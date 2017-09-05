@@ -1,0 +1,20 @@
+<resources>
+
+    <!--Application Strings-->
+    <string name="app_name">Home Lighting App</string>
+
+    <!--Drawer Strings-->
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!--Toolbar Strings-->
+    <string name="action_settings">Settings</string>
+
+    <!--Scan Mode Strings-->
+    <string name="dialog_save_group">Save Group</string>
+    <string name="dialog_edit_text_hint">Enter group name</string>
+    <string name="dialog_save_button">SAVE</string>
+    <string name="dialog_cancel_button">CANCEL</string>
+    <string name="device_name">device name</string>
+    <string name="device_ip_address">ip address</string>
+</resources>
