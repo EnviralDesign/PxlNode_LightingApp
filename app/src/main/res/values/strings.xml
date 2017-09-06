@@ -19,4 +19,9 @@
     <string name="device_name">device name</string>
     <string name="device_ip_address">ip address</string>
     <string name="toast_group_saved">Group created</string>
+
+    <!--Design Mode Strings-->
+    <string name="spinner_hint">Select Group or Item</string>
+    <string name="spinner_group_section_header">GROUPS</string>
+    <string name="spinner_fixture_section_header">FIXTURE</string>
 </resources>
