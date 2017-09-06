@@ -44,7 +44,7 @@ public class ScanActivity extends MainActivity {
     private ArrayList<Device> mCheckedDevicesList;
     private ArrayList<Device> mScannedDevicesList;
     private RecyclerView mDevicesListView;
-    private RecyclerView.Adapter mDeviceAdapter;
+    private DeviceAdapter mDeviceAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
     private ProgressBar mProgressBar;
@@ -160,12 +160,9 @@ public class ScanActivity extends MainActivity {
      * and removes items from ArrayList
      */
     private void removeCheckedItems(){
-        CheckBox cb;
-        for(int i = 0; i < mDeviceAdapter.getItemCount(); i++){
-            cb = (CheckBox) (mDevicesListView.findViewHolderForAdapterPosition(i).itemView).findViewById(R.id.item_checkbox);
-            cb.setChecked(false);
-        }
         mCheckedDevicesList.clear();
+        mDeviceAdapter = new DeviceAdapter();
+        mDevicesListView.setAdapter(mDeviceAdapter);
     }
 
     /**
@@ -186,44 +183,42 @@ public class ScanActivity extends MainActivity {
         Toast.makeText(this, getString(stringID),Toast.LENGTH_SHORT).show();
     }
 
-    private static class ViewHolder extends RecyclerView.ViewHolder{
+    private static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView deviceNameTextView;
         TextView deviceIPAddressTextView;
         CheckBox checkBox;
         CardView cardView;
+        ViewHolderClick mListener;
 
-        public ViewHolder(View v) {
+        public ViewHolder(View v, ViewHolderClick listener) {
             super(v);
+            mListener = listener;
             deviceNameTextView = (TextView) v.findViewById(R.id.device_name_text_view);
             deviceIPAddressTextView = (TextView) v.findViewById(R.id.device_ip_address_text_view);
             checkBox = (CheckBox) v.findViewById(R.id.item_checkbox);
             cardView = (CardView)v.findViewById(R.id.item_card_view);
+            cardView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            mListener.onCardViewClick(view);
+        }
+
+        public interface ViewHolderClick{
+            void onCardViewClick(View view);
         }
     }
 
-    private class DeviceAdapter extends RecyclerView.Adapter<ViewHolder> {
+    public class DeviceAdapter extends RecyclerView.Adapter<ViewHolder>{
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_single_device, parent, false);
-            return new ViewHolder(itemView);
-        }
-
-        @Override
-        public void onBindViewHolder(final ViewHolder holder, int position) {
-            Device device = mScannedDevicesList.get(position);
-
-            //assign data to views
-            holder.checkBox.setTag(R.id.deviceName, device.getName());
-            holder.checkBox.setTag(R.id.deviceIpAddress, device.getIpAddress());
-            holder.deviceNameTextView.setText(device.getName());
-            holder.deviceIPAddressTextView.setText(device.getIpAddress());
-
-            //assign view functionality
-            holder.cardView.setOnClickListener(new View.OnClickListener() {
+            return new ViewHolder(itemView, new ViewHolder.ViewHolderClick() {
                 @Override
-                public void onClick(View view) {
-                    CheckBox cb = holder.checkBox;
+                public void onCardViewClick(View view) {
+                    CheckBox cb = view.findViewById(R.id.item_checkbox);
                     Device device = new Device((String) cb.getTag(R.id.deviceName),(String) cb.getTag(R.id.deviceIpAddress));
                     if(!cb.isChecked()){
                         cb.setChecked(true);
@@ -245,8 +240,29 @@ public class ScanActivity extends MainActivity {
         }
 
         @Override
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
+            Device device = mScannedDevicesList.get(position);
+
+            //assign data to views
+            holder.checkBox.setTag(R.id.deviceName, device.getName());
+            holder.checkBox.setTag(R.id.deviceIpAddress, device.getIpAddress());
+            holder.deviceNameTextView.setText(device.getName());
+            holder.deviceIPAddressTextView.setText(device.getIpAddress());
+        }
+
+        @Override
         public int getItemCount() {
             return mScannedDevicesList.size();
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            return position;
         }
     }
 
