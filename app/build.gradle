@@ -36,6 +36,9 @@ dependencies {
     // MaterialDesign dependency
     compile 'com.android.support:cardview-v7:26.0.2'
 
-    //GSON dependency
+    // GSON dependency
     compile 'com.google.code.gson:gson:2.7'
+
+    // Holo Color Picker
+    compile 'com.larswerkman:HoloColorPicker:1.5'
 }

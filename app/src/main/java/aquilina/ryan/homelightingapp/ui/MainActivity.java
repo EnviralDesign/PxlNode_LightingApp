@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected LinearLayout fullLayout;
     protected FrameLayout actContent;
+    protected NavigationView mNavigationView;
 
     @Override
     public void setContentView(@LayoutRes int layoutResID) {
@@ -43,29 +44,44 @@ public class MainActivity extends AppCompatActivity {
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) fullLayout.findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+        mNavigationView = (NavigationView) fullLayout.findViewById(R.id.nav_view);
+        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 // Handle navigation view item clicks here.
                 int id = item.getItemId();
                 Intent intent;
-                if (id == R.id.nav_design) {
-                    intent = new Intent(getApplicationContext(), DesignActivity.class);
-                    startActivity(intent);
-                } else if (id == R.id.nav_lighting_mode) {
-                    intent = new Intent(getApplicationContext(), PresetsActivity.class);
-                    startActivity(intent);
-                } else if (id == R.id.nav_scan) {
-                    intent = new Intent(getApplicationContext(), ScanActivity.class);
-                    startActivity(intent);
-                }
 
+                if (id == R.id.nav_design) {
+                    if(!mNavigationView.getMenu().findItem(R.id.nav_design).isChecked()){
+                        intent = new Intent(getApplicationContext(), DesignActivity.class);
+                        startActivity(intent);
+                    }
+                } else if (id == R.id.nav_lighting_mode) {
+                    if(!mNavigationView.getMenu().findItem(R.id.nav_lighting_mode).isChecked()){
+                        intent = new Intent(getApplicationContext(), PresetsActivity.class);
+                        startActivity(intent);
+                    }
+                } else if (id == R.id.nav_scan) {
+                    if(!mNavigationView.getMenu().findItem(R.id.nav_scan).isChecked()){
+                        intent = new Intent(getApplicationContext(), ScanActivity.class);
+                        startActivity(intent);
+                    }
+                }
+                item.setChecked(true);
                 DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
                 drawer.closeDrawer(GravityCompat.START);
                 return true;
             }
         });
+    }
+
+    protected void setSelectedNavMenuItem(int itemID){
+        for (int i = 0; i < mNavigationView.getMenu().size(); i++){
+            mNavigationView.getMenu().getItem(i).setChecked(false);
+        }
+
+        mNavigationView.getMenu().findItem(itemID).setChecked(true);
     }
 
     @Override

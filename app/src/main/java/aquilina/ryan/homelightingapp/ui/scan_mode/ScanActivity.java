@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.CardView;
@@ -18,6 +19,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
@@ -25,15 +28,19 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nineoldandroids.view.ViewHelper;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
+import aquilina.ryan.homelightingapp.model.AllGroups;
 import aquilina.ryan.homelightingapp.ui.MainActivity;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
+import aquilina.ryan.homelightingapp.utils.Constants;
 
 /**
  * Created by SterlingRyan on 9/4/2017.
@@ -43,6 +50,8 @@ public class ScanActivity extends MainActivity {
 
     private ArrayList<Device> mCheckedDevicesList;
     private ArrayList<Device> mScannedDevicesList;
+    private ArrayList<DevicesGroup> mGroupsList;
+
     private RecyclerView mDevicesListView;
     private DeviceAdapter mDeviceAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -60,6 +69,7 @@ public class ScanActivity extends MainActivity {
 
         // Set up views
         invalidateOptionsMenu();
+        super.setSelectedNavMenuItem(R.id.nav_scan);
         mDevicesListView = (RecyclerView) findViewById(R.id.devices_list_view);
         mLayoutManager = new LinearLayoutManager(this);
         mDevicesListView.setLayoutManager(mLayoutManager);
@@ -74,6 +84,7 @@ public class ScanActivity extends MainActivity {
         mCheckedDevicesList = new ArrayList<>();
         mDeviceAdapter = new DeviceAdapter();
         mScannedDevicesList = new ArrayList<>();
+        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
 
         // set up view functionality
         mDevicesListView.setAdapter(mDeviceAdapter);
@@ -95,7 +106,15 @@ public class ScanActivity extends MainActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        refreshDevices();
+
+        Gson gson = new Gson();
+        String json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
+        if(json == null){
+            refreshDevices();
+        } else {
+            DevicesGroup singleGroup = gson.fromJson(json, DevicesGroup.class);
+            mScannedDevicesList = singleGroup.getDeviceArrayList();
+        }
     }
 
     @Override
@@ -139,20 +158,24 @@ public class ScanActivity extends MainActivity {
      * locally
      */
     protected boolean saveGroupLocally(String groupName){
+        AllGroups allGroups;
+
         DevicesGroup group = new DevicesGroup(groupName, mCheckedDevicesList);
-        mPrefs = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
+
         Gson gson = new Gson();
-        String json = gson.toJson(group);
-        prefsEditor.putString(groupName, json);
+        String json = mPrefs.getString(Constants.GROUP_OF_DEVICES_GROUPS, null);
+        if(json == null){
+            allGroups = new AllGroups();
+        } else {
+            allGroups = gson.fromJson(json, AllGroups.class);
+        }
+        allGroups.addGroup(group);
+        json = gson.toJson(allGroups);
+        prefsEditor.putString(Constants.GROUP_OF_DEVICES_GROUPS, json);
         removeCheckedItems();
         showToast(R.string.toast_group_saved);
         return prefsEditor.commit();
-
-//        To Retrieve
-//        Gson gson = new Gson();
-//        String json = mPrefs.getString("MyObject", "");
-//        MyObject obj = gson.fromJson(json, MyObject.class);
     }
 
     /**
@@ -274,7 +297,7 @@ public class ScanActivity extends MainActivity {
         protected Void doInBackground(Void... voids) {
             //TODO refresh devices
             DevicesList = new ArrayList<>();
-            for(int i = 0; i < 20; i++){
+            for(int i = 0; i < 5; i++){
                 publishProgress(i);
                 DevicesList.add(new Device("192.8.8.8", "Light Name"));
                 try{
@@ -306,6 +329,17 @@ public class ScanActivity extends MainActivity {
             mScannedDevicesList = DevicesList;
             mDeviceAdapter.notifyDataSetChanged();
             mSwipeRefreshLayout.setRefreshing(false);
+            saveSingleFixturesLocally();
+        }
+
+        private boolean saveSingleFixturesLocally(){
+            SharedPreferences.Editor prefsEditor = mPrefs.edit();
+            DevicesGroup singleGroup = new DevicesGroup(Constants.GROUP_OF_SINGLE_DEVICES, mScannedDevicesList);
+
+            Gson gson = new Gson();
+            String json = gson.toJson(singleGroup);
+            prefsEditor.putString(Constants.GROUP_OF_SINGLE_DEVICES, json);
+            return prefsEditor.commit();
         }
     }
 }
