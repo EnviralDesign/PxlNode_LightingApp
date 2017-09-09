@@ -6,37 +6,25 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.Window;
-import android.widget.BaseAdapter;
 import android.widget.CheckBox;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.nineoldandroids.view.ViewHelper;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 import aquilina.ryan.homelightingapp.model.AllGroups;
-import aquilina.ryan.homelightingapp.ui.MainActivity;
+import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
@@ -270,7 +258,9 @@ public class ScanActivity extends MainActivity {
             holder.checkBox.setTag(R.id.deviceName, device.getName());
             holder.checkBox.setTag(R.id.deviceIpAddress, device.getIpAddress());
             holder.deviceNameTextView.setText(device.getName());
+            holder.deviceNameTextView.setTypeface(mTextTypeFace);
             holder.deviceIPAddressTextView.setText(device.getIpAddress());
+            holder.deviceIPAddressTextView.setTypeface(mSubTextTypeFace);
         }
 
         @Override

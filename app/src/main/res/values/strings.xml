@@ -2,6 +2,9 @@
 
     <!--Application Strings-->
     <string name="app_name">Home Lighting App</string>
+    <string name="ttf_text" translatable="false">TitilliumWeb-Regular.tff</string>
+    <string name="ttf_header" translatable="false">Raleway-Bold.tff</string>
+    <string name="ttf_sub_text" translatable="false">Raleway-ThinItalic.tff</string>
 
     <!--Drawer Strings-->
     <string name="navigation_drawer_open">Open navigation drawer</string>
@@ -24,4 +27,7 @@
     <string name="spinner_hint">Select Group or Item</string>
     <string name="spinner_group_section_header">GROUPS</string>
     <string name="spinner_fixture_section_header">FIXTURE</string>
+    <string name="picker_caption_repetitions">Repetitions</string>
+    <string name="picker_caption_duration">Duration(Sec)</string>
+    <string name="save_preset_button">Save Preset</string>
 </resources>

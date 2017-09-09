@@ -3,14 +3,15 @@ package aquilina.ryan.homelightingapp.ui.design_mode;
 import com.google.gson.Gson;
 
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.database.DataSetObserver;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
@@ -25,8 +26,9 @@ import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.AllGroups;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
-import aquilina.ryan.homelightingapp.ui.MainActivity;
+import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
+import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import fr.ganfra.materialspinner.MaterialSpinner;
 
 /**
@@ -40,6 +42,15 @@ public class DesignActivity extends MainActivity {
     private SharedPreferences mPrefs;
 
     private MaterialSpinner mSpinner;
+    private Button mBlinkButton;
+    private Button mHueButton;
+    private Button mHueTwoButton;
+    private Button mPulseButton;
+    private NumberPickerView mDurationPicker;
+    private NumberPickerView mRepetitionPicker;
+    private Button mSavePresetButton;
+
+    private View.OnClickListener mOnClickListener;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,16 +64,23 @@ public class DesignActivity extends MainActivity {
         OpacityBar opacityBar = (OpacityBar) findViewById(R.id.opacitybar);
         colorPicker.setShowOldCenterColor(false);
         mSpinner = (MaterialSpinner) findViewById(R.id.item_spinner);
+        mBlinkButton = (Button) findViewById(R.id.blink_button);
+        mHueButton = (Button) findViewById(R.id.hue_button);
+        mHueTwoButton = (Button) findViewById(R.id.hue2_button);
+        mPulseButton = (Button) findViewById(R.id.pulse_button);
+        mDurationPicker = (NumberPickerView) findViewById(R.id.duration_picker);
+        mRepetitionPicker = (NumberPickerView) findViewById(R.id.repetitions_picker);
 
         // Load data
         mSingleItemList = new ArrayList<>();
         mGroupedItemList = new ArrayList<>();
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         loadListsWithData();
+        setPickerProperties();
 
         // Set up view's functionality
         colorPicker.addSVBar(saturationValueBar);
-        colorPicker.addOpacityBar(opacityBar);;
+        colorPicker.addOpacityBar(opacityBar);
         colorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
             @Override
             public void onColorChanged(int color) {
@@ -70,6 +88,28 @@ public class DesignActivity extends MainActivity {
             }
         });
         mSpinner.setAdapter(new CustomSpinnerAdapter());
+        mOnClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(((Button) view).isSelected()){
+                    ((Button) view).setSelected(false);
+                }
+                else {
+                    mBlinkButton.setSelected(false);
+                    mHueButton.setSelected(false);
+                    mHueTwoButton.setSelected(false);
+                    mPulseButton.setSelected(false);
+                    ((Button) view).setSelected(true);
+                }
+                switch (view.getId()){
+                    //TODO send post commands according to the button pressed
+                }
+            }
+        };
+        mBlinkButton.setOnClickListener(mOnClickListener);
+        mHueButton.setOnClickListener(mOnClickListener);
+        mHueTwoButton.setOnClickListener(mOnClickListener);
+        mPulseButton.setOnClickListener(mOnClickListener);
     }
 
 
@@ -78,7 +118,6 @@ public class DesignActivity extends MainActivity {
      * to lists
      */
     private void loadListsWithData(){
-        // TODO load lists with actual data
         Gson gson = new Gson();
         String json = mPrefs.getString(Constants.GROUP_OF_DEVICES_GROUPS, null);
         AllGroups allGroups = (AllGroups) gson.fromJson(json, AllGroups.class);
@@ -93,6 +132,25 @@ public class DesignActivity extends MainActivity {
         if(singleGroup != null){
             mSingleItemList = singleGroup.getDeviceArrayList();
         }
+    }
+
+    private void setPickerProperties(){
+        setData(mDurationPicker, 1, 100, 1);
+        setData(mRepetitionPicker, 1, 100, 1);
+    }
+
+    private void setData(NumberPickerView picker, int minValue, int maxValue, int value){
+        String[] displayValues;
+        ArrayList<String> valuesList = new ArrayList<>();
+        for(int i = 0; i < 100; i++){
+            valuesList.add(Integer.toString(i));
+        }
+        displayValues = valuesList.toArray(new String[valuesList.size()]);
+
+        picker.setDisplayedValues(displayValues);
+        picker.setMinValue(minValue);
+        picker.setMaxValue(maxValue);
+        picker.setValue(value);
     }
 
     private class CustomSpinnerAdapter implements SpinnerAdapter{

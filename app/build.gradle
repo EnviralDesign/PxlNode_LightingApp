@@ -41,4 +41,7 @@ dependencies {
 
     // Holo Color Picker
     compile 'com.larswerkman:HoloColorPicker:1.5'
+
+    // Number Picker Library
+    compile 'cn.carbswang.android:NumberPickerView:1.1.0'
 }

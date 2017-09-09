@@ -9,5 +9,6 @@
               android:layout_height="match_parent"
               android:textSize="16sp"
               android:textColor="@color/colorPrimaryText"
+              android:textAlignment="center"
               android:text="Default"/>
 </LinearLayout>

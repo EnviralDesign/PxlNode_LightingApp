@@ -254,7 +254,7 @@ public class MaterialSpinner extends AppCompatSpinner implements ValueAnimator.A
 
     private void updateBottomPadding() {
         Paint.FontMetrics textMetrics = textPaint.getFontMetrics();
-        extraPaddingBottom = underlineTopSpacing + underlineBottomSpacing;
+        extraPaddingBottom =  underlineBottomSpacing;
         if (enableErrorLabel) {
             extraPaddingBottom += (int) ((textMetrics.descent - textMetrics.ascent) * currentNbErrorLines);
         }
