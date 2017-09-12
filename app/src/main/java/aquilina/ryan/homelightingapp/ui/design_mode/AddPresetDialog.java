@@ -3,19 +3,14 @@ package aquilina.ryan.homelightingapp.ui.design_mode;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v7.widget.DialogTitle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import aquilina.ryan.homelightingapp.R;
-import aquilina.ryan.homelightingapp.ui.scan_mode.AddGroupDialog;
-import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 
 /**
  * Created by SterlingRyan on 9/11/2017.
@@ -29,7 +24,6 @@ public class AddPresetDialog extends DialogFragment{
      * Public static constructor that creates fragment and
      * passes a bundle with data into it when adapter is created
      */
-
     public static AddPresetDialog newInstance(){
         AddPresetDialog dialog = new AddPresetDialog();
         return dialog;
@@ -56,7 +50,7 @@ public class AddPresetDialog extends DialogFragment{
             public void onClick(View view) {
                 if(isValidText(editText.getText().toString())){
                     mPresetName = editText.getText().toString();
-                    saveGroup();
+                    savePreset();
                     dismiss();
                 }
             }
@@ -88,7 +82,7 @@ public class AddPresetDialog extends DialogFragment{
     /**
      * Saves the preset locally
      */
-    private void saveGroup(){
-        //TODO create saving functionality
+    private void savePreset(){
+        ((DesignActivity) getActivity()).savePresetLocally(mPresetName);
     }
 }
