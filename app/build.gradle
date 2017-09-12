@@ -31,5 +31,17 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     // Material Spinner
-    compile 'com.github.ganfra:material-spinner:1.1.1'
+    compile project(':libs:MaterialSpinnerLibrary')
+
+    // MaterialDesign dependency
+    compile 'com.android.support:cardview-v7:26.0.2'
+
+    // GSON dependency
+    compile 'com.google.code.gson:gson:2.7'
+
+    // Holo Color Picker
+    compile 'com.larswerkman:HoloColorPicker:1.5'
+
+    // Number Picker Library
+    compile 'cn.carbswang.android:NumberPickerView:1.1.0'
 }

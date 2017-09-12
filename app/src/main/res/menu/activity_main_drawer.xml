@@ -4,15 +4,15 @@
     <group android:checkableBehavior="single">
         <item
                 android:id="@+id/nav_scan"
-                android:icon="@drawable/ic_menu_camera"
+                android:icon="@drawable/ic_wifi_tethering_white_36dp"
                 android:title="Scan for Devices"/>
         <item
                 android:id="@+id/nav_design"
-                android:icon="@drawable/ic_menu_gallery"
+                android:icon="@drawable/ic_color_lens_white_36dp"
                 android:title="Look Design"/>
         <item
                 android:id="@+id/nav_lighting_mode"
-                android:icon="@drawable/ic_menu_slideshow"
+                android:icon="@drawable/ic_lightbulb_outline_white_36dp"
                 android:title="Lighting Mode"/>
     </group>
 </menu>

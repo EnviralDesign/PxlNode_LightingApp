@@ -7,7 +7,9 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import aquilina.ryan.homelightingapp.R;
 
@@ -32,31 +34,35 @@ public class AddGroupDialog extends DialogFragment{
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle(getString(R.string.dialog_save_group));
-
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        View rootView = inflater.inflate(R.layout.dialog_edit_text, null);
-        final EditText editText = (EditText) rootView.findViewById(R.id.dialog_edit_text);
+        View rootView = inflater.inflate(R.layout.dialog_save, null);
+        TextView title = (TextView) rootView.findViewById(R.id.alertTitle);
+        title.setText(getString(R.string.dialog_save_group));
+        final EditText editText = rootView.findViewById(R.id.dialog_edit_text);
         editText.setHint(getString(R.string.dialog_edit_text_hint));
+        Button saveButton = (Button) rootView.findViewById(R.id.button2);
+        saveButton.setText(getString(R.string.dialog_save_button));
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(isValidText(editText.getText().toString())){
+                    mGroupName = editText.getText().toString();
+                    saveGroup();
+                    dismiss();
+                }
+            }
+        });
 
-        builder.setView(rootView)
-                .setPositiveButton(getString(R.string.dialog_save_button), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        if(isValidText(editText.getText().toString())){
-                            mGroupName = editText.getText().toString();
-                            saveGroup();
-                            dialogInterface.dismiss();
-                        }
-                    }
-                })
-                .setNegativeButton(getString(R.string.dialog_cancel_button), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.cancel();
-                    }
-                });
+        Button cancelButton = (Button) rootView.findViewById(R.id.button3);
+        cancelButton.setText(getString(R.string.dialog_cancel_button));
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dismiss();
+            }
+        });
 
+        builder.setView(rootView);
         return builder.create();
     }
 

@@ -2,13 +2,17 @@
 
     <!--Application Strings-->
     <string name="app_name">Home Lighting App</string>
+    <string name="ttf_text" translatable="false">TitilliumWeb-Regular.tff</string>
+    <string name="ttf_header" translatable="false">Raleway-Bold.tff</string>
+    <string name="ttf_sub_text" translatable="false">Raleway-ThinItalic.tff</string>
 
     <!--Drawer Strings-->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <!--Toolbar Strings-->
-    <string name="action_settings">Settings</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_add_group">Add to Group</string>
 
     <!--Scan Mode Strings-->
     <string name="dialog_save_group">Save Group</string>
@@ -17,4 +21,15 @@
     <string name="dialog_cancel_button">CANCEL</string>
     <string name="device_name">device name</string>
     <string name="device_ip_address">ip address</string>
+    <string name="toast_group_saved">Group created</string>
+
+    <!--Design Mode Strings-->
+    <string name="spinner_hint">Select Group or Item</string>
+    <string name="spinner_group_section_header">GROUPS</string>
+    <string name="spinner_fixture_section_header">FIXTURE</string>
+    <string name="picker_caption_repetitions">Repetitions</string>
+    <string name="picker_caption_duration">Duration(Sec)</string>
+    <string name="save_preset_button">Save Preset</string>
+    <string name="dialog_save_preset_title">Save Preset</string>
+    <string name="dialog_preset_edit_text_hint">Enter preset name</string>
 </resources>
