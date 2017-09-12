@@ -7,8 +7,7 @@
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@color/colorSecondaryDark">
+            android:orientation="vertical">
 
         <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
@@ -146,9 +145,11 @@
         </LinearLayout>
 
         <LinearLayout
+                android:id="@+id/effects_controls_linear_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:visibility="gone"
                 android:weightSum="50">
 
             <LinearLayout
@@ -196,7 +197,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="40"
                     app:lineColor="@color/colorAccent"
-                    app:startColor="@color/colorSecondaryText"/>
+                    app:startColor="@color/colorPrimary"/>
 
             <LinearLayout
                     android:layout_width="wrap_content"

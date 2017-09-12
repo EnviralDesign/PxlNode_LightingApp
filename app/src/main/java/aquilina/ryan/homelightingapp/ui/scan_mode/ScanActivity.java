@@ -64,7 +64,6 @@ public class ScanActivity extends MainActivity {
         mAddToGroupButton = (FloatingActionButton) findViewById(R.id.add_to_group_fab);
         mAddToGroupButton.setVisibility(View.INVISIBLE);
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        mProgressBar.setVisibility(View.INVISIBLE);
         mProgressBar.setMax(10);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
 
@@ -302,7 +301,7 @@ public class ScanActivity extends MainActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            mProgressBar.setVisibility(View.VISIBLE);
+            mSwipeRefreshLayout.setRefreshing(true);
         }
 
         @Override
@@ -314,7 +313,6 @@ public class ScanActivity extends MainActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            mProgressBar.setVisibility(View.INVISIBLE);
             mScannedDevicesList.clear();
             mScannedDevicesList = DevicesList;
             mDeviceAdapter.notifyDataSetChanged();

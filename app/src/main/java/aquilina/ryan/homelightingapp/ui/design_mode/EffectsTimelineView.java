@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
@@ -96,12 +97,14 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     @Override
     public void onClick(View view) {
         if(view == mStartCircleView){
-            if(mStartCircleView.isSelected()){
-                unSelectView(mStartCircleView);
-            } else {
-                selectView(mStartCircleView);
-                if(mStopCircleView.isSelected()){
-                    unSelectView(mStopCircleView);
+            if(mStopCircleView.isColorChanged){
+                if(mStartCircleView.isSelected()){
+                    unSelectView(mStartCircleView);
+                } else {
+                    selectView(mStartCircleView);
+                    if(mStopCircleView.isSelected()){
+                        unSelectView(mStopCircleView);
+                    }
                 }
             }
         } else if(view == mStopCircleView){
@@ -116,12 +119,12 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         }
     }
 
-    private void selectView(View view){
+    public void selectView(View view){
         view.animate().scaleX(1.25f).scaleY(1.25f).setInterpolator(new AccelerateDecelerateInterpolator()).setDuration(50);
         view.setSelected(true);
     }
 
-    private void unSelectView(View view){
+    public void unSelectView(View view){
         view.animate().scaleX(1f).scaleY(1f).setInterpolator(new AccelerateDecelerateInterpolator()).setDuration(50);
         view.setSelected(false);
     }
@@ -136,7 +139,26 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     public void changeStopCircleColor(int color){
         if(mStopCircleView.isSelected()){
             mStopCircleView.setCircleColor(color);
+            mStopCircleView.setColorChanged(true);
+            mStartCircleView.setInFocus(true);
             mStopCircleView.invalidate();
+        }
+    }
+
+    public void refreshView(){
+        mStartCircleView.setCircleColor(getResources().getColor(R.color.colorPrimary));
+        mStopCircleView.setCircleColor(getResources().getColor(R.color.colorPrimary));
+
+        mStartCircleView.setInFocus(false);
+        mStopCircleView.setInFocus(true);
+
+        mStopCircleView.setColorChanged(false);
+        selectView(mStopCircleView);
+    }
+
+    public void automaticFocus(){
+        if(mStopCircleView.isInFocus){
+            onClick(mStartCircleView);
         }
     }
 
@@ -155,6 +177,9 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
 
         mStopCircleView.setOnClickListener(this);
         mStartCircleView.setOnClickListener(this);
+
+        mStopCircleView.setInFocus(true);
+        selectView(mStopCircleView);
 
         addView(mTimeLineView);
         addView(mStartCircleView);
@@ -207,10 +232,14 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     }
 
     public class CircleView extends View{
-        private final int DEFAULT_CIRCLE_COLOR = Color.RED;
+        private final int DEFAULT_CIRCLE_COLOR = Color.GRAY;
 
         private int circleColor = DEFAULT_CIRCLE_COLOR;
         private Paint paint;
+        private Paint borderPaint;
+        private DashPathEffect dashPathEffect;
+        private boolean isInFocus = false;
+        private boolean isColorChanged = false;
 
         public CircleView(Context context)
         {
@@ -231,7 +260,10 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         private void init(Context context, AttributeSet attrs)
         {
             paint = new Paint();
+            borderPaint = new Paint();
             paint.setAntiAlias(true);
+            borderPaint.setAntiAlias(true);
+            dashPathEffect =  new DashPathEffect(new float[] {10,10}, 0);
         }
 
         public void setCircleColor(int circleColor)
@@ -243,6 +275,23 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         public int getCircleColor()
         {
             return circleColor;
+        }
+
+        public boolean isInFocus() {
+            return isInFocus;
+        }
+
+        public void setInFocus(boolean inFocus) {
+            isInFocus = inFocus;
+            invalidate();
+        }
+
+        public boolean isColorChanged() {
+            return isColorChanged;
+        }
+
+        public void setColorChanged(boolean colorChanged) {
+            isColorChanged = colorChanged;
         }
 
         protected void onDraw(Canvas canvas)
@@ -264,8 +313,19 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
             int cx = pl + (usableWidth / 2);
             int cy = pt + (usableHeight / 2);
 
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setColor(DEFAULT_CIRCLE_COLOR);
+            borderPaint.setStrokeWidth(3);
+
+            if(!isInFocus){
+                borderPaint.setPathEffect(dashPathEffect);
+            } else{
+                borderPaint.setPathEffect(null);
+            }
+            canvas.drawCircle(cx, cy, radius - 2, borderPaint);
+
             paint.setColor(circleColor);
-            canvas.drawCircle(cx, cy, radius, paint);
+            canvas.drawCircle(cx, cy, radius - 3, paint);
         }
     }
 
@@ -310,14 +370,14 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
             canvas.getClipBounds(rect);
             int cHeight = rect.height();
             int cWidth = rect.width();
-            textPaint.setColor(mStartCircleColor);
+            textPaint.setColor(getResources().getColor(R.color.colorSecondaryText));
             textPaint.setAntiAlias(true);
             textPaint.setTextAlign(Paint.Align.LEFT);
             textPaint.setTextSize(spToPixels(getContext(),12));
             textPaint.getTextBounds(captionText, 0, captionText.length(),rect);
             float x = cWidth / 2f - rect.width() / 2f - rect.left;
             float y = cHeight / 2f + rect.height() / 2f - rect.bottom;
-            canvas.drawText(captionText,x,y , textPaint);
+            canvas.drawText(captionText, x, y , textPaint);
         }
     }
 
