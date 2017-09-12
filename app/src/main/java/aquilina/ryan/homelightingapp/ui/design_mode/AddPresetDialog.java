@@ -1,34 +1,43 @@
-package aquilina.ryan.homelightingapp.ui.scan_mode;
+package aquilina.ryan.homelightingapp.ui.design_mode;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v7.widget.DialogTitle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import aquilina.ryan.homelightingapp.R;
+import aquilina.ryan.homelightingapp.ui.scan_mode.AddGroupDialog;
+import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 
 /**
- * Created by SterlingRyan on 9/4/2017.
+ * Created by SterlingRyan on 9/11/2017.
  */
 
-public class AddGroupDialog extends DialogFragment{
+public class AddPresetDialog extends DialogFragment{
 
-    private String mGroupName;
+    private String mPresetName;
 
     /**
      * Public static constructor that creates fragment and
      * passes a bundle with data into it when adapter is created
      */
 
-    public static AddGroupDialog newInstance(){
-        AddGroupDialog dialog = new AddGroupDialog();
+    public static AddPresetDialog newInstance(){
+        AddPresetDialog dialog = new AddPresetDialog();
         return dialog;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -37,16 +46,16 @@ public class AddGroupDialog extends DialogFragment{
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View rootView = inflater.inflate(R.layout.dialog_save, null);
         TextView title = (TextView) rootView.findViewById(R.id.alertTitle);
-        title.setText(getString(R.string.dialog_save_group));
+        title.setText(getString(R.string.dialog_save_preset_title));
         final EditText editText = rootView.findViewById(R.id.dialog_edit_text);
-        editText.setHint(getString(R.string.dialog_edit_text_hint));
+        editText.setHint(getString(R.string.dialog_preset_edit_text_hint));
         Button saveButton = (Button) rootView.findViewById(R.id.button2);
         saveButton.setText(getString(R.string.dialog_save_button));
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(isValidText(editText.getText().toString())){
-                    mGroupName = editText.getText().toString();
+                    mPresetName = editText.getText().toString();
                     saveGroup();
                     dismiss();
                 }
@@ -77,9 +86,9 @@ public class AddGroupDialog extends DialogFragment{
     }
 
     /**
-     * Saves the group locally
+     * Saves the preset locally
      */
     private void saveGroup(){
-        ((ScanActivity) getActivity()).saveGroupLocally(mGroupName);
+        //TODO create saving functionality
     }
 }

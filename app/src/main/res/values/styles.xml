@@ -20,11 +20,23 @@
     <!-- EditText Style -->
     <style name="MyEditTextTheme">
         <!-- Used for the bottom line when not selected / focused -->
-        <item name="colorControlNormal">@color/colorAccent</item>
-        <item name="android:textColorHint">@color/colorSecondaryText</item>
+        <item name="colorControlNormal">@color/colorPrimaryText</item>
+        <item name="android:textColorHint">@color/colorPrimaryText</item>
         <!-- colorControlActivated & colorControlHighlight use the colorAccent color by default -->
-        <item name="colorControlActivated">@color/colorPrimary</item>
-        <item name="colorControlHighlight">@color/colorPrimary</item>
+        <item name="colorControlActivated">@color/colorAccent</item>
+        <item name="colorControlHighlight">@color/colorAccent</item>
+    </style>
+
+    <!--Dialogue Style-->
+    <style name="MyDialogTheme">
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowBackground">@color/colorPrimary</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowTitleStyle">@null</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
     </style>
 
 </resources>

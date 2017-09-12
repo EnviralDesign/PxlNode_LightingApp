@@ -30,4 +30,6 @@
     <string name="picker_caption_repetitions">Repetitions</string>
     <string name="picker_caption_duration">Duration(Sec)</string>
     <string name="save_preset_button">Save Preset</string>
+    <string name="dialog_save_preset_title">Save Preset</string>
+    <string name="dialog_preset_edit_text_hint">Enter preset name</string>
 </resources>

@@ -2,6 +2,7 @@ package aquilina.ryan.homelightingapp.ui.design_mode;
 
 import com.google.gson.Gson;
 
+import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.database.DataSetObserver;
@@ -49,6 +50,7 @@ public class DesignActivity extends MainActivity {
     private NumberPickerView mDurationPicker;
     private NumberPickerView mRepetitionPicker;
     private Button mSavePresetButton;
+    private EffectsTimelineView mEffectsTimeLineView;
 
     private View.OnClickListener mOnClickListener;
 
@@ -70,6 +72,8 @@ public class DesignActivity extends MainActivity {
         mPulseButton = (Button) findViewById(R.id.pulse_button);
         mDurationPicker = (NumberPickerView) findViewById(R.id.duration_picker);
         mRepetitionPicker = (NumberPickerView) findViewById(R.id.repetitions_picker);
+        mEffectsTimeLineView = (EffectsTimelineView) findViewById(R.id.effects_timeline);
+        mSavePresetButton = (Button) findViewById(R.id.save_preset_button);
 
         // Load data
         mSingleItemList = new ArrayList<>();
@@ -85,6 +89,8 @@ public class DesignActivity extends MainActivity {
             @Override
             public void onColorChanged(int color) {
                 //TODO send post command changing color of the light in realtime
+                mEffectsTimeLineView.changeStartCircleColor(color);
+                mEffectsTimeLineView.changeStopCircleColor(color);
             }
         });
         mSpinner.setAdapter(new CustomSpinnerAdapter());
@@ -110,6 +116,21 @@ public class DesignActivity extends MainActivity {
         mHueButton.setOnClickListener(mOnClickListener);
         mHueTwoButton.setOnClickListener(mOnClickListener);
         mPulseButton.setOnClickListener(mOnClickListener);
+        mSavePresetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showSavePresetDialog();
+            }
+        });
+    }
+
+    /**
+     *  Show save group dialog
+     *  fragment.
+     */
+    private void showSavePresetDialog(){
+        DialogFragment dialogFragment = AddPresetDialog.newInstance();
+        dialogFragment.show(getFragmentManager(), "AddPresetDialog");
     }
 
 
