@@ -39,110 +39,97 @@
                     app:ms_arrowSize="16dp"/>
         </android.support.v7.widget.CardView>
 
-        <LinearLayout
+        <RelativeLayout
+                android:id="@+id/holo_picker_controls"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_marginBottom="8dp"
                 android:layout_marginRight="16dp"
-                android:layout_marginLeft="16dp">
+                android:layout_marginLeft="16dp"
+                android:visibility="gone">
 
             <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:id="@+id/left_buttons"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerInParent="true">
 
-                <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:gravity="center_vertical">
+                <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/blink_button"
+                        android:layout_width="62dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="Blink"
+                        android:textColor="@color/colorPrimaryText"
+                        android:textSize="12sp"
+                        android:backgroundTint="@color/custom_button_color_state_list"
+                        style="Widget.AppCompat.Button.Colored"/>
 
-                    <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                        <android.support.v7.widget.AppCompatButton
-                                android:id="@+id/blink_button"
-                                android:layout_width="62dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="16dp"
-                                android:text="Blink"
-                                android:textColor="@color/colorPrimaryText"
-                                android:textSize="12sp"
-                                android:backgroundTint="@color/custom_button_color_state_list"
-                                style="Widget.AppCompat.Button.Colored"/>
-
-                        <android.support.v7.widget.AppCompatButton
-                                android:id="@+id/pulse_button"
-                                android:layout_width="62dp"
-                                android:layout_height="wrap_content"
-                                android:text="pulse"
-                                android:textColor="@color/colorPrimaryText"
-                                android:textSize="12sp"
-                                android:backgroundTint="@color/custom_button_color_state_list"
-                                style="Widget.AppCompat.Button.Colored"/>
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <com.larswerkman.holocolorpicker.ColorPicker
-                        android:id="@+id/picker"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center_horizontal"
-                        android:layout_weight="1.17"/>
-
-                <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:gravity="center_vertical">
-
-                    <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                        <android.support.v7.widget.AppCompatButton
-                                android:id="@+id/hue_button"
-                                android:layout_width="62dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="16dp"
-                                android:text="hue"
-                                android:textColor="@color/colorPrimaryText"
-                                android:textSize="13sp"
-                                android:backgroundTint="@color/custom_button_color_state_list"
-                                style="Widget.AppCompat.Button.Colored"/>
-
-                        <android.support.v7.widget.AppCompatButton
-                                android:id="@+id/hue2_button"
-                                android:layout_width="62dp"
-                                android:layout_height="wrap_content"
-                                android:text="hue2"
-                                android:textColor="@color/colorPrimaryText"
-                                android:textSize="13sp"
-                                android:backgroundTint="@color/custom_button_color_state_list"
-                                style="Widget.AppCompat.Button.Colored"/>
-
-                    </LinearLayout>
-
-                </LinearLayout>
+                <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/pulse_button"
+                        android:layout_width="62dp"
+                        android:layout_height="wrap_content"
+                        android:text="pulse"
+                        android:textColor="@color/colorPrimaryText"
+                        android:textSize="12sp"
+                        android:backgroundTint="@color/custom_button_color_state_list"
+                        style="Widget.AppCompat.Button.Colored"/>
             </LinearLayout>
 
-            <com.larswerkman.holocolorpicker.SVBar
-                    android:id="@+id/svbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"/>
+            <com.larswerkman.holocolorpicker.ColorPicker
+                    android:id="@+id/picker"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_toEndOf="@id/left_buttons"
+                    android:layout_toStartOf="@+id/right_buttons"/>
 
-            <com.larswerkman.holocolorpicker.OpacityBar
-                    android:id="@+id/opacitybar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"/>
-        </LinearLayout>
+            <LinearLayout
+                    android:id="@+id/right_buttons"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true">
+
+                <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/hue_button"
+                        android:layout_width="62dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="hue"
+                        android:textColor="@color/colorPrimaryText"
+                        android:textSize="13sp"
+                        android:backgroundTint="@color/custom_button_color_state_list"
+                        style="Widget.AppCompat.Button.Colored"/>
+
+                <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/hue2_button"
+                        android:layout_width="62dp"
+                        android:layout_height="wrap_content"
+                        android:text="hue2"
+                        android:textColor="@color/colorPrimaryText"
+                        android:textSize="13sp"
+                        android:backgroundTint="@color/custom_button_color_state_list"
+                        style="Widget.AppCompat.Button.Colored"/>
+            </LinearLayout>
+        </RelativeLayout>
+
+        <com.larswerkman.holocolorpicker.SVBar
+                android:id="@+id/svbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"/>
+
+        <com.larswerkman.holocolorpicker.OpacityBar
+                android:id="@+id/opacitybar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"/>
 
         <LinearLayout
                 android:id="@+id/effects_controls_linear_layout"
@@ -181,6 +168,7 @@
                             app:npv_WrapSelectorWheel="true"/>
 
                     <TextView
+                            android:id="@+id/duration_textview"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center_horizontal"
@@ -229,6 +217,7 @@
                             app:npv_WrapSelectorWheel="true"/>
 
                     <TextView
+                            android:id="@+id/repetitions_textview"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center_horizontal"
@@ -248,6 +237,8 @@
                 android:textColor="@color/colorPrimaryText"
                 android:backgroundTint="@color/colorAccent"
                 android:padding="8dp"
-                android:layout_margin="@dimen/activity_horizontal_margin"/>
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:alpha="0.2"
+                android:visibility="gone"/>
     </LinearLayout>
 </ScrollView>

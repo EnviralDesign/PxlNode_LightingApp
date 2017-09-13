@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -31,6 +32,8 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     private int mStartCircleColor;
     private int mEndCircleColor;
     private int mLineColor;
+
+    private Typeface mTypeface;
 
     public EffectsTimelineView(Context context) {
         super(context);
@@ -87,9 +90,9 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
             } else if(i == 2){
                 child.layout(childRight - childWidth, childTop, childRight - dipToPixels(getContext(),10), curHeight + childTop);
             } else if(i == 3){
-                child.layout(childLeft + dipToPixels(getContext(),10), (childHeight / 4) * 3,  curWidth + childLeft, childHeight);
+                child.layout(childLeft + dipToPixels(getContext(),10), (childHeight / 6) * 5,  curWidth + childLeft, childHeight);
             } else if(i == 4){
-                child.layout(childRight - childWidth, (childHeight / 4) * 3,  childRight - dipToPixels(getContext(),10), childHeight);
+                child.layout(childRight - childWidth, (childHeight / 6) * 5,  childRight - dipToPixels(getContext(),10), childHeight);
             }
         }
     }
@@ -153,13 +156,31 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         mStopCircleView.setInFocus(true);
 
         mStopCircleView.setColorChanged(false);
+    }
+
+    public void setmStartCircleViewFocus(boolean bool){
+        mStartCircleView.setInFocus(bool);
+    }
+
+    public void setmStopCircleViewFocus(boolean bool){
+        mStopCircleView.setInFocus(bool);
         selectView(mStopCircleView);
     }
 
-    public void automaticFocus(){
-        if(mStopCircleView.isInFocus){
-            onClick(mStartCircleView);
-        }
+    public boolean getStartCircleViewFocus(){
+        return mStartCircleView.isInFocus();
+    }
+
+    public boolean getStopCircleViewFocus(){
+        return mStopCircleView.isInFocus();
+    }
+
+    public Typeface getmTypeface() {
+        return mTypeface;
+    }
+
+    public void setmTypeface(Typeface mTypeface) {
+        this.mTypeface = mTypeface;
     }
 
     private void init(){
@@ -177,9 +198,6 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
 
         mStopCircleView.setOnClickListener(this);
         mStartCircleView.setOnClickListener(this);
-
-        mStopCircleView.setInFocus(true);
-        selectView(mStopCircleView);
 
         addView(mTimeLineView);
         addView(mStartCircleView);
@@ -373,7 +391,8 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
             textPaint.setColor(getResources().getColor(R.color.colorSecondaryText));
             textPaint.setAntiAlias(true);
             textPaint.setTextAlign(Paint.Align.LEFT);
-            textPaint.setTextSize(spToPixels(getContext(),12));
+            textPaint.setTextSize(spToPixels(getContext(),10));
+            textPaint.setTypeface(mTypeface);
             textPaint.getTextBounds(captionText, 0, captionText.length(),rect);
             float x = cWidth / 2f - rect.width() / 2f - rect.left;
             float y = cHeight / 2f + rect.height() / 2f - rect.bottom;

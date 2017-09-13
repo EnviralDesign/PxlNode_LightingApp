@@ -1,7 +1,7 @@
 <resources>
 
     <!--Application Strings-->
-    <string name="app_name">Home Lighting App</string>
+    <string name="app_name">Home Lighting</string>
     <string name="ttf_text" translatable="false">TitilliumWeb-Regular.tff</string>
     <string name="ttf_header" translatable="false">Raleway-Bold.tff</string>
     <string name="ttf_sub_text" translatable="false">Raleway-ThinItalic.tff</string>

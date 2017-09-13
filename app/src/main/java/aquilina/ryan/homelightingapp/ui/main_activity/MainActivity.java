@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity {
         super.setContentView(fullLayout);
 
         AssetManager am = getAssets();
-        mHeaderTypeFace = Typeface.createFromAsset(am, "fonts/TitilliumWeb-Regular.ttf");
-        mTextTypeFace = Typeface.createFromAsset(am, "fonts/TitilliumWeb-Bold.ttf");
+        mHeaderTypeFace = Typeface.createFromAsset(am, "fonts/Raleway-Bold.ttf");
+        mTextTypeFace = Typeface.createFromAsset(am, "fonts/TitilliumWeb-Regular.ttf");
         mSubTextTypeFace = Typeface.createFromAsset(am, "fonts/TitilliumWeb-Italic.ttf");
         TextView title = (TextView) findViewById(R.id.appBarTitle);
         title.setTypeface(mHeaderTypeFace);
