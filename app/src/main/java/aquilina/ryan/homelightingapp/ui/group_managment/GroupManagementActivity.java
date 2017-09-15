@@ -1,4 +1,4 @@
-package aquilina.ryan.homelightingapp.ui.presets_mode;
+package aquilina.ryan.homelightingapp.ui.group_managment;
 
 import com.google.gson.Gson;
 
@@ -17,23 +17,26 @@ import android.widget.CheckBox;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import java.security.acl.Group;
 import java.util.ArrayList;
 
 import aquilina.ryan.homelightingapp.R;
+import aquilina.ryan.homelightingapp.model.AllGroups;
 import aquilina.ryan.homelightingapp.model.AllPresets;
+import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 /**
- * Created by SterlingRyan on 9/5/2017.
+ * Created by SterlingRyan on 9/15/2017.
  */
 
-public class PresetsActivity extends MainActivity {
-    private RecyclerView mPresetsRecyclerView;
-    private ArrayList<Preset> mPresets;
-    private ArrayList<String> mToDeletePresets;
-    private PresetAdapter mAdapter;
+public class GroupManagementActivity extends MainActivity {
+    private RecyclerView mGroupsRecyclerView;
+    private ArrayList<DevicesGroup> mGroups;
+    private ArrayList<String> mToDeleteGroups;
+    private GroupsAdapter mAdapter;
     private Menu mMenu;
 
     private SharedPreferences mPrefs;
@@ -42,19 +45,19 @@ public class PresetsActivity extends MainActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_presets);
 
-        mPresets = new ArrayList<>();
-        mToDeletePresets = new ArrayList<>();
-        mPresetsRecyclerView = (RecyclerView) findViewById(R.id.presets_recycler_list);
+        mGroups = new ArrayList<>();
+        mToDeleteGroups = new ArrayList<>();
+        mGroupsRecyclerView = (RecyclerView) findViewById(R.id.presets_recycler_list);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        mPresetsRecyclerView.setLayoutManager(layoutManager);
-        mAdapter = new PresetAdapter();
-        mPresetsRecyclerView.setAdapter(mAdapter);
+        mGroupsRecyclerView.setLayoutManager(layoutManager);
+        mAdapter = new GroupsAdapter();
+        mGroupsRecyclerView.setAdapter(mAdapter);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mPresets = loadPresets();
+        mGroups = loadGroups();
         mAdapter.notifyDataSetChanged();
     }
 
@@ -90,32 +93,32 @@ public class PresetsActivity extends MainActivity {
     }
 
     private void deleteCheckedItems(){
-        ArrayList<Preset> presets;
-        presets = loadPresets();
+        ArrayList<DevicesGroup> groups;
+        groups = loadGroups();
 
-        for(String string: mToDeletePresets){
-            for(Preset preset: presets){
-                if(preset.getPresetName().equals(string)){
-                    presets.remove(preset);
+        for(String string: mToDeleteGroups){
+            for(DevicesGroup group: groups){
+                if(group.getName().equals(string)){
+                    groups.remove(group);
                     break;
                 }
             }
         }
 
-        savePresetList(presets);
+        saveGroupList(groups);
     }
 
-    private void savePresetList(ArrayList<Preset> presets){
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
+    private void saveGroupList(ArrayList<DevicesGroup> groups){
+        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
         Gson gson = new Gson();
 
-        AllPresets allPresets = new AllPresets(presets);
+        AllGroups allGroups = new AllGroups(groups);
 
-        String json = gson.toJson(allPresets);
-        prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
+        String json = gson.toJson(allGroups);
+        prefsEditor.putString(Constants.GROUP_OF_DEVICES_GROUPS, json);
         prefsEditor.apply();
-        mPresets = presets;
+        mGroups = groups;
         mAdapter.notifyDataSetChanged();
     }
 
@@ -131,36 +134,32 @@ public class PresetsActivity extends MainActivity {
     /**
      * Load presets from SharedPreferences
      */
-    private ArrayList<Preset> loadPresets(){
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
+    private ArrayList<DevicesGroup> loadGroups(){
+        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
 
         Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_PRESETS, null);
+        String json = mPrefs.getString(Constants.GROUP_OF_DEVICES_GROUPS, null);
 
-        AllPresets allPresets = (AllPresets) gson.fromJson(json, AllPresets.class);
-        ArrayList<Preset> presets = new ArrayList<>();
+        AllGroups allGroups = (AllGroups) gson.fromJson(json, AllGroups.class);
+        ArrayList<DevicesGroup> groups = new ArrayList<>();
 
-        if(allPresets != null){
-            for (int i = 0; i < allPresets.getAllPresets().size(); i++){
-                presets.add(allPresets.getAllPresets().get(i));
+        if(allGroups != null){
+            for (int i = 0; i < allGroups.getGroups().size(); i++){
+                groups.add(allGroups.getGroups().get(i));
             }
         }
-        return presets;
+        return groups;
     }
 
     private static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
-        TextView nameTextView;
-        TextView groupTextView;
-        Switch aSwitch;
+        TextView textView;
         CardView cardView;
         CheckBox checkBox;
-        ViewHolderClickListener mListener;
+        ViewHolder.ViewHolderClickListener mListener;
 
-        public ViewHolder(View itemView, ViewHolderClickListener mListener) {
+        public ViewHolder(View itemView, ViewHolder.ViewHolderClickListener mListener) {
             super(itemView);
-            this.nameTextView = (TextView) itemView.findViewById(R.id.preset_name);
-            this.groupTextView = (TextView) itemView.findViewById(R.id.associated_group);
-            this.aSwitch = (Switch) itemView.findViewById(R.id.preset_switch);
+            this.textView = (TextView) itemView.findViewById(R.id.preset_name);
             this.cardView = (CardView) itemView.findViewById(R.id.item_card_view);
             this.checkBox = (CheckBox) itemView.findViewById(R.id.item_checkbox);
             this.mListener = mListener;
@@ -185,7 +184,7 @@ public class PresetsActivity extends MainActivity {
         }
     }
 
-    private class PresetAdapter extends RecyclerView.Adapter<ViewHolder>{
+    private class GroupsAdapter extends RecyclerView.Adapter<ViewHolder>{
 
         private boolean isDeleteMode = false;
 
@@ -206,7 +205,7 @@ public class PresetsActivity extends MainActivity {
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_preset, parent, false);
+            View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_group, parent, false);
             return new ViewHolder(itemView, new ViewHolder.ViewHolderClickListener() {
                 @Override
                 public void onCardViewClick(View view) {
@@ -214,25 +213,15 @@ public class PresetsActivity extends MainActivity {
                         CheckBox cb = (CheckBox) view.findViewById(R.id.item_checkbox);
                         if(cb.isChecked()){
                             cb.setChecked(false);
-                            for(int i = 0; i < mToDeletePresets.size(); i++){
-                                if(mToDeletePresets.get(i).equals((String) view.getTag())){
-                                    mToDeletePresets.remove(i);
+                            for(int i = 0; i < mToDeleteGroups.size(); i++){
+                                if(mToDeleteGroups.get(i).equals((String) view.getTag())){
+                                    mToDeleteGroups.remove(i);
                                 }
                             }
                         }
                         else{
                             cb.setChecked(true);
-                            mToDeletePresets.add(((TextView)view.findViewById(R.id.preset_name)).getText().toString());
-                        }
-                    } else{
-                        Switch sw = (Switch) view.findViewById(R.id.preset_switch);
-                        if(sw.isChecked()){
-                            sw.setChecked(false);
-                            //TODO switch off devices
-                        }
-                        else{
-                            sw.setChecked(true);
-                            //TODO switch on devices
+                            mToDeleteGroups.add(((TextView)view.findViewById(R.id.preset_name)).getText().toString());
                         }
                     }
                 }
@@ -241,32 +230,28 @@ public class PresetsActivity extends MainActivity {
                 public void onCardViewLongClick(View view) {
                     setDeleteMode(true);
                     ((CheckBox)view.findViewById(R.id.item_checkbox)).setChecked(true);
-                    mToDeletePresets.add((String) view.getTag());
+                    mToDeleteGroups.add((String) view.getTag());
                 }
             });
         }
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            Preset preset = mPresets.get(position);
+            DevicesGroup group = mGroups.get(position);
 
-            holder.cardView.setTag(preset.getPresetName());
-            holder.nameTextView.setText(preset.getPresetName());
-            holder.nameTextView.setTypeface(mTextTypeFace);
-            holder.groupTextView.setText(preset.getDevicesGroup().getName());
-            holder.groupTextView.setTypeface(mSubTextTypeFace);
+            holder.cardView.setTag(group.getName());
+            holder.textView.setText(group.getName());
+            holder.textView.setTypeface(mTextTypeFace);
             if(isDeleteMode){
                 holder.checkBox.setVisibility(View.VISIBLE);
-                holder.aSwitch.setVisibility(View.INVISIBLE);
             } else{
                 holder.checkBox.setVisibility(View.GONE);
-                holder.aSwitch.setVisibility(View.VISIBLE);
             }
         }
 
         @Override
         public int getItemCount() {
-            return mPresets.size();
+            return mGroups.size();
         }
 
         @Override

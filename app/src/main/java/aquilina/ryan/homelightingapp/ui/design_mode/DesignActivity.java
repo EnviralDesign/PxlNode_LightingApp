@@ -23,9 +23,6 @@ import android.widget.TextView;
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.OpacityBar;
 import com.larswerkman.holocolorpicker.SVBar;
-import com.larswerkman.holocolorpicker.SaturationBar;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -36,6 +33,7 @@ import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
+import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import fr.ganfra.materialspinner.MaterialSpinner;
@@ -200,26 +198,26 @@ public class DesignActivity extends MainActivity {
         mSavePresetButton.setVisibility(View.VISIBLE);
         mSavePresetButton.setAlpha(0);
 
-        mHoloPickerControls.animate().setDuration(500).alpha(1).translationY(0).setListener(new AnimatorListenerAdapter() {
+        mHoloPickerControls.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mHoloPickerControls.setVisibility(View.VISIBLE);
             }
         });
-        mSvBar.animate().setDuration(500).alpha(1).translationY(0).setListener(new AnimatorListenerAdapter() {
+        mSvBar.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mSvBar.setVisibility(View.VISIBLE);
             }
         });
 
-        mOpBar.animate().setDuration(500).alpha(1).translationY(0).setListener(new AnimatorListenerAdapter() {
+        mOpBar.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mOpBar.setVisibility(View.VISIBLE);
             }
         });
-        mSavePresetButton.animate().setDuration(500).alpha(1).translationY(0).setListener(new AnimatorListenerAdapter() {
+        mSavePresetButton.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mSavePresetButton.setVisibility(View.VISIBLE);
@@ -233,7 +231,7 @@ public class DesignActivity extends MainActivity {
      */
     private void hideAllLightingView(){
         mHoloPickerControls.setVisibility(View.GONE);
-        mHoloPickerControls.animate().setDuration(500).translationY(-mSpinner.getHeight()).setListener(new AnimatorListenerAdapter() {
+        mHoloPickerControls.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
@@ -241,7 +239,7 @@ public class DesignActivity extends MainActivity {
             }
         });
         mSvBar.setVisibility(View.GONE);
-        mSvBar.animate().setDuration(500).translationY(-mSpinner.getHeight()).setListener(new AnimatorListenerAdapter() {
+        mSvBar.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
@@ -249,7 +247,7 @@ public class DesignActivity extends MainActivity {
             }
         });
         mOpBar.setVisibility(View.GONE);
-        mOpBar.animate().setDuration(500).translationY(-mSpinner.getHeight()).setListener(new AnimatorListenerAdapter() {
+        mOpBar.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
@@ -257,7 +255,7 @@ public class DesignActivity extends MainActivity {
             }
         });
         mSavePresetButton.setVisibility(View.GONE);
-        mSavePresetButton.animate().setDuration(500).translationY(-mSpinner.getHeight()).setListener(new AnimatorListenerAdapter() {
+        mSavePresetButton.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
@@ -290,15 +288,13 @@ public class DesignActivity extends MainActivity {
             return;
         } else if (i > 0 && i <= mGroupedItemList.size()){
             DevicesGroup devicesGroup = (DevicesGroup) mSpinner.getSelectedItem();
-            for (int j = 0; j < devicesGroup.getDeviceArrayList().size(); j ++){
-                preset.getDevicesList().add(devicesGroup.getDeviceArrayList().get(j));
-            }
+            preset.setDevicesGroup(devicesGroup);
         } else if (i == (mGroupedItemList.size() + 1)){
             // TODO SNACKBAR
             return;
         } else {
             Device device = (Device) mSpinner.getSelectedItem();
-            preset.getDevicesList().add(device);
+            preset.getDevicesGroup().getDeviceArrayList().add(device);
         }
 
         mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
@@ -343,7 +339,6 @@ public class DesignActivity extends MainActivity {
         if(allGroups != null){
             mGroupedItemList = allGroups.getGroups();
         }
-
         json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
         DevicesGroup singleGroup = gson.fromJson(json, DevicesGroup.class);
 
@@ -357,20 +352,23 @@ public class DesignActivity extends MainActivity {
      */
     private void setPickerProperties(){
         setPickerData(mDurationPicker, 1, 100, 1);
-        setPickerData(mRepetitionPicker, 1, 100, 1);
+        setPickerData(mRepetitionPicker, 1, 99, 1);
     }
 
     private void setPickerData(NumberPickerView picker, int minValue, int maxValue, int value){
         String[] displayValues;
         ArrayList<String> valuesList = new ArrayList<>();
-        for(int i = 0; i < 100; i++){
+        for(int i = 0; i < maxValue; i++){
             valuesList.add(Integer.toString(i));
+        }
+        if(maxValue == 99){
+            valuesList.add("∞");
         }
         displayValues = valuesList.toArray(new String[valuesList.size()]);
 
         picker.setDisplayedValues(displayValues);
         picker.setMinValue(minValue);
-        picker.setMaxValue(maxValue);
+        picker.setMaxValue(100);
         picker.setValue(value);
     }
 
@@ -473,10 +471,17 @@ public class DesignActivity extends MainActivity {
 
         @Override
         public Object getItem(int i) {
-            if(i > mGroupedItemList.size()){
-                return mSingleItemList.get(i - mGroupedItemList.size());
+            if(i == 0){
+                return null;
+            } else if (i > 0 && i < mGroupedItemList.size()){
+                return mGroupedItemList.get(i - 1);
+            } else if (i == mGroupedItemList.size()){
+                return mGroupedItemList.get(i - 1);
+            } else if (i == (mGroupedItemList.size() + 1)){
+                return null;
+            } else {
+                return mSingleItemList.get(i - (mGroupedItemList.size() + 2));
             }
-            return mGroupedItemList.get(i - 1);
         }
 
         @Override

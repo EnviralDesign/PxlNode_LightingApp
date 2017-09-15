@@ -24,6 +24,7 @@ import java.util.Locale;
 
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.ui.design_mode.DesignActivity;
+import aquilina.ryan.homelightingapp.ui.group_managment.GroupManagementActivity;
 import aquilina.ryan.homelightingapp.ui.presets_mode.PresetsActivity;
 import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 
@@ -36,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
     protected Typeface mHeaderTypeFace;
     protected Typeface mTextTypeFace;
     protected Typeface mSubTextTypeFace;
+
+    protected ActionBarDrawerToggle mToogle;
+    protected Toolbar mToolbar;
 
     @Override
     public void setContentView(@LayoutRes int layoutResID) {
@@ -54,15 +58,15 @@ public class MainActivity extends AppCompatActivity {
         TextView title = (TextView) findViewById(R.id.appBarTitle);
         title.setTypeface(mHeaderTypeFace);
 
-        Toolbar toolbar = (Toolbar) fullLayout.findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        mToolbar = (Toolbar) fullLayout.findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         DrawerLayout drawer = (DrawerLayout) fullLayout.findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
+        mToogle = new ActionBarDrawerToggle(
+                this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(mToogle);
+        mToogle.syncState();
 
         mNavigationView = (NavigationView) fullLayout.findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -87,7 +91,13 @@ public class MainActivity extends AppCompatActivity {
                         intent = new Intent(getApplicationContext(), ScanActivity.class);
                         startActivity(intent);
                     }
+                } else if (id == R.id.nav_group_management) {
+                    if (!mNavigationView.getMenu().findItem(R.id.nav_group_management).isChecked()) {
+                        intent = new Intent(getApplicationContext(), GroupManagementActivity.class);
+                        startActivity(intent);
+                    }
                 }
+
                 item.setChecked(true);
                 DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
                 drawer.closeDrawer(GravityCompat.START);

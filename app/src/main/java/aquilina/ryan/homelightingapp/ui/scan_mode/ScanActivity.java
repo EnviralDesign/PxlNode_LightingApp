@@ -283,7 +283,7 @@ public class ScanActivity extends MainActivity {
         protected Void doInBackground(Void... voids) {
             //TODO refresh devices
             DevicesList = new ArrayList<>();
-            for(int i = 0; i < 5; i++){
+            for(int i = 0; i < 15; i++){
                 publishProgress(i);
                 DevicesList.add(new Device("192.8.8.8", "Light Name"));
                 try{

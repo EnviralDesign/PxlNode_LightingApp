@@ -11,12 +11,19 @@ public class DevicesGroup implements Serializable{
     private String name;
     private ArrayList<Device> deviceArrayList;
 
+    public DevicesGroup() {
+        this.deviceArrayList = new ArrayList<>();
+    }
+
     public DevicesGroup(String name, ArrayList<Device> deviceArrayList) {
         this.name = name;
         this.deviceArrayList = deviceArrayList;
     }
 
     public String getName() {
+        if(this.name == null){
+            return deviceArrayList.get(0).getName();
+        }
         return name;
     }
 
