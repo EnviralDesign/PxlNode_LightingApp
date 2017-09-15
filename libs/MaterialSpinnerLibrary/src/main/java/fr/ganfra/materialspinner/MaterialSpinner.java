@@ -1,6 +1,7 @@
 package fr.ganfra.materialspinner;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -104,6 +105,8 @@ public class MaterialSpinner extends AppCompatSpinner implements ValueAnimator.A
     private boolean isRtl;
 
     private HintAdapter hintAdapter;
+
+    private Typeface mSpinnerHintTypeface;
 
     //Default hint views
     private Integer mDropDownHintView;
@@ -558,6 +561,14 @@ public class MaterialSpinner extends AppCompatSpinner implements ValueAnimator.A
     * **********************************************************************************
     */
 
+    public Typeface getmSpinnerHintTypeface() {
+        return mSpinnerHintTypeface;
+    }
+
+    public void setmSpinnerHintTypeface(Typeface mSpinnerHintTypeface) {
+        this.mSpinnerHintTypeface = mSpinnerHintTypeface;
+    }
+
     public int getBaseColor() {
         return baseColor;
     }
@@ -949,6 +960,7 @@ public class MaterialSpinner extends AppCompatSpinner implements ValueAnimator.A
             final int resid = isDropDownView ? mDropDownHintView : mHintView;
             final TextView textView = (TextView) inflater.inflate(resid, parent, false);
             textView.setText(hint);
+            textView.setTypeface(mSpinnerHintTypeface);
             textView.setTextColor(MaterialSpinner.this.isEnabled() ? hintColor : disabledColor);
             textView.setTag(HINT_TYPE);
             if (hintTextSize != -1)

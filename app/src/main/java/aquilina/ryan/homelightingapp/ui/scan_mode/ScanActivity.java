@@ -44,7 +44,6 @@ public class ScanActivity extends MainActivity {
     private DeviceAdapter mDeviceAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private ProgressBar mProgressBar;
     private FloatingActionButton mAddToGroupButton;
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
@@ -63,8 +62,6 @@ public class ScanActivity extends MainActivity {
         mDevicesListView.setLayoutManager(mLayoutManager);
         mAddToGroupButton = (FloatingActionButton) findViewById(R.id.add_to_group_fab);
         mAddToGroupButton.setVisibility(View.INVISIBLE);
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        mProgressBar.setMax(10);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
 
         // set up data
@@ -286,11 +283,11 @@ public class ScanActivity extends MainActivity {
         protected Void doInBackground(Void... voids) {
             //TODO refresh devices
             DevicesList = new ArrayList<>();
-            for(int i = 0; i < 5; i++){
+            for(int i = 0; i < 15; i++){
                 publishProgress(i);
                 DevicesList.add(new Device("192.8.8.8", "Light Name"));
                 try{
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                 } catch (InterruptedException e){
                     e.printStackTrace();
                 }
@@ -302,12 +299,6 @@ public class ScanActivity extends MainActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             mSwipeRefreshLayout.setRefreshing(true);
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            mProgressBar.setProgress(values[0]);
         }
 
         @Override

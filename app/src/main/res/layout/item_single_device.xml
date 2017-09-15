@@ -24,7 +24,7 @@
                     android:id="@+id/device_name_text_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
                     android:text="Kitchen Light"
                     android:textColor="@color/colorPrimaryText"
                     android:layout_marginBottom="8dp"/>

@@ -9,16 +9,16 @@ import java.util.ArrayList;
 
 public class Preset implements Serializable{
     private String presetName;
-    private ArrayList<Device> devicesList;
+    private DevicesGroup devicesGroup;
 
     public Preset(String presetName) {
         this.presetName = presetName;
-        devicesList = new ArrayList<>();
+        this.devicesGroup = new DevicesGroup();
     }
 
-    public Preset(String presetName, ArrayList<Device> devicesList) {
+    public Preset(String presetName, DevicesGroup devicesGroup) {
         this.presetName = presetName;
-        this.devicesList = devicesList;
+        this.devicesGroup = devicesGroup;
     }
 
     public String getPresetName() {
@@ -29,11 +29,11 @@ public class Preset implements Serializable{
         this.presetName = presetName;
     }
 
-    public ArrayList<Device> getDevicesList() {
-        return devicesList;
+    public DevicesGroup getDevicesGroup() {
+        return devicesGroup;
     }
 
-    public void setDevicesList(ArrayList<Device> devicesList) {
-        this.devicesList = devicesList;
+    public void setDevicesGroup(DevicesGroup devicesGroup) {
+        this.devicesGroup = devicesGroup;
     }
 }

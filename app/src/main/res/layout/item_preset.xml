@@ -15,15 +15,46 @@
             android:paddingTop="8dp"
             android:paddingBottom="8dp">
 
-        <TextView
-                android:id="@+id/preset_name"
+        <CheckBox
+                android:id="@+id/item_checkbox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Default"
-                android:padding="16dp"
-                android:textSize="20sp"
-                android:textColor="@color/colorPrimaryText"
-                android:layout_alignParentStart="true"/>
+                android:layout_marginStart="16dp"
+                android:backgroundTint="@color/colorAccent"
+                android:buttonTint="@color/colorPrimaryText"
+                android:layout_centerVertical="true"
+                android:clickable="false"
+                android:visibility="gone"/>
+
+        <LinearLayout
+                android:id="@+id/linearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_toRightOf="@id/item_checkbox">
+
+            <TextView
+                    android:id="@+id/preset_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:text="Default"
+                    android:textColor="@color/colorPrimaryText"
+                    android:layout_marginBottom="8dp"/>
+
+            <TextView
+                    android:id="@+id/associated_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:text="Kitchen Lights"
+                    android:textColor="@color/colorSecondaryText"/>
+        </LinearLayout>
+
 
         <Switch
                 android:id="@+id/preset_switch"
@@ -31,6 +62,7 @@
                 android:layout_height="wrap_content"
                 android:padding="16dp"
                 android:clickable="false"
+                android:longClickable="false"
                 android:layout_centerVertical="true"
                 android:layout_alignParentEnd="true"/>
 

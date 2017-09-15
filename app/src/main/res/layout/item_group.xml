@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:layout_marginBottom="1dp"
+        android:id="@+id/item_card_view">
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:gravity="center_vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+        <CheckBox
+                android:id="@+id/item_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:backgroundTint="@color/colorAccent"
+                android:buttonTint="@color/colorPrimaryText"
+                android:layout_centerVertical="true"
+                android:clickable="false"
+                android:visibility="gone"/>
+
+        <TextView
+                android:id="@+id/preset_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Default"
+                android:padding="16dp"
+                android:textSize="16sp"
+                android:textColor="@color/colorPrimaryText"
+                android:layout_toEndOf="@id/item_checkbox"/>
+
+    </RelativeLayout>
+</android.support.v7.widget.CardView>
