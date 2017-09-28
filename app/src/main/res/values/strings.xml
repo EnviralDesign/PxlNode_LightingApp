@@ -9,6 +9,10 @@
     <!--Drawer Strings-->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_scan_mode_name">Scan For Devices</string>
+    <string name="nav_design_mode_name">Look Design</string>
+    <string name="nav_light_mode_name">Lighting Mode</string>
+    <string name="nav_group_management_name">Group Management</string>
 
     <!--Toolbar Strings-->
     <string name="action_refresh">Refresh</string>
@@ -32,4 +36,11 @@
     <string name="save_preset_button">Save Preset</string>
     <string name="dialog_save_preset_title">Save Preset</string>
     <string name="dialog_preset_edit_text_hint">Enter preset name</string>
+
+    <!-- Lighting Mode Strings-->
+    <string name="button_save_macro">SAVE MACRO</string>
+    <string name="dialog_save_macro_title">Save Macro</string>
+    <string name="dialog_save_macro_hint">Enter macro name</string>
+    <string name="recyclerview_macros_title">MACROS</string>
+    <string name="recyclerview_presets_title">PRESETS</string>
 </resources>

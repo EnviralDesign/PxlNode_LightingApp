@@ -15,6 +15,7 @@ public final class Constants {
     public static final String DEVICE_IP = "device_ip";
     public static final String GROUP_OF_DEVICES_GROUPS = "group_of_devices_groups";
     public static final String GROUP_OF_SINGLE_DEVICES = "group_of_single_devices";
+    public static final String GROUP_OF_MACROS = "group_of_macros";
 
     /* Presets Constants */
     public static final String GROUP_OF_PRESETS = "group_of_presets";

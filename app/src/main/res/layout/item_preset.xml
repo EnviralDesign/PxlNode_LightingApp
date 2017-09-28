@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView
+<LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/item_card_view"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:layout_marginBottom="1dp"
-        android:id="@+id/item_card_view">
+        android:background="@drawable/border_black">
 
     <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorPrimary"
             android:gravity="center_vertical"
             android:paddingTop="8dp"
             android:paddingBottom="8dp">
@@ -56,15 +55,16 @@
         </LinearLayout>
 
 
-        <Switch
+        <ImageView
                 android:id="@+id/preset_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="16dp"
                 android:clickable="false"
+                android:src="@drawable/ic_play_circle_filled_white_36dp"
                 android:longClickable="false"
                 android:layout_centerVertical="true"
                 android:layout_alignParentEnd="true"/>
 
     </RelativeLayout>
-</android.support.v7.widget.CardView>
+</LinearLayout>

@@ -5,18 +5,18 @@
         <item
                 android:id="@+id/nav_scan"
                 android:icon="@drawable/ic_wifi_tethering_white_36dp"
-                android:title="Scan for Devices"/>
+                android:title="@string/nav_scan_mode_name"/>
         <item
                 android:id="@+id/nav_design"
                 android:icon="@drawable/ic_color_lens_white_36dp"
-                android:title="Look Design"/>
-        <item
-                android:id="@+id/nav_lighting_mode"
-                android:icon="@drawable/ic_lightbulb_outline_white_36dp"
-                android:title="Lighting Mode"/>
+                android:title="@string/nav_design_mode_name"/>
         <item
                 android:id="@+id/nav_group_management"
                 android:icon="@drawable/ic_group_work_white_24dp"
-                android:title="Group Management"/>
+                android:title="@string/nav_group_management_name"/>
+        <item
+                android:id="@+id/nav_lighting_mode"
+                android:icon="@drawable/ic_lightbulb_outline_white_36dp"
+                android:title="@string/nav_light_mode_name"/>
     </group>
 </menu>

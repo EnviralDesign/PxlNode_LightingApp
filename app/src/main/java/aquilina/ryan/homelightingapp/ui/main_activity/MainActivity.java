@@ -16,16 +16,15 @@ import android.text.SpannableString;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.Locale;
-
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.ui.design_mode.DesignActivity;
 import aquilina.ryan.homelightingapp.ui.group_managment.GroupManagementActivity;
-import aquilina.ryan.homelightingapp.ui.presets_mode.PresetsActivity;
+import aquilina.ryan.homelightingapp.ui.lighting_mode.LightingModeActivity;
 import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
 
     protected ActionBarDrawerToggle mToogle;
     protected Toolbar mToolbar;
+    protected DrawerLayout mDrawer;
+
+    private boolean mToolBarNavigationListenerIsRegistered = false;
 
     @Override
     public void setContentView(@LayoutRes int layoutResID) {
@@ -62,10 +64,10 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        DrawerLayout drawer = (DrawerLayout) fullLayout.findViewById(R.id.drawer_layout);
+        mDrawer = (DrawerLayout) fullLayout.findViewById(R.id.drawer_layout);
         mToogle = new ActionBarDrawerToggle(
-                this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(mToogle);
+                this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawer.setDrawerListener(mToogle);
         mToogle.syncState();
 
         mNavigationView = (NavigationView) fullLayout.findViewById(R.id.nav_view);
@@ -83,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else if (id == R.id.nav_lighting_mode) {
                     if(!mNavigationView.getMenu().findItem(R.id.nav_lighting_mode).isChecked()){
-                        intent = new Intent(getApplicationContext(), PresetsActivity.class);
+                        intent = new Intent(getApplicationContext(), LightingModeActivity.class);
                         startActivity(intent);
                     }
                 } else if (id == R.id.nav_scan) {
@@ -156,6 +158,32 @@ public class MainActivity extends AppCompatActivity {
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+        }
+    }
+
+    protected void enableBackButton(boolean enable){
+        if(enable){
+            // remove hamburger
+            mToogle.setDrawerIndicatorEnabled(false);
+
+            // Show back button
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+            if(!mToolBarNavigationListenerIsRegistered){
+                mToogle.setToolbarNavigationClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        onBackPressed();
+                    }
+                });
+
+                mToolBarNavigationListenerIsRegistered = true;
+            }
+        } else {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            mToogle.setDrawerIndicatorEnabled(true);
+            mToogle.setToolbarNavigationClickListener(null);
+            mToolBarNavigationListenerIsRegistered = false;
         }
     }
 }
