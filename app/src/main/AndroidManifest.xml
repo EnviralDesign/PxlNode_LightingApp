@@ -2,12 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="aquilina.ryan.homelightingapp">
 
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
     <application
             android:name=".Application"
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_round"
+            android:roundIcon="@mipmap/ic_launcher"
             android:supportsRtl="true"
             android:theme="@style/AppTheme.NoActionBar"
             android:configChanges="orientation"
@@ -27,7 +29,7 @@
         <activity android:name=".ui.design_mode.DesignActivity"
                   android:configChanges="orientation"
                   android:screenOrientation="portrait"/>
-        <activity android:name=".ui.presets_mode.PresetsActivity"
+        <activity android:name=".ui.lighting_mode.LightingModeActivity"
                   android:configChanges="orientation"
                   android:screenOrientation="portrait"/>
         <activity android:name=".ui.group_managment.GroupManagementActivity"

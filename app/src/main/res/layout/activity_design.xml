@@ -122,14 +122,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"/>
 
         <com.larswerkman.holocolorpicker.OpacityBar
                 android:id="@+id/opacitybar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"/>
 
         <LinearLayout
                 android:id="@+id/effects_controls_linear_layout"

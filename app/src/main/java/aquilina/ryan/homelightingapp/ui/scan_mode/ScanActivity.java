@@ -4,13 +4,16 @@ import com.google.gson.Gson;
 
 import android.app.DialogFragment;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +24,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import aquilina.ryan.homelightingapp.model.AllGroups;
@@ -63,6 +74,7 @@ public class ScanActivity extends MainActivity {
         mAddToGroupButton = (FloatingActionButton) findViewById(R.id.add_to_group_fab);
         mAddToGroupButton.setVisibility(View.INVISIBLE);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+
 
         // set up data
         mCheckedDevicesList = new ArrayList<>();
@@ -188,6 +200,46 @@ public class ScanActivity extends MainActivity {
 
     private void showToast(int stringID){
         Toast.makeText(this, getString(stringID),Toast.LENGTH_SHORT).show();
+    }
+
+    @Nullable
+    private ArrayList<Device> getDevicesConnectedToWifi(){
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+        String subIP = "";
+
+        int noOfDots = 0;
+        for(int i = 0; noOfDots < 3; i++){
+            subIP += ip.substring(i, i + 1);
+            if(ip.charAt(i) == '.'){
+                noOfDots += 1;
+            }
+        }
+
+        HttpURLConnection urlConnection;
+        URL url;
+        BufferedReader input;
+        String strLine;
+
+        StringBuilder response  = new StringBuilder();
+        for(int i = 0; i <= 255; i++){
+            try{
+                url = new URL("http://" + ip + Integer.toString(i) + "/getstatus");
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                input = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                strLine = null;
+                while ((strLine = input.readLine()) != null)
+                {
+                    response.append(strLine);
+                }
+                input.close();
+
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     private static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
