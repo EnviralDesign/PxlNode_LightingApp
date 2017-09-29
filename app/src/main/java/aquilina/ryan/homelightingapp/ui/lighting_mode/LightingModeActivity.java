@@ -26,9 +26,11 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.AllMacros;
 import aquilina.ryan.homelightingapp.model.AllPresets;
+import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
@@ -357,7 +359,13 @@ public class LightingModeActivity extends MainActivity {
                     presetItemViewHolder.cardView.setTag(preset.getPresetName());
                     presetItemViewHolder.nameTextView.setText(preset.getPresetName());
                     presetItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
-                    presetItemViewHolder.groupTextView.setText(preset.getDevicesGroup().getName());
+                    String name = preset.getDevicesGroup().getName();
+                    if(name == null){
+                        int id = (int) preset.getDevicesGroup().getDeviceArrayList().get(0);
+                        Device device = (Device) ((Application)getApplicationContext()).getDeviceById(id);
+                        name = device.getName();
+                    }
+                    presetItemViewHolder.groupTextView.setText(name);
                     presetItemViewHolder.groupTextView.setTypeface(mSubTextTypeFace);
                     if(isDeleteMode){
                         presetItemViewHolder.checkBox.setVisibility(View.VISIBLE);

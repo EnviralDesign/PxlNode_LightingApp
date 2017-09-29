@@ -7,11 +7,39 @@ import java.io.Serializable;
  */
 
 public class Device implements Serializable{
-    private String ipAddress;
+    private int id;
     private String name;
+    private String ipAddress;
+    private int port;
+    private int leds;
 
-    public Device(String ipAddress, String name) {
+    public Device(int id, String name, String ipAddress) {
+        this.id = id;
+        this.name = name;
         this.ipAddress = ipAddress;
+    }
+
+    public Device(int id, String name, String ipAddress, int port, int leds) {
+        this.id = id;
+        this.name = name;
+        this.ipAddress = ipAddress;
+        this.port = port;
+        this.leds = leds;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -23,11 +51,19 @@ public class Device implements Serializable{
         this.ipAddress = ipAddress;
     }
 
-    public String getName() {
-        return name;
+    public int getPort() {
+        return port;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public int getLeds() {
+        return leds;
+    }
+
+    public void setLeds(int leds) {
+        this.leds = leds;
     }
 }

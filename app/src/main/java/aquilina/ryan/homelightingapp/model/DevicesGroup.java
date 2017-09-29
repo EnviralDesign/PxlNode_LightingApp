@@ -8,22 +8,29 @@ import java.util.ArrayList;
  */
 
 public class DevicesGroup implements Serializable{
+    private int id;
     private String name;
-    private ArrayList<Device> deviceArrayList;
+    private ArrayList<Integer> deviceArrayList;
 
     public DevicesGroup() {
         this.deviceArrayList = new ArrayList<>();
     }
 
-    public DevicesGroup(String name, ArrayList<Device> deviceArrayList) {
+    public DevicesGroup(int id, String name, ArrayList<Integer> deviceArrayList) {
+        this.id = id;
         this.name = name;
         this.deviceArrayList = deviceArrayList;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getName() {
-        if(this.name == null){
-            return deviceArrayList.get(0).getName();
-        }
         return name;
     }
 
@@ -31,11 +38,11 @@ public class DevicesGroup implements Serializable{
         this.name = name;
     }
 
-    public ArrayList<Device> getDeviceArrayList() {
+    public ArrayList<Integer> getDeviceArrayList() {
         return deviceArrayList;
     }
 
-    public void setDeviceArrayList(ArrayList<Device> deviceArrayList) {
+    public void setDeviceArrayList(ArrayList<Integer> deviceArrayList) {
         this.deviceArrayList = deviceArrayList;
     }
 }

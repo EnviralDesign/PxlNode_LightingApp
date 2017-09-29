@@ -20,9 +20,11 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.AllMacros;
 import aquilina.ryan.homelightingapp.model.AllPresets;
+import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
@@ -188,7 +190,6 @@ public class GroupManagementActivity extends MainActivity {
 
         AllMacros allMacros;
         Gson gson = new Gson();
-
         String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
 
         if(json == null){
@@ -207,7 +208,7 @@ public class GroupManagementActivity extends MainActivity {
             }
         }
 
-        Macro macro = new Macro(macroName, presets);
+        Macro macro = new Macro(allMacros.getMacros().size() + 1, macroName, presets);
         allMacros.addMacro(macro);
 
         json = gson.toJson(allMacros);
@@ -321,20 +322,13 @@ public class GroupManagementActivity extends MainActivity {
             holder.cardView.setTag(preset.getPresetName());
             holder.textView.setText(preset.getPresetName());
             holder.textView.setTypeface(mTextTypeFace);
-
-//            String subText = "";
-//            for(int i = 0; i < preset.getDeviceArrayList().size(); i++){
-//                subText += ((Device) preset.getDeviceArrayList().get(i)).getName();
-//                if(i != preset.getDeviceArrayList().size() - 1){
-//                    subText += ", ";
-//                }
-//            }
-//
-//            if(subText.length() > 50){
-//                subText = subText.substring(0, 50);
-//                subText += ".....";
-//            }
-            holder.subTextView.setText(preset.getDevicesGroup().getName());
+            String name = preset.getDevicesGroup().getName();
+            if(name == null){
+                int id = (int) preset.getDevicesGroup().getDeviceArrayList().get(0);
+                Device device = (Device) ((Application)getApplicationContext()).getDeviceById(id);
+                name = device.getName();
+            }
+            holder.subTextView.setText(name);
             holder.subTextView.setTypeface(mSubTextTypeFace);
             if(isDeleteMode){
                 holder.checkBox.setVisibility(View.VISIBLE);

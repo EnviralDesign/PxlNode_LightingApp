@@ -1,8 +1,14 @@
 package aquilina.ryan.homelightingapp;
 
+import com.google.gson.Gson;
+
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 
+import java.util.ArrayList;
+
+import aquilina.ryan.homelightingapp.model.Device;
+import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 /**
@@ -10,16 +16,33 @@ import aquilina.ryan.homelightingapp.utils.Constants;
  */
 
 public class Application extends android.app.Application {
+
+    private ScannedDevices mScannedDevices;
     // Called when the application is starting, before any other application objects have been created.
     // Overriding this method is totally optional!
     @Override
     public void onCreate() {
         super.onCreate();
         // Required initialization logic here!
-        SharedPreferences preferences = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.remove(Constants.GROUP_OF_SINGLE_DEVICES);
-        editor.apply();
+    }
+
+    public ScannedDevices getmScannedDevices() {
+        return mScannedDevices;
+    }
+
+    public void setmScannedDevices(ScannedDevices mScannedDevices) {
+        this.mScannedDevices = mScannedDevices;
+    }
+
+    public Device getDeviceById(int id){
+        if(!mScannedDevices.getDevicesList().isEmpty()){
+            for (Device device: mScannedDevices.getDevicesList()) {
+                if(id == device.getId()){
+                    return device;
+                }
+            }
+        }
+        return null;
     }
 
     // Called by the system when the device configuration changes while your component is running.

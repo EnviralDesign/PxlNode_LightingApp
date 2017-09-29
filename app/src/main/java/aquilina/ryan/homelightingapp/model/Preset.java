@@ -8,17 +8,28 @@ import java.util.ArrayList;
  */
 
 public class Preset implements Serializable{
+    private int id;
     private String presetName;
     private DevicesGroup devicesGroup;
 
-    public Preset(String presetName) {
+    public Preset(int id, String presetName) {
+        this.id = id;
         this.presetName = presetName;
         this.devicesGroup = new DevicesGroup();
     }
 
-    public Preset(String presetName, DevicesGroup devicesGroup) {
+    public Preset(int id, String presetName, DevicesGroup devicesGroup) {
+        this.id = id;
         this.presetName = presetName;
         this.devicesGroup = devicesGroup;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getPresetName() {

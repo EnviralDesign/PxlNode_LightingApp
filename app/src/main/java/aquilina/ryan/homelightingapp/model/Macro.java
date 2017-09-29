@@ -8,15 +8,25 @@ import java.util.ArrayList;
  */
 
 public class Macro implements Serializable {
+    private int id;
     private String name;
     private ArrayList<Preset> presetList;
 
     public Macro() {
     }
 
-    public Macro(String name, ArrayList<Preset> presetList) {
+    public Macro(int id, String name, ArrayList<Preset> presetList) {
+        this.id = id;
         this.name = name;
         this.presetList = presetList;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {

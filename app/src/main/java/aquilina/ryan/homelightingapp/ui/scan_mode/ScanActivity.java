@@ -14,6 +14,7 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.Formatter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +28,8 @@ import android.widget.Toast;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -34,7 +37,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.model.AllGroups;
+import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.Device;
@@ -47,9 +52,8 @@ import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class ScanActivity extends MainActivity {
 
-    private ArrayList<Device> mCheckedDevicesList;
     private ArrayList<Device> mScannedDevicesList;
-    private ArrayList<DevicesGroup> mGroupsList;
+    private ArrayList<Integer> mCheckedDevicesList;
 
     private RecyclerView mDevicesListView;
     private DeviceAdapter mDeviceAdapter;
@@ -74,7 +78,6 @@ public class ScanActivity extends MainActivity {
         mAddToGroupButton = (FloatingActionButton) findViewById(R.id.add_to_group_fab);
         mAddToGroupButton.setVisibility(View.INVISIBLE);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
-
 
         // set up data
         mCheckedDevicesList = new ArrayList<>();
@@ -105,11 +108,17 @@ public class ScanActivity extends MainActivity {
 
         Gson gson = new Gson();
         String json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
-        if(json == null){
-            refreshDevices();
+        ScannedDevices singleGroup = gson.fromJson(json, ScannedDevices.class);
+
+        if(singleGroup != null){
+            if(singleGroup.getDevicesList().isEmpty()) {
+                refreshDevices();
+            } else {
+                mScannedDevicesList = singleGroup.getDevicesList();
+                ((Application)getApplicationContext()).setmScannedDevices(singleGroup);
+            }
         } else {
-            DevicesGroup singleGroup = gson.fromJson(json, DevicesGroup.class);
-            mScannedDevicesList = singleGroup.getDeviceArrayList();
+            refreshDevices();
         }
     }
 
@@ -155,8 +164,6 @@ public class ScanActivity extends MainActivity {
      */
     protected boolean saveGroupLocally(String groupName){
         AllGroups allGroups;
-
-        DevicesGroup group = new DevicesGroup(groupName, mCheckedDevicesList);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 
         Gson gson = new Gson();
@@ -166,6 +173,8 @@ public class ScanActivity extends MainActivity {
         } else {
             allGroups = gson.fromJson(json, AllGroups.class);
         }
+
+        DevicesGroup group = new DevicesGroup(allGroups.getGroups().size() + 1, groupName, mCheckedDevicesList);
         allGroups.addGroup(group);
         json = gson.toJson(allGroups);
         prefsEditor.putString(Constants.GROUP_OF_DEVICES_GROUPS, json);
@@ -182,6 +191,7 @@ public class ScanActivity extends MainActivity {
         mCheckedDevicesList.clear();
         mDeviceAdapter = new DeviceAdapter();
         mDevicesListView.setAdapter(mDeviceAdapter);
+        changeVisibilityOfAddGroupButton();
     }
 
     /**
@@ -204,6 +214,9 @@ public class ScanActivity extends MainActivity {
 
     @Nullable
     private ArrayList<Device> getDevicesConnectedToWifi(){
+        int TIMEOUT_VALUE = 75;
+
+        ArrayList<Device> devices = new ArrayList<>();
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
         String subIP = "";
@@ -218,28 +231,60 @@ public class ScanActivity extends MainActivity {
 
         HttpURLConnection urlConnection;
         URL url;
-        BufferedReader input;
         String strLine;
+        int id = 0;
 
-        StringBuilder response  = new StringBuilder();
         for(int i = 0; i <= 255; i++){
             try{
-                url = new URL("http://" + ip + Integer.toString(i) + "/getstatus");
-
+                url = new URL("http://" + subIP + Integer.toString(i) + "/getstatus");
+                devices.add(new Device(id, "Device " + Integer.toString(i), subIP + Integer.toString(i)));
+                // Start Connection
+                long start = System.nanoTime();
                 urlConnection = (HttpURLConnection) url.openConnection();
-                input = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                strLine = null;
-                while ((strLine = input.readLine()) != null)
-                {
-                    response.append(strLine);
+                urlConnection.setConnectTimeout(TIMEOUT_VALUE);
+                urlConnection.setReadTimeout(TIMEOUT_VALUE);
+                strLine = convertStreamToString(urlConnection.getInputStream());
+                long elapsed = System.nanoTime() - start;
+
+                // Analyze data given
+                if(!strLine.isEmpty()){
+                    if(strLine.substring(0,39).equals("<!doctype html><html><body>Connected to")){
+                        devices.add(new Device(id, "Device " + Integer.toString(i), subIP + Integer.toString(i)));
+                        id++;
+                    }
                 }
-                input.close();
+                Log.i("Elapsed Time",  Long.toString(elapsed/1000000));
+                Log.i("Good Device Ip", subIP + Integer.toString(i));
 
             } catch (Exception e){
+                Log.w("Bad Device Ip", subIP + Integer.toString(i));
+            }
+        }
+        return devices;
+    }
+
+    /**
+     * Convert the InputStream to a String.
+     */
+    private static String convertStreamToString(InputStream is) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+
+        String line = null;
+        try {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        return null;
+        return sb.toString();
     }
 
     private static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -278,16 +323,16 @@ public class ScanActivity extends MainActivity {
                 @Override
                 public void onCardViewClick(View view) {
                     CheckBox cb = view.findViewById(R.id.item_checkbox);
-                    Device device = new Device((String) cb.getTag(R.id.deviceName),(String) cb.getTag(R.id.deviceIpAddress));
+                    int id = (int) cb.getTag();
                     if(!cb.isChecked()){
                         cb.setChecked(true);
-                        mCheckedDevicesList.add(device);
+                        mCheckedDevicesList.add(id);
                         changeVisibilityOfAddGroupButton();
                     }
                     else{
                         cb.setChecked(false);
                         for(int i = 0; i < mCheckedDevicesList.size(); i++){
-                            if(mCheckedDevicesList.get(i).getIpAddress().equals(device.getIpAddress())){
+                            if(mCheckedDevicesList.get(i)== id){
                                 mCheckedDevicesList.remove(i);
                                 changeVisibilityOfAddGroupButton();
                                 return;
@@ -303,8 +348,7 @@ public class ScanActivity extends MainActivity {
             Device device = mScannedDevicesList.get(position);
 
             //assign data to views
-            holder.checkBox.setTag(R.id.deviceName, device.getName());
-            holder.checkBox.setTag(R.id.deviceIpAddress, device.getIpAddress());
+            holder.checkBox.setTag(device.getId());
             holder.deviceNameTextView.setText(device.getName());
             holder.deviceNameTextView.setTypeface(mTextTypeFace);
             holder.deviceIPAddressTextView.setText(device.getIpAddress());
@@ -333,17 +377,7 @@ public class ScanActivity extends MainActivity {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            //TODO refresh devices
-            DevicesList = new ArrayList<>();
-            for(int i = 0; i < 15; i++){
-                publishProgress(i);
-                DevicesList.add(new Device("192.8.8.8", "Light Name"));
-                try{
-                    Thread.sleep(500);
-                } catch (InterruptedException e){
-                    e.printStackTrace();
-                }
-            }
+            DevicesList = getDevicesConnectedToWifi();
             return null;
         }
 
@@ -365,11 +399,14 @@ public class ScanActivity extends MainActivity {
 
         private boolean saveSingleFixturesLocally(){
             SharedPreferences.Editor prefsEditor = mPrefs.edit();
-            DevicesGroup singleGroup = new DevicesGroup(Constants.GROUP_OF_SINGLE_DEVICES, mScannedDevicesList);
+            ScannedDevices singleGroup = new ScannedDevices(mScannedDevicesList);
 
             Gson gson = new Gson();
             String json = gson.toJson(singleGroup);
             prefsEditor.putString(Constants.GROUP_OF_SINGLE_DEVICES, json);
+
+            // Save the list in memory
+            ((Application)getApplicationContext()).setmScannedDevices(singleGroup);
             return prefsEditor.commit();
         }
     }

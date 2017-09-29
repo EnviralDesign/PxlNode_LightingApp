@@ -32,6 +32,7 @@ import aquilina.ryan.homelightingapp.model.AllPresets;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
+import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
@@ -280,7 +281,18 @@ public class DesignActivity extends MainActivity {
     protected void savePresetLocally(String presetName){
         AllPresets allPresets;
 
-        Preset preset = new Preset(presetName);
+        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+        Gson gson = new Gson();
+        String json = mPrefs.getString(Constants.GROUP_OF_PRESETS, null);
+
+        if(json == null){
+            allPresets = new AllPresets();
+        } else {
+            allPresets = gson.fromJson(json, AllPresets.class);
+        }
+
+        Preset preset = new Preset(allPresets.getAllPresets().size() + 1, presetName);
 
         int i = mSpinner.getSelectedItemPosition();
         if(i == 0){
@@ -294,19 +306,10 @@ public class DesignActivity extends MainActivity {
             return;
         } else {
             Device device = (Device) mSpinner.getSelectedItem();
-            preset.getDevicesGroup().getDeviceArrayList().add(device);
+            preset.getDevicesGroup().getDeviceArrayList().add(device.getId());
         }
 
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor prefsEditor = mPrefs.edit();
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_PRESETS, null);
 
-        if(json == null){
-            allPresets = new AllPresets();
-        } else {
-            allPresets = gson.fromJson(json, AllPresets.class);
-        }
 
         allPresets.addPreset(preset);
         json = gson.toJson(allPresets);
@@ -339,11 +342,13 @@ public class DesignActivity extends MainActivity {
         if(allGroups != null){
             mGroupedItemList = allGroups.getGroups();
         }
-        json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
-        DevicesGroup singleGroup = gson.fromJson(json, DevicesGroup.class);
 
-        if(singleGroup != null){
-            mSingleItemList = singleGroup.getDeviceArrayList();
+        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
+        ScannedDevices scannedDevices = (ScannedDevices) gson.fromJson(json, ScannedDevices.class);
+
+        if(scannedDevices != null){
+            mSingleItemList = scannedDevices.getDevicesList();
         }
     }
 
