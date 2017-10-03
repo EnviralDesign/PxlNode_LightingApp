@@ -305,11 +305,9 @@ public class DesignActivity extends MainActivity {
             // TODO SNACKBAR
             return;
         } else {
-            Device device = (Device) mSpinner.getSelectedItem();
+            Device device = mSingleItemList.get(i - (mGroupedItemList.size() + 2));
             preset.getDevicesGroup().getDeviceArrayList().add(device.getId());
         }
-
-
 
         allPresets.addPreset(preset);
         json = gson.toJson(allPresets);

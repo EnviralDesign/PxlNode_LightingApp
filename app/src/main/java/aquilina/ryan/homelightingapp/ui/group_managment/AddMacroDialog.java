@@ -42,7 +42,7 @@ public class AddMacroDialog extends DialogFragment {
         TextView title = (TextView) rootView.findViewById(R.id.alertTitle);
         title.setText(getString(R.string.dialog_save_macro_title));
         final EditText editText = rootView.findViewById(R.id.dialog_edit_text);
-        editText.setHint(getString(R.string.dialog_preset_edit_text_hint));
+        editText.setHint(getString(R.string.dialog_save_macro_hint));
         Button saveButton = (Button) rootView.findViewById(R.id.button2);
         saveButton.setText(getString(R.string.dialog_save_button));
         saveButton.setOnClickListener(new View.OnClickListener() {

@@ -25,6 +25,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
@@ -45,8 +46,9 @@ public class LightingModeActivity extends MainActivity {
     private Menu mMenu;
 
     private ArrayList<Preset> mPresets;
-    private ArrayList<String> mSelectedPresets;
+    private ArrayList<Integer> mSelectedPresets;
     private ArrayList<Macro> mMacros;
+    private ArrayList<Integer> mSelectedMacros;
     private PresetAdapter mAdapter;
 
     private SharedPreferences mPrefs;
@@ -61,6 +63,7 @@ public class LightingModeActivity extends MainActivity {
         // Set view's data/design
         mPresets = new ArrayList<>();
         mSelectedPresets = new ArrayList<>();
+        mSelectedMacros = new ArrayList<>();
         mAdapter = new PresetAdapter();
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mPresetsRecyclerView.setLayoutManager(layoutManager);
@@ -114,21 +117,126 @@ public class LightingModeActivity extends MainActivity {
      * Deletes all items in mSelected Items.
      */
     private void deleteCheckedItems(){
-        ArrayList<Preset> presets;
-        presets = loadPresets();
+        if(!mSelectedPresets.isEmpty()){
+            ArrayList<Preset> presets = loadPresets();
 
-        // TODO optimize the delete algorithm and add functionality to the macros list
-        for(String string: mSelectedPresets){
-            for(Preset preset: presets){
-                if(preset.getPresetName().equals(string)){
-                    presets.remove(preset);
+            for(int id: mSelectedPresets){
+                for(int i = 0; i <= presets.size(); i++){
+                    Preset preset = presets.get(i);
+                    if(preset.getId() == id){
+                        presets.remove(preset);
+                        presets = arrangePresetsIds(presets, i);
+                        break;
+                    }
+                }
+            }
+
+            removePresetsFromMacros(mSelectedPresets);
+            mSelectedPresets.clear();
+            savePresetList(presets);
+        }
+
+        if(!mSelectedMacros.isEmpty()){
+            ArrayList<Macro> macros = loadMacros();
+
+            for(int id: mSelectedMacros){
+                for(int i = 0; i <= macros.size(); i++){
+                    Macro macro = macros.get(i);
+                    if(macro.getId() == id){
+                        macros.remove(macro);
+                        macros = arrangeMacrosIds(macros, i);
+                        break;
+                    }
+                }
+            }
+
+            mSelectedMacros.clear();
+            saveMacroList(macros);
+        }
+
+        mAdapter.setDeleteMode(false);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * Arranges the id of the remaining presets
+     */
+    private ArrayList<Preset> arrangePresetsIds(ArrayList<Preset> presets, int i){
+        for (int j = i; j < presets.size(); j++ ){
+            presets.get(j).setId(j);
+        }
+        return presets;
+    }
+
+    /**
+     * Arranges the id of the remaining macros
+     */
+    private ArrayList<Macro> arrangeMacrosIds(ArrayList<Macro> macros, int i){
+        for (int j = i; j < macros.size(); j++ ){
+            macros.get(j).setId(j);
+        }
+        return macros;
+    }
+
+    /**
+     * Remove presets from macros
+     */
+    private void removePresetsFromMacros(ArrayList<Integer> presetsToDelete){
+        Macro currentMacro;
+        ArrayList<Macro> macros = loadMacros();
+        Iterator<Macro> macroIterator = macros.iterator();
+
+        while(macroIterator.hasNext()){
+            Macro macro = macroIterator.next();
+            ArrayList<Preset> presets = macro.getPresetList();
+            Iterator<Preset> presetsIterator = presets.iterator();
+
+            for (int id: presetsToDelete) {
+                while (presetsIterator.hasNext()){
+                    Preset preset = presetsIterator.next();
+                    if(preset.getId() == id){
+                        macro.removePreset(preset);
+                        currentMacro = macro;
+                        saveMacro(currentMacro);
+                        if(macro.getPresetList().isEmpty()){
+                            macroIterator.remove();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        mMacros = macros;
+    }
+
+    protected void saveMacro(Macro editedMacro){
+        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+
+        AllMacros allMacros;
+        Gson gson = new Gson();
+        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
+
+        if(json == null){
+            allMacros = new AllMacros();
+        } else {
+            allMacros = (AllMacros) gson.fromJson(json, AllMacros.class);
+        }
+
+        if(allMacros != null){
+            for (Macro macro: allMacros.getMacros()) {
+                if(macro.getId() == editedMacro.getId()){
+                    macro.setPresetList(editedMacro.getPresetList());
+                    if(macro.getPresetList().isEmpty()){
+                        allMacros.removeMacro(macro);
+                    }
                     break;
                 }
             }
         }
-
-        mSelectedPresets.clear();
-        savePresetList(presets);
+        json = gson.toJson(allMacros);
+        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
+        prefsEditor.apply();
     }
 
 
@@ -147,7 +255,31 @@ public class LightingModeActivity extends MainActivity {
         prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
         prefsEditor.apply();
         mPresets = presets;
-        mAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * Save presets as macro
+     */
+    protected void saveMacroList(ArrayList<Macro> macros){
+        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+
+        AllMacros allMacros;
+        Gson gson = new Gson();
+        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
+
+        if(json == null){
+            allMacros = new AllMacros();
+        } else {
+            allMacros = (AllMacros) gson.fromJson(json, AllMacros.class);
+        }
+
+        allMacros.setMacros(macros);
+
+        json = gson.toJson(allMacros);
+        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
+        prefsEditor.apply();
+        mMacros = macros;
     }
 
     /**
@@ -204,6 +336,7 @@ public class LightingModeActivity extends MainActivity {
      */
     private void removeCheckItems(){
         mSelectedPresets.clear();
+        mSelectedMacros.clear();
         mAdapter = new PresetAdapter();
         mPresetsRecyclerView.setAdapter(mAdapter);
     }
@@ -328,7 +461,8 @@ public class LightingModeActivity extends MainActivity {
                 case MACRO_ITEM:{
                     ItemViewHolder macroItemViewHolder = (ItemViewHolder) holder;
                     Macro macro = mMacros.get(position - 1);
-                    macroItemViewHolder.cardView.setTag(macro.getName());
+                    macroItemViewHolder.cardView.setTag(R.id.ID, macro.getId());
+                    macroItemViewHolder.cardView.setTag(R.id.groupType, Constants.MACRO);
                     macroItemViewHolder.nameTextView.setText(macro.getName());
                     macroItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     macroItemViewHolder.groupTextView.setText(getMacroItemSubString(macro));
@@ -356,7 +490,8 @@ public class LightingModeActivity extends MainActivity {
                     } else {
                         preset = mPresets.get(position - (mMacros.size() + 2));
                     }
-                    presetItemViewHolder.cardView.setTag(preset.getPresetName());
+                    presetItemViewHolder.cardView.setTag(R.id.ID, preset.getId());
+                    presetItemViewHolder.cardView.setTag(R.id.groupType, Constants.PRESET);
                     presetItemViewHolder.nameTextView.setText(preset.getPresetName());
                     presetItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     String name = preset.getDevicesGroup().getName();
@@ -437,15 +572,29 @@ public class LightingModeActivity extends MainActivity {
                 CheckBox cb = (CheckBox) view.findViewById(R.id.item_checkbox);
                 if(cb.isChecked()){
                     cb.setChecked(false);
-                    for(int i = 0; i < mSelectedPresets.size(); i++){
-                        if(mSelectedPresets.get(i).equals((String) view.getTag())){
-                            mSelectedPresets.remove(i);
+                    if(((String)view.getTag(R.id.groupType)).equals(Constants.PRESET)){
+                        for(int i = 0; i < mSelectedPresets.size(); i++){
+                            if(mSelectedPresets.get(i) == ((int) view.getTag(R.id.ID))){
+                                mSelectedPresets.remove(i);
+                            }
+                        }
+                    } else {
+                        for(int i = 0; i < mSelectedMacros.size(); i++){
+                            if(mSelectedMacros.get(i) == ((int) view.getTag(R.id.ID))){
+                                mSelectedMacros.remove(i);
+                            }
                         }
                     }
                 }
                 else{
                     cb.setChecked(true);
-                    mSelectedPresets.add(((TextView)view.findViewById(R.id.preset_name)).getText().toString());
+                    String type = (String)view.getTag(R.id.groupType);
+                    if(type.equals(Constants.MACRO)){
+                        mSelectedMacros.add((int) view.getTag(R.id.ID));
+                    }
+                    else{
+                        mSelectedPresets.add((int) view.getTag(R.id.ID));
+                    }
                 }
             } else{
                 //TODO switch on devices
@@ -455,7 +604,14 @@ public class LightingModeActivity extends MainActivity {
         private void itemOnLongClick(View view){
             setDeleteMode(true);
             ((CheckBox)view.findViewById(R.id.item_checkbox)).setChecked(true);
-            mSelectedPresets.add((String) view.getTag());
+
+            String type = (String)view.getTag(R.id.groupType);
+            if(type.equals(Constants.MACRO)){
+                mSelectedMacros.add((int) view.getTag(R.id.ID));
+            }
+            else{
+                mSelectedPresets.add((int) view.getTag(R.id.ID));
+            }
         }
 
         private boolean itemOnGestureListener(View view, MotionEvent motionEvent){

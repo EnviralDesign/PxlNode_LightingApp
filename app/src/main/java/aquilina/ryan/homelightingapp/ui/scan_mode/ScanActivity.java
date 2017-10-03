@@ -237,7 +237,6 @@ public class ScanActivity extends MainActivity {
         for(int i = 0; i <= 255; i++){
             try{
                 url = new URL("http://" + subIP + Integer.toString(i) + "/getstatus");
-                devices.add(new Device(id, "Device " + Integer.toString(i), subIP + Integer.toString(i)));
                 // Start Connection
                 long start = System.nanoTime();
                 urlConnection = (HttpURLConnection) url.openConnection();

@@ -49,7 +49,7 @@ public class Macro implements Serializable {
         presetList.add(preset);
     }
 
-    public void removePreser(Preset preset){
+    public void removePreset(Preset preset){
         presetList.remove(preset);
     }
 }
