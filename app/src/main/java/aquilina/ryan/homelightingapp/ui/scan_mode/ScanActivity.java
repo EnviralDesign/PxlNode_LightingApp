@@ -237,24 +237,20 @@ public class ScanActivity extends MainActivity {
         for(int i = 0; i <= 255; i++){
             try{
                 url = new URL("http://" + subIP + Integer.toString(i) + "/getstatus");
-                // Start Connection
-                long start = System.nanoTime();
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setConnectTimeout(TIMEOUT_VALUE);
                 urlConnection.setReadTimeout(TIMEOUT_VALUE);
-                strLine = convertStreamToString(urlConnection.getInputStream());
-                long elapsed = System.nanoTime() - start;
-
-                // Analyze data given
+                urlConnection.setUseCaches(false);
+                urlConnection.connect();
+                InputStream inputStream = urlConnection.getInputStream();
+                strLine = convertStreamToString(inputStream);
                 if(!strLine.isEmpty()){
                     if(strLine.substring(0,39).equals("<!doctype html><html><body>Connected to")){
                         devices.add(new Device(id, "Device " + Integer.toString(i), subIP + Integer.toString(i)));
                         id++;
                     }
                 }
-                Log.i("Elapsed Time",  Long.toString(elapsed/1000000));
-                Log.i("Good Device Ip", subIP + Integer.toString(i));
-
+                Log.i("Good Device Ip", subIP + Integer.toString(i) + "Response Code " + Integer.toString(urlConnection.getResponseCode()));
             } catch (Exception e){
                 Log.w("Bad Device Ip", subIP + Integer.toString(i));
             }

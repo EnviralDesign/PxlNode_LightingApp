@@ -52,6 +52,7 @@ public class LightingModeActivity extends MainActivity {
     private PresetAdapter mAdapter;
 
     private SharedPreferences mPrefs;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

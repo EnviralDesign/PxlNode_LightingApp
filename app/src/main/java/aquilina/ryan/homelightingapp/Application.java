@@ -35,10 +35,12 @@ public class Application extends android.app.Application {
     }
 
     public Device getDeviceById(int id){
-        if(!mScannedDevices.getDevicesList().isEmpty()){
-            for (Device device: mScannedDevices.getDevicesList()) {
-                if(id == device.getId()){
-                    return device;
+        if(mScannedDevices != null){
+            if(!mScannedDevices.getDevicesList().isEmpty()){
+                for (Device device: mScannedDevices.getDevicesList()) {
+                    if(id == device.getId()){
+                        return device;
+                    }
                 }
             }
         }

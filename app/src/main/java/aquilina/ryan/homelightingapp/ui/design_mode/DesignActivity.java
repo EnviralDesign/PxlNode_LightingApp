@@ -7,9 +7,12 @@ import android.animation.AnimatorListenerAdapter;
 import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.database.DataSetObserver;
+import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,8 +27,15 @@ import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.OpacityBar;
 import com.larswerkman.holocolorpicker.SVBar;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
+import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.AllGroups;
 import aquilina.ryan.homelightingapp.model.AllPresets;
@@ -34,7 +44,6 @@ import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
-import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import fr.ganfra.materialspinner.MaterialSpinner;
@@ -65,8 +74,10 @@ public class DesignActivity extends MainActivity {
     private OpacityBar mOpBar;
 
     private View.OnClickListener mOnClickListener;
-
     private CustomSpinnerAdapter mCustomSpinnerAdapter;
+
+    private ArrayList<Integer> selectedDevices;
+    private int oldColor;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -97,6 +108,7 @@ public class DesignActivity extends MainActivity {
         // Load data
         mSingleItemList = new ArrayList<>();
         mGroupedItemList = new ArrayList<>();
+        selectedDevices = new ArrayList<>();
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         setPickerProperties();
 
@@ -115,8 +127,19 @@ public class DesignActivity extends MainActivity {
                 if(mEffectsTimeLineView.getStartCircleViewFocus()) {
                     mEffectsTimeLineView.changeStartCircleColor(color);
                 }
-
                 //TODO send post command changing color of the light in realtime
+                String command = "rgb" + Integer.toString(Color.red(color)) + "," + Integer.toString(Color.green(color))+ "," + Integer.toString(Color.blue(color));
+
+                getSelectedIpAddressesAndSendCommands(command);
+            }
+        });
+        mColorPicker.setOnColorSelectedListener(new ColorPicker.OnColorSelectedListener() {
+            @Override
+            public void onColorSelected(int color) {
+                String command = "rgb" + Integer.toString(Color.red(color)) + "," + Integer.toString(Color.green(color))+ "," + Integer.toString(Color.blue(color));
+
+                getSelectedIpAddressesAndSendCommands(command);
+                Log.i("Stop Color", command);
             }
         });
         mCustomSpinnerAdapter = new CustomSpinnerAdapter();
@@ -170,11 +193,14 @@ public class DesignActivity extends MainActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 if(i == -1){
                     hideAllLightingView();
-                }
-                else if (i == mGroupedItemList.size()){
+                } else if (i >= 0 && i < mGroupedItemList.size()){
+                   selectedDevices = mGroupedItemList.get(i).getDeviceArrayList();
+                    showAllLightingViews();
+                } else if (i == (mGroupedItemList.size())){
+                    selectedDevices = new ArrayList<>();
                     hideAllLightingView();
-                }
-                else{
+                } else {
+                    selectedDevices.add(mSingleItemList.get(i - (mGroupedItemList.size() + 1)).getId());
                     showAllLightingViews();
                 }
             }
@@ -184,6 +210,18 @@ public class DesignActivity extends MainActivity {
 
             }
         });
+    }
+
+    /**
+     *  Get selected Ip Addresses and send each one a command
+     */
+    private void getSelectedIpAddressesAndSendCommands(String command){
+        ArrayList<String> paramsList = new ArrayList<>();
+        paramsList.add(command);
+        for(Integer id: selectedDevices){
+            paramsList.add(((Application)getApplicationContext()).getDeviceById(id).getIpAddress());
+        }
+        new SendColorCommand().execute(paramsList.toArray(new String[0]));
     }
 
     /**
@@ -529,6 +567,39 @@ public class DesignActivity extends MainActivity {
             return false;
         }
 
+    }
 
+    private class SendColorCommand extends AsyncTask<String, String, Void> {
+        private final int TIMEOUT_VALUE = 75;
+        @Override
+        protected Void doInBackground(String... strings) {
+            String command = strings[0];
+
+            for (int i = 1; i < strings.length; i++){
+                String urlString = strings[i];
+
+                OutputStream outputStream;
+
+                try{
+                    URL url = new URL("http://" + urlString + "/play");
+                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setConnectTimeout(TIMEOUT_VALUE);
+                    urlConnection.setReadTimeout(TIMEOUT_VALUE);
+                    urlConnection.setRequestMethod("POST");
+                    outputStream = new BufferedOutputStream(urlConnection.getOutputStream());
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                    writer.write(command);
+                    writer.flush();
+                    writer.close();
+                    outputStream.close();
+                    urlConnection.connect();
+                    Log.d("Send Color Command", command +" to " + urlString);
+
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
     }
 }

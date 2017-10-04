@@ -10,6 +10,7 @@ import java.util.ArrayList;
 public class Preset implements Serializable{
     private int id;
     private String presetName;
+    private String command;
     private DevicesGroup devicesGroup;
 
     public Preset(int id, String presetName) {
@@ -18,9 +19,10 @@ public class Preset implements Serializable{
         this.devicesGroup = new DevicesGroup();
     }
 
-    public Preset(int id, String presetName, DevicesGroup devicesGroup) {
+    public Preset(int id, String presetName, String command, DevicesGroup devicesGroup) {
         this.id = id;
         this.presetName = presetName;
+        this.command = command;
         this.devicesGroup = devicesGroup;
     }
 
@@ -38,6 +40,14 @@ public class Preset implements Serializable{
 
     public void setPresetName(String presetName) {
         this.presetName = presetName;
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
     }
 
     public DevicesGroup getDevicesGroup() {
