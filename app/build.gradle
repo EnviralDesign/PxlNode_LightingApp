@@ -43,7 +43,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.7'
 
     // Holo Color Picker
-    compile 'com.larswerkman:HoloColorPicker:1.5'
+    compile project(':libs:HoloColorPickerLibrary')
 
     // Number Picker Library
     compile 'cn.carbswang.android:NumberPickerView:1.1.0'

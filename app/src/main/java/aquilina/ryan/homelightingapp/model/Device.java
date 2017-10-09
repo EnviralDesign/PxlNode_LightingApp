@@ -19,12 +19,9 @@ public class Device implements Serializable{
         this.ipAddress = ipAddress;
     }
 
-    public Device(int id, String name, String ipAddress, int port, int leds) {
-        this.id = id;
+    public Device(String name, String ipAddress) {
         this.name = name;
         this.ipAddress = ipAddress;
-        this.port = port;
-        this.leds = leds;
     }
 
     public int getId() {

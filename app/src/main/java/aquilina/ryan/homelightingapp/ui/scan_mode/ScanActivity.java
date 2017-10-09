@@ -1,3 +1,10 @@
+/*
+ * Created by Ryan Aquilina on 10/9/17 3:30 PM
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 10/9/17 3:14 PM
+ */
+
 package aquilina.ryan.homelightingapp.ui.scan_mode;
 
 import com.google.gson.Gson;
@@ -6,6 +13,7 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -36,6 +44,12 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.model.AllGroups;
@@ -45,10 +59,6 @@ import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.utils.Constants;
-
-/**
- * Created by SterlingRyan on 9/4/2017.
- */
 
 public class ScanActivity extends MainActivity {
 
@@ -63,6 +73,8 @@ public class ScanActivity extends MainActivity {
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private SharedPreferences mPrefs;
+
+    private String mWifiIP = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,13 +124,13 @@ public class ScanActivity extends MainActivity {
 
         if(singleGroup != null){
             if(singleGroup.getDevicesList().isEmpty()) {
-                refreshDevices();
+                new ScanForDevices().execute();
             } else {
                 mScannedDevicesList = singleGroup.getDevicesList();
                 ((Application)getApplicationContext()).setmScannedDevices(singleGroup);
             }
         } else {
-            refreshDevices();
+            new ScanForDevices().execute();
         }
     }
 
@@ -135,7 +147,7 @@ public class ScanActivity extends MainActivity {
 
         switch (id){
             case R.id.refresh_button:
-                refreshDevices();
+                new ScanForDevices().execute();
                 break;
         }
 
@@ -155,7 +167,45 @@ public class ScanActivity extends MainActivity {
      * Refresh the list of devices
      */
     private void refreshDevices(){
-        new ScanForDevices().execute();
+        // Get wifi IP
+        String subIP = "";
+        if(mWifiIP == null){
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+
+
+            int noOfDots = 0;
+            for(int i = 0; noOfDots < 3; i++){
+                subIP += ip.substring(i, i + 1);
+                if(ip.charAt(i) == '.'){
+                    noOfDots += 1;
+                }
+            }
+            mWifiIP = subIP;
+        }
+        else {
+            subIP = mWifiIP;
+        }
+
+
+        // Execute a queue of tasks
+        ExecutorService executorService = Executors.newFixedThreadPool(255);
+        for( int i = 0; i <= 255; i++){
+            Runnable worker = new WorkerThread(subIP, i);
+            executorService.execute(worker);
+        }
+        executorService.shutdown();
+
+        while(!executorService.isTerminated()){
+
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(false);
+                saveSingleFixturesLocally();
+            }
+        });
     }
 
     /**
@@ -213,49 +263,31 @@ public class ScanActivity extends MainActivity {
     }
 
     @Nullable
-    private ArrayList<Device> getDevicesConnectedToWifi(){
-        int TIMEOUT_VALUE = 75;
-
-        ArrayList<Device> devices = new ArrayList<>();
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-        String subIP = "";
-
-        int noOfDots = 0;
-        for(int i = 0; noOfDots < 3; i++){
-            subIP += ip.substring(i, i + 1);
-            if(ip.charAt(i) == '.'){
-                noOfDots += 1;
-            }
-        }
+    private Device getDeviceConnectedToWifi(String subIP, int i){
+        int TIMEOUT_VALUE = 5000;
 
         HttpURLConnection urlConnection;
         URL url;
         String strLine;
-        int id = 0;
-
-        for(int i = 0; i <= 255; i++){
-            try{
-                url = new URL("http://" + subIP + Integer.toString(i) + "/getstatus");
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setConnectTimeout(TIMEOUT_VALUE);
-                urlConnection.setReadTimeout(TIMEOUT_VALUE);
-                urlConnection.setUseCaches(false);
-                urlConnection.connect();
-                InputStream inputStream = urlConnection.getInputStream();
-                strLine = convertStreamToString(inputStream);
-                if(!strLine.isEmpty()){
-                    if(strLine.substring(0,39).equals("<!doctype html><html><body>Connected to")){
-                        devices.add(new Device(id, "Device " + Integer.toString(i), subIP + Integer.toString(i)));
-                        id++;
-                    }
+        try{
+            url = new URL("http://" + subIP + Integer.toString(i) + "/getstatus");
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setConnectTimeout(TIMEOUT_VALUE);
+            urlConnection.setReadTimeout(TIMEOUT_VALUE);
+            urlConnection.setUseCaches(false);
+            urlConnection.connect();
+            InputStream inputStream = urlConnection.getInputStream();
+            strLine = convertStreamToString(inputStream);
+            if(!strLine.isEmpty()){
+                if(strLine.substring(0,39).equals("<!doctype html><html><body>Connected to")){
+                    return new Device("Device " + Integer.toString(i), subIP + Integer.toString(i));
                 }
-                Log.i("Good Device Ip", subIP + Integer.toString(i) + "Response Code " + Integer.toString(urlConnection.getResponseCode()));
-            } catch (Exception e){
-                Log.w("Bad Device Ip", subIP + Integer.toString(i));
             }
+            Log.w("Good Device Ip", subIP + Integer.toString(i));
+        } catch (Exception e){
+            Log.w("Bad Device Ip", subIP + Integer.toString(i));
         }
-        return devices;
+        return null;
     }
 
     /**
@@ -280,6 +312,23 @@ public class ScanActivity extends MainActivity {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * Saves the scanned devices locally
+     * @return
+     */
+    private boolean saveSingleFixturesLocally(){
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+         ScannedDevices singleGroup = new ScannedDevices(mScannedDevicesList);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(singleGroup);
+        prefsEditor.putString(Constants.GROUP_OF_SINGLE_DEVICES, json);
+
+        // Save the list in memory
+        ((Application)getApplicationContext()).setmScannedDevices(singleGroup);
+        return prefsEditor.commit();
     }
 
     private static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -366,13 +415,10 @@ public class ScanActivity extends MainActivity {
         }
     }
 
-    private class ScanForDevices extends AsyncTask<Void , Integer, Void>{
-
-        private ArrayList<Device> DevicesList;
-
+    private class ScanForDevices extends AsyncTask<Void, Void, Void>{
         @Override
         protected Void doInBackground(Void... voids) {
-            DevicesList = getDevicesConnectedToWifi();
+            refreshDevices();
             return null;
         }
 
@@ -380,29 +426,40 @@ public class ScanActivity extends MainActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             mSwipeRefreshLayout.setRefreshing(true);
+            mScannedDevicesList.clear();
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            mScannedDevicesList.clear();
-            mScannedDevicesList = DevicesList;
-            mDeviceAdapter.notifyDataSetChanged();
-            mSwipeRefreshLayout.setRefreshing(false);
-            saveSingleFixturesLocally();
+        }
+    }
+
+    private class WorkerThread implements Runnable{
+        private String subIp;
+        private int i;
+
+
+        private WorkerThread(String subIp, int i) {
+            this.subIp = subIp;
+            this.i = i;
         }
 
-        private boolean saveSingleFixturesLocally(){
-            SharedPreferences.Editor prefsEditor = mPrefs.edit();
-            ScannedDevices singleGroup = new ScannedDevices(mScannedDevicesList);
-
-            Gson gson = new Gson();
-            String json = gson.toJson(singleGroup);
-            prefsEditor.putString(Constants.GROUP_OF_SINGLE_DEVICES, json);
-
-            // Save the list in memory
-            ((Application)getApplicationContext()).setmScannedDevices(singleGroup);
-            return prefsEditor.commit();
+        @Override
+        public void run() {
+            Log.i("Runnable Start Code :", Integer.toString(i));
+            final Device device = getDeviceConnectedToWifi(subIp, i);
+            if(device != null){
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        device.setId(mScannedDevicesList.size());
+                        mScannedDevicesList.add(device);
+                        mDeviceAdapter.notifyDataSetChanged();
+                    }
+                });
+            }
+            Log.i("Runnable Stop Code :", Integer.toString(i));
         }
     }
 }
