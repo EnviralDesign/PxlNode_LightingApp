@@ -25,14 +25,23 @@ import android.widget.TextView;
 
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.SVBar;
+import com.loopj.android.http.AsyncHttpClient;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
@@ -43,9 +52,17 @@ import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
+import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
+import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import fr.ganfra.materialspinner.MaterialSpinner;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okio.BufferedSink;
 
 /**
  * Created by SterlingRyan on 9/5/2017.
@@ -82,6 +99,10 @@ public class DesignActivity extends MainActivity {
     private int startColor;
     private int endColor;
 
+    private ArrayList<SendCommand> tasksList;
+
+    private Common common;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,6 +132,8 @@ public class DesignActivity extends MainActivity {
         mSingleItemList = new ArrayList<>();
         mGroupedItemList = new ArrayList<>();
         selectedDevices = new ArrayList<>();
+        tasksList = new ArrayList<>();
+        common = new Common();
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         setPickerProperties();
         startColor = getResources().getColor(R.color.colorPrimary);
@@ -123,30 +146,13 @@ public class DesignActivity extends MainActivity {
         mColorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
             @Override
             public void onColorChanged(int color) {
-                if(mEffectsTimeLineView.getStopCircleViewFocus()){
-                    mEffectsTimeLineView.changeStopCircleColor(color);
-                }
-
-                if(mEffectsTimeLineView.getStartCircleViewFocus()) {
-                    mEffectsTimeLineView.changeStartCircleColor(color);
-                }
-
-                //TODO optimize the algorithm to send commands when is necessary
-                Log.d("Color", Integer.toString(color));
-                if(isEffectEnabled){
-                    formulateCommand(startColor, endColor, duration, repetition);
-                } else {
-                    formulateCommand(color);
-                }
+                updateDeviceColor(color);
             }
         });
         mColorPicker.setOnColorSelectedListener(new ColorPicker.OnColorSelectedListener() {
             @Override
             public void onColorSelected(int color) {
-                String command = "rgb" + Integer.toString(Color.red(color)) + "," + Integer.toString(Color.green(color))+ "," + Integer.toString(Color.blue(color));
-
-                getSelectedIpAddressesAndSendCommands(command);
-                Log.i("Stop Color", command);
+                updateDeviceColor(color);
             }
         });
         mCustomSpinnerAdapter = new CustomSpinnerAdapter();
@@ -158,6 +164,7 @@ public class DesignActivity extends MainActivity {
                 if(((Button) view).isSelected()){
                     ((Button) view).setSelected(false);
                     enableEffectsControl(false);
+                    isEffectEnabled = false;
                     mEffectsTimeLineView.refreshView();
                 }
                 else {
@@ -167,6 +174,7 @@ public class DesignActivity extends MainActivity {
                     mPulseButton.setSelected(false);
                     ((Button) view).setSelected(true);
                     enableEffectsControl(true);
+                    isEffectEnabled = true;
                 }
             }
         };
@@ -174,14 +182,14 @@ public class DesignActivity extends MainActivity {
         mRepetitionPicker.setOnValueChangedListener(new NumberPickerView.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPickerView picker, int oldVal, int newVal) {
-                repetition = newVal;
+                repetition = newVal - 1;
             }
         });
 
         mDurationPicker.setOnValueChangedListener(new NumberPickerView.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPickerView picker, int oldVal, int newVal) {
-                duration = newVal;
+                duration = newVal - 1;
             }
         });
         mBlinkButton.setOnClickListener(mOnClickListener);
@@ -231,6 +239,28 @@ public class DesignActivity extends MainActivity {
     }
 
     /**
+     * Update command variables
+     */
+    private void updateDeviceColor(int color){
+        if(mEffectsTimeLineView.getStopCircleViewFocus()){
+            mEffectsTimeLineView.changeStopCircleColor(color);
+            endColor = color;
+        }
+
+        if(mEffectsTimeLineView.getStartCircleViewFocus()) {
+            mEffectsTimeLineView.changeStartCircleColor(color);
+            startColor = color;
+        }
+
+        Log.d("Color", Integer.toString(color));
+        if(isEffectEnabled){
+            formulateCommand(startColor, endColor, duration, repetition);
+        } else {
+            formulateCommand(color);
+        }
+    }
+
+    /**
      * Formulate command
      */
     private void formulateCommand(int color){
@@ -265,10 +295,20 @@ public class DesignActivity extends MainActivity {
     private void getSelectedIpAddressesAndSendCommands(String command){
         ArrayList<String> paramsList = new ArrayList<>();
         paramsList.add(command);
+
         for(Integer id: selectedDevices){
             paramsList.add(((Application)getApplicationContext()).getDeviceById(id).getIpAddress());
         }
-        new SendColorCommand().execute(paramsList.toArray(new String[0]));
+
+        if(tasksList.size() >= 1){
+            tasksList.get(tasksList.size() - 1).cancel(true);
+            tasksList.remove(tasksList.size() - 1);
+        }
+
+        SendCommand sendCommand = new SendCommand();
+        sendCommand.execute(paramsList.toArray(new String[0]));
+        tasksList.add(sendCommand);
+
     }
 
     /**
@@ -365,13 +405,13 @@ public class DesignActivity extends MainActivity {
 
         int i = mSpinner.getSelectedItemPosition();
         if(i == 0){
-            // TODO SNACKBAR
+            common.showToast(this, "Choose a group or a device");
             return;
         } else if (i > 0 && i <= mGroupedItemList.size()){
             DevicesGroup devicesGroup = (DevicesGroup) mSpinner.getSelectedItem();
             preset.setDevicesGroup(devicesGroup);
         } else if (i == (mGroupedItemList.size() + 1)){
-            // TODO SNACKBAR
+            common.showToast(this, "Choose a group or a device");
             return;
         } else {
             Device device = mSingleItemList.get(i - (mGroupedItemList.size() + 2));
@@ -383,7 +423,8 @@ public class DesignActivity extends MainActivity {
         prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
         prefsEditor.apply();
         refreshLayout();
-        // TODO SNACKBAR
+        common.showToast(this, "Preset saved");
+
     }
 
     private void refreshLayout(){
@@ -601,8 +642,7 @@ public class DesignActivity extends MainActivity {
 
     }
 
-    private class SendColorCommand extends AsyncTask<String, String, Void> {
-        private final int TIMEOUT_VALUE = 75;
+    private class SendCommand extends AsyncTask<String, Void, Void>{
         @Override
         protected Void doInBackground(String... strings) {
             String command = strings[0];
@@ -610,23 +650,14 @@ public class DesignActivity extends MainActivity {
             for (int i = 1; i < strings.length; i++){
                 String urlString = strings[i];
 
-                OutputStream outputStream;
-
                 try{
                     URL url = new URL("http://" + urlString + "/play");
                     HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setConnectTimeout(TIMEOUT_VALUE);
-                    urlConnection.setReadTimeout(TIMEOUT_VALUE);
                     urlConnection.setRequestMethod("POST");
-                    outputStream = new BufferedOutputStream(urlConnection.getOutputStream());
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                    writer.write(command);
-                    writer.flush();
-                    writer.close();
-                    outputStream.close();
-                    urlConnection.connect();
-                    Log.d("Send Color Command", command +" to " + urlString);
+                    OutputStream outputStream = urlConnection.getOutputStream();
+                    outputStream.write(command.getBytes());
 
+                    int response = urlConnection.getResponseCode();
                 } catch (Exception e){
                     e.printStackTrace();
                 }

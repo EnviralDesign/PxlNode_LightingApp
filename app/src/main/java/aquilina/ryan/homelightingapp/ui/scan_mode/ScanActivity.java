@@ -13,7 +13,6 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -29,27 +28,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.model.AllGroups;
@@ -58,23 +47,23 @@ import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
+import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class ScanActivity extends MainActivity {
+
+    private Common common;
 
     private ArrayList<Device> mScannedDevicesList;
     private ArrayList<Integer> mCheckedDevicesList;
 
     private RecyclerView mDevicesListView;
     private DeviceAdapter mDeviceAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
 
     private FloatingActionButton mAddToGroupButton;
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private SharedPreferences mPrefs;
-
-    private String mWifiIP = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,25 +73,26 @@ public class ScanActivity extends MainActivity {
         // Set up views
         invalidateOptionsMenu();
         super.setSelectedNavMenuItem(R.id.nav_scan);
-        mDevicesListView = (RecyclerView) findViewById(R.id.devices_list_view);
-        mLayoutManager = new LinearLayoutManager(this);
+        mDevicesListView = findViewById(R.id.devices_list_view);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mDevicesListView.setLayoutManager(mLayoutManager);
-        mAddToGroupButton = (FloatingActionButton) findViewById(R.id.add_to_group_fab);
+        mAddToGroupButton =  findViewById(R.id.add_to_group_fab);
         mAddToGroupButton.setVisibility(View.INVISIBLE);
-        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout = findViewById(R.id.swiperefresh);
 
         // set up data
         mCheckedDevicesList = new ArrayList<>();
         mDeviceAdapter = new DeviceAdapter();
         mScannedDevicesList = new ArrayList<>();
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        common = new Common();
 
         // set up view functionality
         mDevicesListView.setAdapter(mDeviceAdapter);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                new ScanForDevices().execute();
+                getWifiStateAndConnect();
             }
         });
         mAddToGroupButton.setOnClickListener(new View.OnClickListener() {
@@ -124,13 +114,13 @@ public class ScanActivity extends MainActivity {
 
         if(singleGroup != null){
             if(singleGroup.getDevicesList().isEmpty()) {
-                new ScanForDevices().execute();
+                getWifiStateAndConnect();
             } else {
                 mScannedDevicesList = singleGroup.getDevicesList();
                 ((Application)getApplicationContext()).setmScannedDevices(singleGroup);
             }
         } else {
-            new ScanForDevices().execute();
+            getWifiStateAndConnect();
         }
     }
 
@@ -147,7 +137,7 @@ public class ScanActivity extends MainActivity {
 
         switch (id){
             case R.id.refresh_button:
-                new ScanForDevices().execute();
+                getWifiStateAndConnect();
                 break;
         }
 
@@ -155,8 +145,21 @@ public class ScanActivity extends MainActivity {
     }
 
     /**
-     *  Show save group dialog
-     *  fragment.
+     * Check wifi connection and get devices
+     */
+    private void getWifiStateAndConnect(){
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        if(wm.isWifiEnabled()){
+            new ScanForDevices().execute();
+        } else {
+            mSwipeRefreshLayout.setRefreshing(false);
+            mDeviceAdapter.notifyDataSetChanged();
+            common.showToast(getApplicationContext(), "No connections are available");
+        }
+    }
+
+    /**
+     *  Show save group dialog fragment.
      */
     private void showSaveGroupDialog(){
         DialogFragment dialogFragment = AddGroupDialog.newInstance();
@@ -169,26 +172,19 @@ public class ScanActivity extends MainActivity {
     private void refreshDevices(){
         // Get wifi IP
         String subIP = "";
-        if(mWifiIP == null){
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-            String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
 
-
-            int noOfDots = 0;
-            for(int i = 0; noOfDots < 3; i++){
-                subIP += ip.substring(i, i + 1);
-                if(ip.charAt(i) == '.'){
-                    noOfDots += 1;
-                }
+        int noOfDots = 0;
+        for(int i = 0; noOfDots < 3; i++){
+            subIP += ip.substring(i, i + 1);
+            if(ip.charAt(i) == '.'){
+                noOfDots += 1;
             }
-            mWifiIP = subIP;
-        }
-        else {
-            subIP = mWifiIP;
         }
 
 
-        // Execute a queue of tasks
+        // Execute a queue of tasks for each possible device
         ExecutorService executorService = Executors.newFixedThreadPool(255);
         for( int i = 0; i <= 255; i++){
             Runnable worker = new WorkerThread(subIP, i);
@@ -209,8 +205,7 @@ public class ScanActivity extends MainActivity {
     }
 
     /**
-     * Saves the group of devices
-     * locally
+     * Saves the group of devices locally
      */
     protected boolean saveGroupLocally(String groupName){
         AllGroups allGroups;
@@ -229,7 +224,7 @@ public class ScanActivity extends MainActivity {
         json = gson.toJson(allGroups);
         prefsEditor.putString(Constants.GROUP_OF_DEVICES_GROUPS, json);
         removeCheckedItems();
-        showToast(R.string.toast_group_saved);
+        common.showToast(getApplicationContext(), getString(R.string.toast_group_saved));
         return prefsEditor.commit();
     }
 
@@ -258,13 +253,9 @@ public class ScanActivity extends MainActivity {
         }
     }
 
-    private void showToast(int stringID){
-        Toast.makeText(this, getString(stringID),Toast.LENGTH_SHORT).show();
-    }
-
     @Nullable
     private Device getDeviceConnectedToWifi(String subIP, int i){
-        int TIMEOUT_VALUE = 5000;
+        int TIMEOUT_VALUE = 1000;
 
         HttpURLConnection urlConnection;
         URL url;
@@ -297,10 +288,10 @@ public class ScanActivity extends MainActivity {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
 
-        String line = null;
+        String line;
         try {
             while ((line = reader.readLine()) != null) {
-                sb.append(line + "\n");
+                sb.append(line).append("\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -316,7 +307,6 @@ public class ScanActivity extends MainActivity {
 
     /**
      * Saves the scanned devices locally
-     * @return
      */
     private boolean saveSingleFixturesLocally(){
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
@@ -338,13 +328,13 @@ public class ScanActivity extends MainActivity {
         CardView cardView;
         ViewHolderClick mListener;
 
-        public ViewHolder(View v, ViewHolderClick listener) {
+        private ViewHolder(View v, ViewHolderClick listener) {
             super(v);
             mListener = listener;
-            deviceNameTextView = (TextView) v.findViewById(R.id.device_name_text_view);
-            deviceIPAddressTextView = (TextView) v.findViewById(R.id.device_ip_address_text_view);
-            checkBox = (CheckBox) v.findViewById(R.id.item_checkbox);
-            cardView = (CardView)v.findViewById(R.id.item_card_view);
+            deviceNameTextView =  v.findViewById(R.id.device_name_text_view);
+            deviceIPAddressTextView =  v.findViewById(R.id.device_ip_address_text_view);
+            checkBox = v.findViewById(R.id.item_checkbox);
+            cardView = v.findViewById(R.id.item_card_view);
             cardView.setOnClickListener(this);
         }
 
@@ -353,12 +343,12 @@ public class ScanActivity extends MainActivity {
             mListener.onCardViewClick(view);
         }
 
-        public interface ViewHolderClick{
+        private interface ViewHolderClick{
             void onCardViewClick(View view);
         }
     }
 
-    public class DeviceAdapter extends RecyclerView.Adapter<ViewHolder>{
+    private class DeviceAdapter extends RecyclerView.Adapter<ViewHolder>{
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -432,13 +422,13 @@ public class ScanActivity extends MainActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+            mDeviceAdapter.notifyDataSetChanged();
         }
     }
 
     private class WorkerThread implements Runnable{
         private String subIp;
         private int i;
-
 
         private WorkerThread(String subIp, int i) {
             this.subIp = subIp;
@@ -447,7 +437,6 @@ public class ScanActivity extends MainActivity {
 
         @Override
         public void run() {
-            Log.i("Runnable Start Code :", Integer.toString(i));
             final Device device = getDeviceConnectedToWifi(subIp, i);
             if(device != null){
                 runOnUiThread(new Runnable() {
@@ -459,7 +448,6 @@ public class ScanActivity extends MainActivity {
                     }
                 });
             }
-            Log.i("Runnable Stop Code :", Integer.toString(i));
         }
     }
 }

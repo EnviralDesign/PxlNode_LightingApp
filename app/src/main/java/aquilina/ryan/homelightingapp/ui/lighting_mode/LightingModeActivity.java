@@ -160,6 +160,20 @@ public class LightingModeActivity extends MainActivity {
     }
 
     /**
+     * Arrange ids of presets inside other macros
+     */
+    private ArrayList<Preset> arrangePresetsIdsInMacro(ArrayList<Preset> presets, int removedPresetId){
+        int currentId;
+        for(int i = 0; i < presets.size(); i ++){
+            currentId = presets.get(i).getId();
+            if(currentId > removedPresetId){
+                presets.get(i).setId(currentId - 1);
+            }
+        }
+        return presets;
+    }
+
+    /**
      * Arranges the id of the remaining presets
      */
     private ArrayList<Preset> arrangePresetsIds(ArrayList<Preset> presets, int i){
@@ -202,8 +216,10 @@ public class LightingModeActivity extends MainActivity {
                         if(macro.getPresetList().isEmpty()){
                             macroIterator.remove();
                         }
-                        break;
                     }
+                }
+                for (Macro macroTemp: macros) {
+                    macroTemp.setPresetList(arrangePresetsIdsInMacro(macro.getPresetList(), id));
                 }
             }
         }
@@ -229,12 +245,15 @@ public class LightingModeActivity extends MainActivity {
                 if(macro.getId() == editedMacro.getId()){
                     macro.setPresetList(editedMacro.getPresetList());
                     if(macro.getPresetList().isEmpty()){
+                        int id = editedMacro.getId();
+                        allMacros.setMacros(arrangeMacrosIds(allMacros.getMacros(), id));
                         allMacros.removeMacro(macro);
                     }
                     break;
                 }
             }
         }
+
         json = gson.toJson(allMacros);
         prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
         prefsEditor.apply();
@@ -368,6 +387,7 @@ public class LightingModeActivity extends MainActivity {
             this.checkBox = (CheckBox) itemView.findViewById(R.id.item_checkbox);
             this.mListener = mListener;
             aSwitch.setOnClickListener(this);
+            cardView.setOnClickListener(this);
             cardView.setOnLongClickListener(this);
             aSwitch.setOnTouchListener(this);
         }
