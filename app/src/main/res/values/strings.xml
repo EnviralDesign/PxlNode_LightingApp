@@ -21,8 +21,8 @@
     <!--Scan Mode Strings-->
     <string name="dialog_save_group">Save Group</string>
     <string name="dialog_edit_text_hint">Enter group name</string>
-    <string name="dialog_save_button">SAVE</string>
-    <string name="dialog_cancel_button">CANCEL</string>
+    <string name="dialog_save_button">Save</string>
+    <string name="dialog_cancel_button">Cancel</string>
     <string name="device_name">device name</string>
     <string name="device_ip_address">ip address</string>
     <string name="toast_group_saved">Group created</string>
@@ -34,13 +34,18 @@
     <string name="picker_caption_repetitions">Repetitions</string>
     <string name="picker_caption_duration">Duration(Sec)</string>
     <string name="save_preset_button">Save Preset</string>
+    <string name="preview_preset_button">Preview</string>
     <string name="dialog_save_preset_title">Save Preset</string>
     <string name="dialog_preset_edit_text_hint">Enter preset name</string>
+    <string name="blink">Blink</string>
+    <string name="hue">Hue</string>
+    <string name="hue_two">Hue2</string>
+    <string name="pulse">Pulse</string>
 
     <!-- Lighting Mode Strings-->
     <string name="button_save_macro">SAVE MACRO</string>
     <string name="dialog_save_macro_title">Save Macro</string>
     <string name="dialog_save_macro_hint">Enter macro name</string>
-    <string name="recyclerview_macros_title">MACROS</string>
-    <string name="recyclerview_presets_title">PRESETS</string>
+    <string name="recycler_view_macros_title">MACROS</string>
+    <string name="recycler_view_presets_title">PRESETS</string>
 </resources>

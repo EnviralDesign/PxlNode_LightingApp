@@ -1,10 +1,14 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 4:38 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 10/9/17 10:03 AM
+ */
+
 package aquilina.ryan.homelightingapp.model;
 
 import java.io.Serializable;
-
-/**
- * Created by SterlingRyan on 9/4/2017.
- */
 
 public class Device implements Serializable{
     private int id;

@@ -48,11 +48,8 @@ dependencies {
     // Number Picker Library
     compile 'cn.carbswang.android:NumberPickerView:1.1.0'
 
-    // OkHTTP Library
-    compile 'com.squareup.okhttp3:okhttp:3.9.0'
-
-    // Asynchronous Http Client
-    compile 'com.loopj.android:android-async-http:1.4.9'
+    // Fast Android Networking
+    compile 'com.amitshekhar.android:android-networking:1.0.0'
 
     // UI Testing Dependencies
     androidTestCompile 'com.android.support:support-v4:26.1.0'

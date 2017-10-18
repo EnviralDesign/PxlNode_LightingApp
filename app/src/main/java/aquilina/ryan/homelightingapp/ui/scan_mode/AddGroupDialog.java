@@ -1,21 +1,25 @@
+/*
+ * Created by Ryan Aquilina on 10/16/17 4:53 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 10/16/17 4:52 PM
+ */
+
 package aquilina.ryan.homelightingapp.ui.scan_mode;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import aquilina.ryan.homelightingapp.R;
-
-/**
- * Created by SterlingRyan on 9/4/2017.
- */
 
 public class AddGroupDialog extends DialogFragment{
 
@@ -27,20 +31,20 @@ public class AddGroupDialog extends DialogFragment{
      */
 
     public static AddGroupDialog newInstance(){
-        AddGroupDialog dialog = new AddGroupDialog();
-        return dialog;
+        return new AddGroupDialog();
     }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        View rootView = inflater.inflate(R.layout.dialog_save, null);
-        TextView title = (TextView) rootView.findViewById(R.id.alertTitle);
+        final ViewGroup nullParent = null;
+        View rootView = inflater.inflate(R.layout.dialog_save, nullParent);
+        TextView title = rootView.findViewById(R.id.alertTitle);
         title.setText(getString(R.string.dialog_save_group));
         final EditText editText = rootView.findViewById(R.id.dialog_edit_text);
         editText.setHint(getString(R.string.dialog_edit_text_hint));
-        Button saveButton = (Button) rootView.findViewById(R.id.button2);
+        Button saveButton = rootView.findViewById(R.id.button2);
         saveButton.setText(getString(R.string.dialog_save_button));
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,7 +57,7 @@ public class AddGroupDialog extends DialogFragment{
             }
         });
 
-        Button cancelButton = (Button) rootView.findViewById(R.id.button3);
+        Button cancelButton = rootView.findViewById(R.id.button3);
         cancelButton.setText(getString(R.string.dialog_cancel_button));
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,10 +74,7 @@ public class AddGroupDialog extends DialogFragment{
      * Checks if text is valid
      */
     private boolean isValidText(String text){
-        if(text.isEmpty()){
-            return false;
-        }
-        return true;
+        return text.equals("");
     }
 
     /**

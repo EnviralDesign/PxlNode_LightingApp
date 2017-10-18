@@ -1,3 +1,11 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 4:28 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 9/28/17 3:26 PM
+ */
+
 package aquilina.ryan.homelightingapp.ui.design_mode;
 
 import android.content.Context;
@@ -9,6 +17,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -18,19 +27,11 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 
 import aquilina.ryan.homelightingapp.R;
 
-/**
- * Created by SterlingRyan on 9/11/2017.
- */
-
 public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener {
-    private Timeline mTimeLineView;
     private CircleView mStartCircleView;
     private CircleView mStopCircleView;
-    private CaptionView mStartCaptionView;
-    private CaptionView mEndCaptionView;
 
     private int mStartCircleColor;
-    private int mEndCircleColor;
     private int mLineColor;
 
     private Typeface mTypeface;
@@ -51,8 +52,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
 
         try{
             mStartCircleColor = a.getColor(R.styleable.EffectsTimelineView_startColor, Color.GRAY);
-            mEndCircleColor = a.getColor(R.styleable.EffectsTimelineView_endColor, Color.GRAY);
-            mLineColor = a.getColor(R.styleable.EffectsTimelineView_lineColor, getResources().getColor(R.color.colorPrimary));
+            mLineColor = a.getColor(R.styleable.EffectsTimelineView_lineColor, ContextCompat.getColor(getContext(), R.color.colorPrimary));
         }
         finally {
             a.recycle();
@@ -64,7 +64,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     @Override
     protected void onLayout(boolean b, int l, int i1, int i2, int i3) {
         final int count = getChildCount();
-        int curWidth, curHeight, curLeft, curTop, maxHeight;
+        int curWidth, curHeight;
 
         // get available size of child view, without padding
         final int childLeft = this.getPaddingLeft();
@@ -149,8 +149,8 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     }
 
     public void refreshView(){
-        mStartCircleView.setCircleColor(getResources().getColor(R.color.colorPrimary));
-        mStopCircleView.setCircleColor(getResources().getColor(R.color.colorPrimary));
+        mStartCircleView.setCircleColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
+        mStopCircleView.setCircleColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
 
         mStartCircleView.setInFocus(false);
         mStopCircleView.setInFocus(true);
@@ -158,11 +158,11 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         mStopCircleView.setColorChanged(false);
     }
 
-    public void setmStartCircleViewFocus(boolean bool){
+    public void setStartCircleViewFocus(boolean bool){
         mStartCircleView.setInFocus(bool);
     }
 
-    public void setmStopCircleViewFocus(boolean bool){
+    public void setStopCircleViewFocus(boolean bool){
         mStopCircleView.setInFocus(bool);
         selectView(mStopCircleView);
     }
@@ -175,20 +175,16 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         return mStopCircleView.isInFocus();
     }
 
-    public Typeface getmTypeface() {
-        return mTypeface;
-    }
-
-    public void setmTypeface(Typeface mTypeface) {
+    public void setTypeface(Typeface mTypeface) {
         this.mTypeface = mTypeface;
     }
 
     private void init(){
-        mTimeLineView = new Timeline(getContext());
+        Timeline mTimeLineView = new Timeline(getContext());
         mStartCircleView= new CircleView(getContext());
         mStopCircleView = new CircleView(getContext());
-        mStartCaptionView = new CaptionView(getContext());
-        mEndCaptionView = new CaptionView(getContext());
+        CaptionView mStartCaptionView = new CaptionView(getContext());
+        CaptionView mEndCaptionView = new CaptionView(getContext());
 
         mStartCaptionView.setCaptionText("Start Color");
         mEndCaptionView.setCaptionText("End Color");
@@ -264,7 +260,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
             super(context);
 
             circleColor = mStartCircleColor;
-            init(context, null);
+            init();
         }
 
         public CircleView(Context context, AttributeSet attrs)
@@ -272,10 +268,10 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
             super(context, attrs);
 
             circleColor = mStartCircleColor;
-            init(context, attrs);
+            init();
         }
 
-        private void init(Context context, AttributeSet attrs)
+        private void init()
         {
             paint = new Paint();
             borderPaint = new Paint();
@@ -290,11 +286,6 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
             invalidate();
         }
 
-        public int getCircleColor()
-        {
-            return circleColor;
-        }
-
         public boolean isInFocus() {
             return isInFocus;
         }
@@ -302,10 +293,6 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         public void setInFocus(boolean inFocus) {
             isInFocus = inFocus;
             invalidate();
-        }
-
-        public boolean isColorChanged() {
-            return isColorChanged;
         }
 
         public void setColorChanged(boolean colorChanged) {
@@ -362,10 +349,6 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
             super(context, attrs);
         }
 
-        public String getCaptionText() {
-            return captionText;
-        }
-
         public void setCaptionText(String captionText) {
             this.captionText = captionText;
         }
@@ -374,21 +357,10 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
 
-            int w = getWidth();
-            int h = getHeight();
-
-            int pl = getPaddingLeft();
-            int pr = getPaddingRight();
-            int pt = getPaddingTop();
-            int pb = getPaddingBottom();
-
-            int usableWidth = w - (pl + pr);
-            int usableHeight = h - (pt + pb);
-
             canvas.getClipBounds(rect);
             int cHeight = rect.height();
             int cWidth = rect.width();
-            textPaint.setColor(getResources().getColor(R.color.colorSecondaryText));
+            textPaint.setColor(ContextCompat.getColor(getContext(), R.color.colorSecondaryText));
             textPaint.setAntiAlias(true);
             textPaint.setTextAlign(Paint.Align.LEFT);
             textPaint.setTextSize(spToPixels(getContext(),10));
@@ -406,7 +378,6 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     }
 
     public static int spToPixels(Context context, float sp) {
-        int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
-        return px;
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
     }
 }

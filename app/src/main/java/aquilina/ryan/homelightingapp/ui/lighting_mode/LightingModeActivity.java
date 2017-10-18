@@ -1,18 +1,20 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 4:51 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 10/10/17 1:29 PM
+ */
+
 package aquilina.ryan.homelightingapp.ui.lighting_mode;
 
 import com.google.gson.Gson;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,10 +39,6 @@ import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
-/**
- * Created by SterlingRyan on 9/5/2017.
- */
-
 public class LightingModeActivity extends MainActivity {
     private RecyclerView mPresetsRecyclerView;
     private Menu mMenu;
@@ -59,7 +57,7 @@ public class LightingModeActivity extends MainActivity {
         setContentView(R.layout.activity_presets);
 
         // Set views.
-        mPresetsRecyclerView = (RecyclerView) findViewById(R.id.presets_recycler_list);
+        mPresetsRecyclerView = findViewById(R.id.presets_recycler_list);
 
         // Set view's data/design
         mPresets = new ArrayList<>();
@@ -237,7 +235,7 @@ public class LightingModeActivity extends MainActivity {
         if(json == null){
             allMacros = new AllMacros();
         } else {
-            allMacros = (AllMacros) gson.fromJson(json, AllMacros.class);
+            allMacros = gson.fromJson(json, AllMacros.class);
         }
 
         if(allMacros != null){
@@ -262,7 +260,6 @@ public class LightingModeActivity extends MainActivity {
 
     /**
      * Save presets list after it has been edited.
-     * @param presets
      */
     private void savePresetList(ArrayList<Preset> presets){
         mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
@@ -291,7 +288,7 @@ public class LightingModeActivity extends MainActivity {
         if(json == null){
             allMacros = new AllMacros();
         } else {
-            allMacros = (AllMacros) gson.fromJson(json, AllMacros.class);
+            allMacros = gson.fromJson(json, AllMacros.class);
         }
 
         allMacros.setMacros(macros);
@@ -304,7 +301,6 @@ public class LightingModeActivity extends MainActivity {
 
     /**
      * Enable or disable delete button in app bar.
-     * @param enable
      */
     private void enableDeleteMenuItem(boolean enable){
         if(enable){
@@ -324,7 +320,7 @@ public class LightingModeActivity extends MainActivity {
         Gson gson = new Gson();
         String json = mPrefs.getString(Constants.GROUP_OF_PRESETS, null);
 
-        AllPresets allPresets = (AllPresets) gson.fromJson(json, AllPresets.class);
+        AllPresets allPresets = gson.fromJson(json, AllPresets.class);
         ArrayList<Preset> presets = new ArrayList<>();
 
         if(allPresets != null){
@@ -347,7 +343,7 @@ public class LightingModeActivity extends MainActivity {
         if(json == null){
             return new ArrayList<>();
         } else {
-            return ((AllMacros) gson.fromJson(json, AllMacros.class)).getMacros();
+            return gson.fromJson(json, AllMacros.class).getMacros();
         }
     }
 
@@ -364,7 +360,7 @@ public class LightingModeActivity extends MainActivity {
     private static class TitleViewHolder extends RecyclerView.ViewHolder{
         TextView titleTextView;
 
-        public TitleViewHolder(View itemView) {
+        private TitleViewHolder(View itemView) {
             super(itemView);
             this.titleTextView = itemView.findViewById(R.id.header_title);
         }
@@ -378,13 +374,13 @@ public class LightingModeActivity extends MainActivity {
         CheckBox checkBox;
         ViewHolderClickListener mListener;
 
-        public ItemViewHolder(View itemView, ViewHolderClickListener mListener) {
+        private ItemViewHolder(View itemView, ViewHolderClickListener mListener) {
             super(itemView);
-            this.nameTextView = (TextView) itemView.findViewById(R.id.preset_name);
-            this.groupTextView = (TextView) itemView.findViewById(R.id.associated_group);
-            this.aSwitch = (ImageView) itemView.findViewById(R.id.preset_switch);
-            this.cardView = (LinearLayout) itemView.findViewById(R.id.item_card_view);
-            this.checkBox = (CheckBox) itemView.findViewById(R.id.item_checkbox);
+            this.nameTextView = itemView.findViewById(R.id.preset_name);
+            this.groupTextView = itemView.findViewById(R.id.associated_group);
+            this.aSwitch = itemView.findViewById(R.id.preset_switch);
+            this.cardView = itemView.findViewById(R.id.item_card_view);
+            this.checkBox = itemView.findViewById(R.id.item_checkbox);
             this.mListener = mListener;
             aSwitch.setOnClickListener(this);
             cardView.setOnClickListener(this);
@@ -408,7 +404,7 @@ public class LightingModeActivity extends MainActivity {
             return mListener.onCardGestureListener(view, motionEvent);
         }
 
-        public interface ViewHolderClickListener{
+        private interface ViewHolderClickListener{
             void onCardViewClick(View view);
             void onCardViewLongClick(View view);
             boolean onCardGestureListener(View view, MotionEvent motionEvent);
@@ -441,11 +437,11 @@ public class LightingModeActivity extends MainActivity {
 
         private boolean isDeleteMode = false;
 
-        public boolean isDeleteMode() {
+        private boolean isDeleteMode() {
             return isDeleteMode;
         }
 
-        public void setDeleteMode(boolean deleteMode) {
+        private void setDeleteMode(boolean deleteMode) {
             isDeleteMode = deleteMode;
             mAdapter.notifyDataSetChanged();
             if(deleteMode){
@@ -475,7 +471,7 @@ public class LightingModeActivity extends MainActivity {
             switch (holder.getItemViewType()){
                 case MACRO_TITLE:{
                     TitleViewHolder macroTitleViewHolder = (TitleViewHolder) holder;
-                    macroTitleViewHolder.titleTextView.setText(getString(R.string.recyclerview_macros_title));
+                    macroTitleViewHolder.titleTextView.setText(getString(R.string.recycler_view_macros_title));
                     macroTitleViewHolder.titleTextView.setTypeface(mHeaderTypeFace);
                     break;
                 }
@@ -499,7 +495,7 @@ public class LightingModeActivity extends MainActivity {
                 }
                 case PRESETS_TITLE:{
                     TitleViewHolder presetTitleViewHolder = (TitleViewHolder) holder;
-                    presetTitleViewHolder.titleTextView.setText(getString(R.string.recyclerview_presets_title));
+                    presetTitleViewHolder.titleTextView.setText(getString(R.string.recycler_view_presets_title));
                     presetTitleViewHolder.titleTextView.setTypeface(mHeaderTypeFace);
                     break;
                 }
@@ -517,8 +513,8 @@ public class LightingModeActivity extends MainActivity {
                     presetItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     String name = preset.getDevicesGroup().getName();
                     if(name == null){
-                        int id = (int) preset.getDevicesGroup().getDeviceArrayList().get(0);
-                        Device device = (Device) ((Application)getApplicationContext()).getDeviceById(id);
+                        int id = preset.getDevicesGroup().getDeviceArrayList().get(0);
+                        Device device = ((Application)getApplicationContext()).getDeviceById(id);
                         name = device.getName();
                     }
                     presetItemViewHolder.groupTextView.setText(name);
@@ -590,10 +586,10 @@ public class LightingModeActivity extends MainActivity {
 
         private void itemOnClick(View view){
             if(isDeleteMode){
-                CheckBox cb = (CheckBox) view.findViewById(R.id.item_checkbox);
+                CheckBox cb = view.findViewById(R.id.item_checkbox);
                 if(cb.isChecked()){
                     cb.setChecked(false);
-                    if(((String)view.getTag(R.id.groupType)).equals(Constants.PRESET)){
+                    if((view.getTag(R.id.groupType)).equals(Constants.PRESET)){
                         for(int i = 0; i < mSelectedPresets.size(); i++){
                             if(mSelectedPresets.get(i) == ((int) view.getTag(R.id.ID))){
                                 mSelectedPresets.remove(i);
@@ -636,7 +632,7 @@ public class LightingModeActivity extends MainActivity {
         }
 
         private boolean itemOnGestureListener(View view, MotionEvent motionEvent){
-            ImageView imageView = (ImageView) view.findViewById(R.id.preset_switch);
+            ImageView imageView = view.findViewById(R.id.preset_switch);
             switch (motionEvent.getAction()){
                 case MotionEvent.ACTION_DOWN:
                     imageView.setImageDrawable(getDrawable(R.drawable.ic_play_circle_filled_black_36dp));
@@ -654,7 +650,7 @@ public class LightingModeActivity extends MainActivity {
         private String getMacroItemSubString(Macro macro){
             String subText = "";
             for(int i = 0; i < macro.getPresetList().size(); i++){
-                subText += ((Preset) macro.getPresetList().get(i)).getPresetName();
+                subText += (macro.getPresetList().get(i)).getPresetName();
                 if(i != macro.getPresetList().size() - 1){
                     subText += ", ";
                 }

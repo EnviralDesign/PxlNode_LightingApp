@@ -3,10 +3,6 @@ package aquilina.ryan.homelightingapp.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-/**
- * Created by SterlingRyan on 9/12/2017.
- */
-
 public class Preset implements Serializable{
     private int id;
     private String presetName;

@@ -117,7 +117,7 @@ public class ScanActivity extends MainActivity {
                 getWifiStateAndConnect();
             } else {
                 mScannedDevicesList = singleGroup.getDevicesList();
-                ((Application)getApplicationContext()).setmScannedDevices(singleGroup);
+                ((Application)getApplicationContext()).setScannedDevices(singleGroup);
             }
         } else {
             getWifiStateAndConnect();
@@ -183,7 +183,6 @@ public class ScanActivity extends MainActivity {
             }
         }
 
-
         // Execute a queue of tasks for each possible device
         ExecutorService executorService = Executors.newFixedThreadPool(255);
         for( int i = 0; i <= 255; i++){
@@ -193,7 +192,7 @@ public class ScanActivity extends MainActivity {
         executorService.shutdown();
 
         while(!executorService.isTerminated()){
-
+            // Do nothing
         }
         runOnUiThread(new Runnable() {
             @Override
@@ -317,7 +316,7 @@ public class ScanActivity extends MainActivity {
         prefsEditor.putString(Constants.GROUP_OF_SINGLE_DEVICES, json);
 
         // Save the list in memory
-        ((Application)getApplicationContext()).setmScannedDevices(singleGroup);
+        ((Application)getApplicationContext()).setScannedDevices(singleGroup);
         return prefsEditor.commit();
     }
 

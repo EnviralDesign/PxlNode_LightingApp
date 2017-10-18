@@ -1,14 +1,18 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 4:37 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 9/12/17 9:07 AM
+ */
+
 package aquilina.ryan.homelightingapp.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-/**
- * Created by SterlingRyan on 9/7/2017.
- */
-
 public class AllGroups implements Serializable{
-    ArrayList<DevicesGroup> groups;
+    private ArrayList<DevicesGroup> groups;
 
     public AllGroups() {
         groups = new ArrayList<>();

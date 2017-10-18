@@ -1,3 +1,11 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 4:21 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 9/28/17 3:26 PM
+ */
+
 package aquilina.ryan.homelightingapp.ui.design_mode;
 
 import android.app.AlertDialog;
@@ -6,15 +14,12 @@ import android.app.DialogFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import aquilina.ryan.homelightingapp.R;
-
-/**
- * Created by SterlingRyan on 9/11/2017.
- */
 
 public class AddPresetDialog extends DialogFragment{
 
@@ -25,8 +30,7 @@ public class AddPresetDialog extends DialogFragment{
      * passes a bundle with data into it when adapter is created
      */
     public static AddPresetDialog newInstance(){
-        AddPresetDialog dialog = new AddPresetDialog();
-        return dialog;
+        return new AddPresetDialog();
     }
 
     @Override
@@ -38,12 +42,13 @@ public class AddPresetDialog extends DialogFragment{
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        View rootView = inflater.inflate(R.layout.dialog_save, null);
-        TextView title = (TextView) rootView.findViewById(R.id.alertTitle);
+        final ViewGroup nullParent = null;
+        View rootView = inflater.inflate(R.layout.dialog_save, nullParent, false);
+        TextView title = rootView.findViewById(R.id.alertTitle);
         title.setText(getString(R.string.dialog_save_preset_title));
         final EditText editText = rootView.findViewById(R.id.dialog_edit_text);
         editText.setHint(getString(R.string.dialog_preset_edit_text_hint));
-        Button saveButton = (Button) rootView.findViewById(R.id.button2);
+        Button saveButton = rootView.findViewById(R.id.button2);
         saveButton.setText(getString(R.string.dialog_save_button));
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -56,7 +61,7 @@ public class AddPresetDialog extends DialogFragment{
             }
         });
 
-        Button cancelButton = (Button) rootView.findViewById(R.id.button3);
+        Button cancelButton = rootView.findViewById(R.id.button3);
         cancelButton.setText(getString(R.string.dialog_cancel_button));
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,10 +78,7 @@ public class AddPresetDialog extends DialogFragment{
      * Checks if text is valid
      */
     private boolean isValidText(String text){
-        if(text.isEmpty()){
-            return false;
-        }
-        return true;
+        return text.equals("");
     }
 
     /**

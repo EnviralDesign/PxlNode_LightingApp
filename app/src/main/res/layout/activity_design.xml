@@ -144,7 +144,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                        android:layout_marginStart="@dimen/activity_horizontal_margin"
                         android:gravity="center_horizontal">
 
                     <cn.carbswang.android.numberpickerview.library.NumberPickerView
@@ -193,7 +193,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginRight="@dimen/activity_horizontal_margin"
+                        android:layout_marginEnd="@dimen/activity_horizontal_margin"
                         android:gravity="center_horizontal">
 
                     <cn.carbswang.android.numberpickerview.library.NumberPickerView
@@ -223,6 +223,18 @@
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
+
+        <android.support.v7.widget.AppCompatButton
+                android:id="@+id/preview_preset_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/preview_preset_button"
+                android:textColor="@color/colorPrimaryText"
+                android:backgroundTint="@color/colorAccent"
+                android:padding="8dp"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:alpha="0.2"
+                android:visibility="gone"/>
 
         <android.support.v7.widget.AppCompatButton
                 android:id="@+id/save_preset_button"

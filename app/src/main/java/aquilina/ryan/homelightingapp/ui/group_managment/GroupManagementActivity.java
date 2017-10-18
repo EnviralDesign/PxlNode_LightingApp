@@ -1,10 +1,17 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 4:44 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 10/3/17 11:01 AM
+ */
+
 package aquilina.ryan.homelightingapp.ui.group_managment;
 
 import com.google.gson.Gson;
 
 import android.app.DialogFragment;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.CardView;
@@ -19,12 +26,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 
 import aquilina.ryan.homelightingapp.Application;
@@ -36,10 +37,6 @@ import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
-
-/**
- * Created by SterlingRyan on 9/15/2017.
- */
 
 public class GroupManagementActivity extends MainActivity {
     private RecyclerView mGroupsRecyclerView;
@@ -57,8 +54,8 @@ public class GroupManagementActivity extends MainActivity {
         setContentView(R.layout.activity_groups);
 
         // Set views
-        mGroupsRecyclerView = (RecyclerView) findViewById(R.id.groups_recycler_list);
-        mSaveMacroButton = (Button) findViewById(R.id.save_macro_button);
+        mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
+        mSaveMacroButton = findViewById(R.id.save_macro_button);
 
         // Set view's data
         mPresets = new ArrayList<>();
@@ -183,13 +180,12 @@ public class GroupManagementActivity extends MainActivity {
         if(json == null){
             return new ArrayList<>();
         } else {
-            return ((AllMacros) gson.fromJson(json, AllMacros.class)).getMacros();
+            return gson.fromJson(json, AllMacros.class).getMacros();
         }
     }
 
     /**
      * Once the checked groups are deleted, save the changes.
-     * @param presets
      */
     private void saveGroupList(ArrayList<Preset> presets){
         mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
@@ -208,7 +204,6 @@ public class GroupManagementActivity extends MainActivity {
 
     /**
      * Enables/Disables the delete menu item.
-     * @param enable
      */
     private void enableDeleteMenuItem(boolean enable){
         if(enable){
@@ -228,7 +223,7 @@ public class GroupManagementActivity extends MainActivity {
         Gson gson = new Gson();
         String json = mPrefs.getString(Constants.GROUP_OF_PRESETS, null);
 
-        AllPresets allPresets = (AllPresets) gson.fromJson(json, AllPresets.class);
+        AllPresets allPresets = gson.fromJson(json, AllPresets.class);
         ArrayList<Preset> presets = new ArrayList<>();
 
         if(allPresets != null){
@@ -251,7 +246,7 @@ public class GroupManagementActivity extends MainActivity {
         if(json == null){
             allMacros = new AllMacros();
         } else {
-            allMacros = (AllMacros) gson.fromJson(json, AllMacros.class);
+            allMacros = gson.fromJson(json, AllMacros.class);
         }
 
         ArrayList<Preset> presets = new ArrayList<>();
@@ -284,7 +279,7 @@ public class GroupManagementActivity extends MainActivity {
         if(json == null){
             allMacros = new AllMacros();
         } else {
-            allMacros = (AllMacros) gson.fromJson(json, AllMacros.class);
+            allMacros = gson.fromJson(json, AllMacros.class);
         }
 
         if(allMacros != null){
@@ -316,12 +311,12 @@ public class GroupManagementActivity extends MainActivity {
         CheckBox checkBox;
         ViewHolder.ViewHolderClickListener mListener;
 
-        public ViewHolder(View itemView, ViewHolder.ViewHolderClickListener mListener) {
+        private ViewHolder(View itemView, ViewHolder.ViewHolderClickListener mListener) {
             super(itemView);
-            this.textView = (TextView) itemView.findViewById(R.id.group_name);
-            this.subTextView = (TextView) itemView.findViewById(R.id.associated_devices);
-            this.cardView = (CardView) itemView.findViewById(R.id.item_card_view);
-            this.checkBox = (CheckBox) itemView.findViewById(R.id.item_checkbox);
+            this.textView = itemView.findViewById(R.id.group_name);
+            this.subTextView = itemView.findViewById(R.id.associated_devices);
+            this.cardView = itemView.findViewById(R.id.item_card_view);
+            this.checkBox = itemView.findViewById(R.id.item_checkbox);
             this.mListener = mListener;
             cardView.setOnClickListener(this);
             cardView.setOnLongClickListener(this);
@@ -338,7 +333,7 @@ public class GroupManagementActivity extends MainActivity {
             return true;
         }
 
-        public interface ViewHolderClickListener{
+        private interface ViewHolderClickListener{
             void onCardViewClick(View view);
             void onCardViewLongClick(View view);
         }
@@ -348,11 +343,11 @@ public class GroupManagementActivity extends MainActivity {
 
         private boolean isDeleteMode = false;
 
-        public boolean isDeleteMode() {
+        private boolean isDeleteMode() {
             return isDeleteMode;
         }
 
-        public void setDeleteMode(boolean deleteMode) {
+        private void setDeleteMode(boolean deleteMode) {
             isDeleteMode = deleteMode;
             mAdapter.notifyDataSetChanged();
 
@@ -376,7 +371,7 @@ public class GroupManagementActivity extends MainActivity {
                 @Override
                 public void onCardViewClick(View view) {
                     if(isDeleteMode){
-                        CheckBox cb = (CheckBox) view.findViewById(R.id.item_checkbox);
+                        CheckBox cb = view.findViewById(R.id.item_checkbox);
                         if(cb.isChecked()){
                             cb.setChecked(false);
                             for(int i = 0; i < mSelectedPresets.size(); i++){
@@ -411,7 +406,7 @@ public class GroupManagementActivity extends MainActivity {
             String name = preset.getDevicesGroup().getName();
             if(name == null){
                 int id =  preset.getDevicesGroup().getDeviceArrayList().get(0);
-                Device device = (Device) ((Application) getApplicationContext()).getDeviceById(id);
+                Device device = ((Application) getApplicationContext()).getDeviceById(id);
                 name = device.getName();
             }
             holder.subTextView.setText(name);

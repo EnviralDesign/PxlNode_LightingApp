@@ -1,3 +1,11 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 4:59 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 9/12/17 9:07 AM
+ */
+
 package aquilina.ryan.homelightingapp.ui.main_activity;
 
 import android.annotation.SuppressLint;
@@ -5,10 +13,6 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.text.TextPaint;
 import android.text.style.TypefaceSpan;
-
-/**
- * Created by SterlingRyan on 9/8/2017.
- */
 
 @SuppressLint("ParcelCreator")
 public class CustomTypefaceSpan extends TypefaceSpan {

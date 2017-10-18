@@ -1,19 +1,17 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 5:04 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 10/4/17 10:07 AM
+ */
+
 package aquilina.ryan.homelightingapp;
 
-import com.google.gson.Gson;
-
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
-
-import java.util.ArrayList;
 
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
-import aquilina.ryan.homelightingapp.utils.Constants;
-
-/**
- * Created by SterlingRyan on 9/7/2017.
- */
 
 public class Application extends android.app.Application {
 
@@ -26,11 +24,7 @@ public class Application extends android.app.Application {
         // Required initialization logic here!
     }
 
-    public ScannedDevices getmScannedDevices() {
-        return mScannedDevices;
-    }
-
-    public void setmScannedDevices(ScannedDevices mScannedDevices) {
+    public void setScannedDevices(ScannedDevices mScannedDevices) {
         this.mScannedDevices = mScannedDevices;
     }
 

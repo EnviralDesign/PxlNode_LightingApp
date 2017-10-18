@@ -17,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -46,8 +47,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void setContentView(@LayoutRes int layoutResID) {
         // base layout
-        fullLayout = (LinearLayout) getLayoutInflater().inflate(R.layout.activity_main, null);
-        actContent = (FrameLayout) fullLayout.findViewById(R.id.activity_content);
+        final ViewGroup nullParent = null;
+        fullLayout = (LinearLayout) getLayoutInflater().inflate(R.layout.activity_main, nullParent);
+        actContent = fullLayout.findViewById(R.id.activity_content);
 
         // Setting the content of layout that is provided through layoutResID
         getLayoutInflater().inflate(layoutResID, actContent, true);
@@ -57,20 +59,21 @@ public class MainActivity extends AppCompatActivity {
         mHeaderTypeFace = Typeface.createFromAsset(am, "fonts/Raleway-Bold.ttf");
         mTextTypeFace = Typeface.createFromAsset(am, "fonts/TitilliumWeb-Regular.ttf");
         mSubTextTypeFace = Typeface.createFromAsset(am, "fonts/TitilliumWeb-Italic.ttf");
-        TextView title = (TextView) findViewById(R.id.appBarTitle);
+        TextView title = findViewById(R.id.appBarTitle);
         title.setTypeface(mHeaderTypeFace);
 
-        mToolbar = (Toolbar) fullLayout.findViewById(R.id.toolbar);
+        mToolbar = fullLayout.findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        mDrawer = (DrawerLayout) fullLayout.findViewById(R.id.drawer_layout);
+
+        mDrawer = fullLayout.findViewById(R.id.drawer_layout);
         mToogle = new ActionBarDrawerToggle(
                 this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawer.setDrawerListener(mToogle);
         mToogle.syncState();
 
-        mNavigationView = (NavigationView) fullLayout.findViewById(R.id.nav_view);
+        mNavigationView = fullLayout.findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -101,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 item.setChecked(true);
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                DrawerLayout drawer = findViewById(R.id.drawer_layout);
                 drawer.closeDrawer(GravityCompat.START);
                 return true;
             }
@@ -111,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -153,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Apply typeface to a menu item
-     * @param mi
      */
     private void applyFontToMenuItem(MenuItem mi) {
         SpannableString mNewTitle = new SpannableString(mi.getTitle());

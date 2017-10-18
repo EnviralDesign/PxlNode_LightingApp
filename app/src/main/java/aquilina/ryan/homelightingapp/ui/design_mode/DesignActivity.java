@@ -8,7 +8,6 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.database.DataSetObserver;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -23,25 +22,16 @@ import android.widget.RelativeLayout;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.SVBar;
-import com.loopj.android.http.AsyncHttpClient;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import org.json.JSONArray;
+
 import java.util.ArrayList;
-import java.util.Queue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
@@ -52,21 +42,10 @@ import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
-import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 import fr.ganfra.materialspinner.MaterialSpinner;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okio.BufferedSink;
-
-/**
- * Created by SterlingRyan on 9/5/2017.
- */
 
 public class DesignActivity extends MainActivity {
 
@@ -82,14 +61,11 @@ public class DesignActivity extends MainActivity {
     private NumberPickerView mDurationPicker;
     private NumberPickerView mRepetitionPicker;
     private Button mSavePresetButton;
+    private Button mPreviewPresetButton;
     private EffectsTimelineView mEffectsTimeLineView;
     private LinearLayout mEffectsControlLayout;
-    private ColorPicker mColorPicker;
     private RelativeLayout mHoloPickerControls;
     private SVBar mSvBar;
-
-    private View.OnClickListener mOnClickListener;
-    private CustomSpinnerAdapter mCustomSpinnerAdapter;
 
     private ArrayList<Integer> selectedDevices;
 
@@ -99,8 +75,9 @@ public class DesignActivity extends MainActivity {
     private int startColor;
     private int endColor;
 
-    private ArrayList<SendCommand> tasksList;
-
+//    private long startTime = 0;
+//    private long thisTime = 0;
+//    private int postCount = 0;
     private Common common;
 
     @Override
@@ -111,7 +88,7 @@ public class DesignActivity extends MainActivity {
         getWindow().setBackgroundDrawable(null);
         // Set up views
         super.setSelectedNavMenuItem(R.id.nav_design);
-        mColorPicker = findViewById(R.id.picker);
+        ColorPicker mColorPicker = findViewById(R.id.picker);
         mSvBar = findViewById(R.id.svbar);
         mColorPicker.setShowOldCenterColor(false);
         mSpinner = findViewById(R.id.item_spinner);
@@ -123,8 +100,10 @@ public class DesignActivity extends MainActivity {
         mRepetitionPicker = findViewById(R.id.repetitions_picker);
         mEffectsTimeLineView = findViewById(R.id.effects_timeline);
         mSavePresetButton = findViewById(R.id.save_preset_button);
+        mPreviewPresetButton = findViewById(R.id.preview_preset_button);
         mEffectsControlLayout = findViewById(R.id.effects_controls_linear_layout);
         mHoloPickerControls = findViewById(R.id.holo_picker_controls);
+
         final TextView repetitionText = findViewById(R.id.repetitions_textview);
         final TextView durationText = findViewById(R.id.duration_textview);
 
@@ -132,12 +111,12 @@ public class DesignActivity extends MainActivity {
         mSingleItemList = new ArrayList<>();
         mGroupedItemList = new ArrayList<>();
         selectedDevices = new ArrayList<>();
-        tasksList = new ArrayList<>();
+        AndroidNetworking.initialize(getApplicationContext());
         common = new Common();
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         setPickerProperties();
-        startColor = getResources().getColor(R.color.colorPrimary);
-        endColor = getResources().getColor(R.color.colorPrimary);
+        startColor = ContextCompat.getColor(getBaseContext(), R.color.colorPrimary);
+        endColor = ContextCompat.getColor(getBaseContext(), R.color.colorPrimary);
 
         // Set up view's functionality & design
         repetitionText.setTypeface(mSubTextTypeFace);
@@ -155,14 +134,14 @@ public class DesignActivity extends MainActivity {
                 updateDeviceColor(color);
             }
         });
-        mCustomSpinnerAdapter = new CustomSpinnerAdapter();
+        CustomSpinnerAdapter mCustomSpinnerAdapter = new CustomSpinnerAdapter();
         mSpinner.setAdapter(mCustomSpinnerAdapter);
         mSpinner.setTypeface(mTextTypeFace);
-        mOnClickListener = new View.OnClickListener() {
+        View.OnClickListener mOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(((Button) view).isSelected()){
-                    ((Button) view).setSelected(false);
+                if(view.isSelected()){
+                    view.setSelected(false);
                     enableEffectsControl(false);
                     isEffectEnabled = false;
                     mEffectsTimeLineView.refreshView();
@@ -172,7 +151,7 @@ public class DesignActivity extends MainActivity {
                     mHueButton.setSelected(false);
                     mHueTwoButton.setSelected(false);
                     mPulseButton.setSelected(false);
-                    ((Button) view).setSelected(true);
+                    view.setSelected(true);
                     enableEffectsControl(true);
                     isEffectEnabled = true;
                 }
@@ -206,8 +185,14 @@ public class DesignActivity extends MainActivity {
                 showSavePresetDialog();
             }
         });
+        mPreviewPresetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                formulateCommand(startColor, endColor, duration, repetition);
+            }
+        });
         mSavePresetButton.setTypeface(mHeaderTypeFace);
-        mEffectsTimeLineView.setmTypeface(mSubTextTypeFace);
+        mEffectsTimeLineView.setTypeface(mSubTextTypeFace);
     }
 
     @Override
@@ -220,7 +205,7 @@ public class DesignActivity extends MainActivity {
                 if(i == -1){
                     hideAllLightingView();
                 } else if (i >= 0 && i < mGroupedItemList.size()){
-                   selectedDevices = mGroupedItemList.get(i).getDeviceArrayList();
+                    selectedDevices = mGroupedItemList.get(i).getDeviceArrayList();
                     showAllLightingViews();
                 } else if (i == (mGroupedItemList.size())){
                     selectedDevices = new ArrayList<>();
@@ -254,7 +239,7 @@ public class DesignActivity extends MainActivity {
 
         Log.d("Color", Integer.toString(color));
         if(isEffectEnabled){
-            formulateCommand(startColor, endColor, duration, repetition);
+            formulateCommand(color, duration, repetition);
         } else {
             formulateCommand(color);
         }
@@ -268,12 +253,11 @@ public class DesignActivity extends MainActivity {
         getSelectedIpAddressesAndSendCommands(command);
     }
 
-    private void formulateCommand(int startColor, int endColor, int duration, int repetition){
-        String startRGB = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
-        String endRGB = "rgb" + Integer.toString(Color.red(endColor)) + "," + Integer.toString(Color.green(endColor))+ "," + Integer.toString(Color.blue(endColor));
+    private void formulateCommand(int color, int duration, int repetition){
+        String rgb = "rgb" + Integer.toString(Color.red(color)) + "," + Integer.toString(Color.green(color))+ "," + Integer.toString(Color.blue(color));
 
         String button = "";
-        String command = "";
+        String command;
 
         if(mHueButton.isSelected()){
             button = "hue";
@@ -285,7 +269,28 @@ public class DesignActivity extends MainActivity {
             button = "pulse";
         }
 
-        command = button + " " + startRGB + " " + endRGB + " " + duration + " " + repetition;
+        command = button + " " + rgb + " t" + duration + " f" + repetition;
+        getSelectedIpAddressesAndSendCommands(command);
+    }
+
+    private void formulateCommand(int startColor, int endColor, int duration, int repetition){
+        String startRGB = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
+        String endRGB = "rgb" + Integer.toString(Color.red(endColor)) + "," + Integer.toString(Color.green(endColor))+ "," + Integer.toString(Color.blue(endColor));
+
+        String button = "";
+        String command;
+
+        if(mHueButton.isSelected()){
+            button = "hue";
+        } else if (mBlinkButton.isSelected()){
+            button = "blink";
+        } else if (mHueTwoButton.isSelected()){
+            button = "hue2";
+        } else if (mPulseButton.isSelected()){
+            button = "pulse";
+        }
+
+        command = button + " " + startRGB + " " + endRGB + " t" + duration + " f" + repetition;
         getSelectedIpAddressesAndSendCommands(command);
     }
 
@@ -293,22 +298,23 @@ public class DesignActivity extends MainActivity {
      *  Get selected Ip Addresses and send each one a command
      */
     private void getSelectedIpAddressesAndSendCommands(String command){
-        ArrayList<String> paramsList = new ArrayList<>();
-        paramsList.add(command);
-
         for(Integer id: selectedDevices){
-            paramsList.add(((Application)getApplicationContext()).getDeviceById(id).getIpAddress());
+            String ipAddress = ((Application)getApplicationContext()).getDeviceById(id).getIpAddress();
+            AndroidNetworking.post("http://" + ipAddress + "/play")
+                    .addByteBody(command.getBytes())
+                    .setPriority(Priority.IMMEDIATE)
+                    .build()
+                    .getAsJSONArray(new JSONArrayRequestListener() {
+                        @Override
+                        public void onResponse(JSONArray response) {
+                            // do anything with response
+                        }
+                        @Override
+                        public void onError(ANError error) {
+                            // handle error
+                        }
+                    });
         }
-
-        if(tasksList.size() >= 1){
-            tasksList.get(tasksList.size() - 1).cancel(true);
-            tasksList.remove(tasksList.size() - 1);
-        }
-
-        SendCommand sendCommand = new SendCommand();
-        sendCommand.execute(paramsList.toArray(new String[0]));
-        tasksList.add(sendCommand);
-
     }
 
     /**
@@ -321,6 +327,8 @@ public class DesignActivity extends MainActivity {
         mSvBar.setAlpha(0);
         mSavePresetButton.setVisibility(View.VISIBLE);
         mSavePresetButton.setAlpha(0);
+        mPreviewPresetButton.setVisibility(View.VISIBLE);
+        mPreviewPresetButton.setAlpha(0);
 
         mHoloPickerControls.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
@@ -334,11 +342,16 @@ public class DesignActivity extends MainActivity {
                 mSvBar.setVisibility(View.VISIBLE);
             }
         });
-
         mSavePresetButton.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mSavePresetButton.setVisibility(View.VISIBLE);
+            }
+        });
+        mPreviewPresetButton.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mPreviewPresetButton.setVisibility(View.VISIBLE);
             }
         });
         enableEffectsControl(false);
@@ -372,12 +385,19 @@ public class DesignActivity extends MainActivity {
                 mSavePresetButton.setVisibility(View.GONE);
             }
         });
+        mPreviewPresetButton.setVisibility(View.GONE);
+        mPreviewPresetButton.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                mPreviewPresetButton.setVisibility(View.GONE);
+            }
+        });
         enableEffectsControl(false);
     }
 
     /**
-     *  Show save group dialog
-     *  fragment.
+     *  Show save group dialog fragment.
      */
     private void showSavePresetDialog(){
         DialogFragment dialogFragment = AddPresetDialog.newInstance();
@@ -424,9 +444,11 @@ public class DesignActivity extends MainActivity {
         prefsEditor.apply();
         refreshLayout();
         common.showToast(this, "Preset saved");
-
     }
 
+    /**
+     * Sets layout back to default
+     */
     private void refreshLayout(){
         mEffectsTimeLineView.refreshView();
         mBlinkButton.setSelected(false);
@@ -438,14 +460,13 @@ public class DesignActivity extends MainActivity {
     }
 
     /**
-     * Loads groups and fixtures from file
-     * to lists
+     * Loads groups and fixtures from file to lists
      */
     private void loadListsWithData(){
         Gson gson = new Gson();
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         String json = mPrefs.getString(Constants.GROUP_OF_DEVICES_GROUPS, null);
-        AllGroups allGroups = (AllGroups) gson.fromJson(json, AllGroups.class);
+        AllGroups allGroups = gson.fromJson(json, AllGroups.class);
 
         if(allGroups != null){
             mGroupedItemList = allGroups.getGroups();
@@ -453,7 +474,7 @@ public class DesignActivity extends MainActivity {
 
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
-        ScannedDevices scannedDevices = (ScannedDevices) gson.fromJson(json, ScannedDevices.class);
+        ScannedDevices scannedDevices = gson.fromJson(json, ScannedDevices.class);
 
         if(scannedDevices != null){
             mSingleItemList = scannedDevices.getDevicesList();
@@ -488,7 +509,7 @@ public class DesignActivity extends MainActivity {
 
     /**
      * Sets the effects controls to clickable
-     * or unclickable
+     * or un-clickable
      */
     private void enableEffectsControl(boolean enable){
         if(!enable){
@@ -497,10 +518,11 @@ public class DesignActivity extends MainActivity {
                 public void onAnimationStart(Animator animation) {
                     super.onAnimationStart(animation);
                     mEffectsControlLayout.setVisibility(View.INVISIBLE);
-                    mEffectsTimeLineView.setmStartCircleViewFocus(false);
-                    mEffectsTimeLineView.setmStopCircleViewFocus(false);
+                    mEffectsTimeLineView.setStartCircleViewFocus(false);
+                    mEffectsTimeLineView.setStopCircleViewFocus(false);
                 }
             });
+            mPreviewPresetButton.animate().translationY(- mEffectsControlLayout.getHeight());
 
         } else{
             mSavePresetButton.animate().translationY(0).setListener(new AnimatorListenerAdapter() {
@@ -508,9 +530,10 @@ public class DesignActivity extends MainActivity {
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
                     mEffectsControlLayout.setVisibility(View.VISIBLE);
-                    mEffectsTimeLineView.setmStopCircleViewFocus(true);
+                    mEffectsTimeLineView.setStopCircleViewFocus(true);
                 }
             });
+            mPreviewPresetButton.animate().translationY(0);
         }
     }
 
@@ -529,21 +552,21 @@ public class DesignActivity extends MainActivity {
                     view.findViewById(R.id.spinner_section_header_text_view).setLayoutParams(layoutParams);
                     view.setBackground(null);
                 } else{
-                    TextView textView = (TextView) view.findViewById(R.id.spinner_section_header_text_view);
+                    TextView textView = view.findViewById(R.id.spinner_section_header_text_view);
                     textView.setTypeface(mTextTypeFace);
                     textView.setText(getString(R.string.spinner_group_section_header));
                 }
                 return view;
             } else if (i > 0 && i < mGroupedItemList.size()){
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.spinner_item, viewGroup, false);
-                TextView textView = (TextView) view.findViewById(R.id.spinner_item_text_view);
+                TextView textView = view.findViewById(R.id.spinner_item_text_view);
                 textView.setText(mGroupedItemList.get(i - 1).getName());
                 textView.setTypeface(mTextTypeFace);
                 return view;
             } else if (i == mGroupedItemList.size()){
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.spinner_item, viewGroup, false);
                 view.setBackgroundColor(ContextCompat.getColor(getBaseContext(),R.color.colorPrimary));
-                TextView textView = (TextView) view.findViewById(R.id.spinner_item_text_view);
+                TextView textView = view.findViewById(R.id.spinner_item_text_view);
                 textView.setTypeface(mTextTypeFace);
                 textView.setText(mGroupedItemList.get(i - 1).getName());
                 return view;
@@ -554,14 +577,14 @@ public class DesignActivity extends MainActivity {
                     view.findViewById(R.id.spinner_section_header_text_view).setLayoutParams(layoutParams);
                     view.setBackground(null);
                 } else {
-                    TextView textView = (TextView) view.findViewById(R.id.spinner_section_header_text_view);
+                    TextView textView = view.findViewById(R.id.spinner_section_header_text_view);
                     textView.setTypeface(mTextTypeFace);
                     textView.setText(getString(R.string.spinner_fixture_section_header));
                 }
                 return view;
             } else {
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.spinner_item, viewGroup, false);
-                TextView textView = (TextView) view.findViewById(R.id.spinner_item_text_view);
+                TextView textView = view.findViewById(R.id.spinner_item_text_view);
                 textView.setTypeface(mTextTypeFace);
                 textView.setText(mSingleItemList.get(i - (mGroupedItemList.size() + 2)).getName());
                 return view;
@@ -610,8 +633,11 @@ public class DesignActivity extends MainActivity {
 
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
-            view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.spinner_hint, viewGroup, false);
-            TextView textView = (TextView) view.findViewById(R.id.spinner_hint);
+            if (view == null){
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.spinner_hint, viewGroup, false);
+            }
+
+            TextView textView = view.findViewById(R.id.spinner_hint);
             textView.setTypeface(mTextTypeFace);
             if(i == 0 || i == (mGroupedItemList.size() + 1)){
                 textView.setText(getString(R.string.spinner_hint));
@@ -640,29 +666,5 @@ public class DesignActivity extends MainActivity {
             return false;
         }
 
-    }
-
-    private class SendCommand extends AsyncTask<String, Void, Void>{
-        @Override
-        protected Void doInBackground(String... strings) {
-            String command = strings[0];
-
-            for (int i = 1; i < strings.length; i++){
-                String urlString = strings[i];
-
-                try{
-                    URL url = new URL("http://" + urlString + "/play");
-                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("POST");
-                    OutputStream outputStream = urlConnection.getOutputStream();
-                    outputStream.write(command.getBytes());
-
-                    int response = urlConnection.getResponseCode();
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-            return null;
-        }
     }
 }
