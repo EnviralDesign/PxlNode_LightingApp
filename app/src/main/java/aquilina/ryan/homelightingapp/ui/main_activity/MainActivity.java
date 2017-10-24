@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     protected Typeface mTextTypeFace;
     protected Typeface mSubTextTypeFace;
 
-    protected ActionBarDrawerToggle mToogle;
+    protected ActionBarDrawerToggle mToggle;
     protected Toolbar mToolbar;
     protected DrawerLayout mDrawer;
 
@@ -68,10 +68,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         mDrawer = fullLayout.findViewById(R.id.drawer_layout);
-        mToogle = new ActionBarDrawerToggle(
+        mToggle = new ActionBarDrawerToggle(
                 this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawer.setDrawerListener(mToogle);
-        mToogle.syncState();
+        mDrawer.setDrawerListener(mToggle);
+        mToggle.syncState();
 
         mNavigationView = fullLayout.findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Show which item is selected in drawer
-     * @param itemID
      */
     protected void setSelectedNavMenuItem(int itemID){
         for (int i = 0; i < mNavigationView.getMenu().size(); i++){
@@ -166,13 +165,13 @@ public class MainActivity extends AppCompatActivity {
     protected void enableBackButton(boolean enable){
         if(enable){
             // remove hamburger
-            mToogle.setDrawerIndicatorEnabled(false);
+            mToggle.setDrawerIndicatorEnabled(false);
 
             // Show back button
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
             if(!mToolBarNavigationListenerIsRegistered){
-                mToogle.setToolbarNavigationClickListener(new View.OnClickListener() {
+                mToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         onBackPressed();
@@ -183,8 +182,8 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-            mToogle.setDrawerIndicatorEnabled(true);
-            mToogle.setToolbarNavigationClickListener(null);
+            mToggle.setDrawerIndicatorEnabled(true);
+            mToggle.setToolbarNavigationClickListener(null);
             mToolBarNavigationListenerIsRegistered = false;
         }
     }

@@ -28,6 +28,10 @@ public class Application extends android.app.Application {
         this.mScannedDevices = mScannedDevices;
     }
 
+    public ScannedDevices getScannedDevices() {
+        return mScannedDevices;
+    }
+
     public Device getDeviceById(int id){
         if(mScannedDevices != null){
             if(!mScannedDevices.getDevicesList().isEmpty()){

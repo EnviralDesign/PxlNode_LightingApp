@@ -405,6 +405,7 @@ public class ScanActivity extends MainActivity {
     }
 
     private class ScanForDevices extends AsyncTask<Void, Void, Void>{
+
         @Override
         protected Void doInBackground(Void... voids) {
             refreshDevices();

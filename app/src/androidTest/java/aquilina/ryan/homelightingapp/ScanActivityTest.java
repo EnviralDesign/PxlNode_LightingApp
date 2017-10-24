@@ -1,3 +1,11 @@
+/*
+ * Created by Ryan Aquilina on 10/18/17 5:15 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 9/28/17 3:26 PM
+ */
+
 package aquilina.ryan.homelightingapp;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -25,10 +33,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
-
-/**
- * Created by SterlingRyan on 9/15/2017.
- */
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest

@@ -138,7 +138,7 @@ public class GroupManagementActivity extends MainActivity {
     }
 
     /**
-     * Arranges the id of the remaining presets
+     * Arranges the id of the remaining presets.
      */
     private ArrayList<Preset> arrangePresetsIds(ArrayList<Preset> presets, int i){
         for (int j = i; j < presets.size(); j++ ){
@@ -148,9 +148,10 @@ public class GroupManagementActivity extends MainActivity {
     }
 
     /**
-     * Remove presets from macros
+     * Remove presets from macros.
      */
     private void removePresetsFromMacros(ArrayList<Integer> presetsToDelete){
+        // TODO implement the proper algorithm
         Macro currentMacro;
         ArrayList<Macro> macros = loadMacros();
         for (Macro macro: macros) {
@@ -169,7 +170,7 @@ public class GroupManagementActivity extends MainActivity {
     }
 
     /**
-     * Load all saved macros
+     * Load all saved macros.
      */
     private ArrayList<Macro> loadMacros(){
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
@@ -215,7 +216,7 @@ public class GroupManagementActivity extends MainActivity {
     }
 
     /**
-     * Load presets from SharedPreferences
+     * Load presets from SharedPreferences.
      */
     private ArrayList<Preset> loadGroups(){
         mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
@@ -233,7 +234,7 @@ public class GroupManagementActivity extends MainActivity {
     }
 
     /**
-     * Save presets as macro
+     * Save presets as macro.
      */
     protected void saveMacro(String macroName){
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);

@@ -26,6 +26,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONArrayRequestListener;
+
+import org.json.JSONArray;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -36,6 +43,7 @@ import aquilina.ryan.homelightingapp.model.AllPresets;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
+import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
@@ -106,10 +114,48 @@ public class LightingModeActivity extends MainActivity {
                 deleteCheckedItems();
                 return true;
             case R.id.refresh_button:
-                //TODO send all lights blank command
+                switchOffLights();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Get a list of online devices.
+     */
+    private ArrayList<Device> getOnlineDevice(){
+        ScannedDevices scannedDevices = ((Application)getApplication()).getScannedDevices();
+
+        if(scannedDevices != null){
+            return scannedDevices.getDevicesList();
+        }
+        return null;
+    }
+
+    /**
+     * Switch off a list of devices.
+     */
+    private void switchOffLights(){
+        // TODO add the proper command
+        ArrayList<Device> onlineDevices = getOnlineDevice();
+
+        if(onlineDevices != null){
+            for(Device device : onlineDevices){
+                AndroidNetworking.post("http://" + device.getIpAddress() + "/stop")
+                        .setPriority(Priority.IMMEDIATE)
+                        .build()
+                        .getAsJSONArray(new JSONArrayRequestListener() {
+                            @Override
+                            public void onResponse(JSONArray response) {
+                                // do anything with response
+                            }
+                            @Override
+                            public void onError(ANError error) {
+                                // handle error
+                            }
+                        });
+            }
+        }
     }
 
     /**
@@ -150,7 +196,7 @@ public class LightingModeActivity extends MainActivity {
             }
 
             mSelectedMacros.clear();
-            saveMacroList(macros);
+            savePresetsInMacro(macros);
         }
 
         mAdapter.setDeleteMode(false);
@@ -158,7 +204,7 @@ public class LightingModeActivity extends MainActivity {
     }
 
     /**
-     * Arrange ids of presets inside other macros
+     * Arrange ids of presets inside other macros.
      */
     private ArrayList<Preset> arrangePresetsIdsInMacro(ArrayList<Preset> presets, int removedPresetId){
         int currentId;
@@ -172,17 +218,19 @@ public class LightingModeActivity extends MainActivity {
     }
 
     /**
-     * Arranges the id of the remaining presets
+     * Arranges the id of the remaining presets.
      */
     private ArrayList<Preset> arrangePresetsIds(ArrayList<Preset> presets, int i){
-        for (int j = i; j < presets.size(); j++ ){
-            presets.get(j).setId(j);
+        for(Preset preset : presets){
+            if(preset.getId() > i){
+                preset.setId(preset.getId() - 1);
+            }
         }
         return presets;
     }
 
     /**
-     * Arranges the id of the remaining macros
+     * Arranges the id of the remaining macros.
      */
     private ArrayList<Macro> arrangeMacrosIds(ArrayList<Macro> macros, int i){
         for (int j = i; j < macros.size(); j++ ){
@@ -192,10 +240,9 @@ public class LightingModeActivity extends MainActivity {
     }
 
     /**
-     * Remove presets from macros
+     * Remove presets from macros.
      */
     private void removePresetsFromMacros(ArrayList<Integer> presetsToDelete){
-        Macro currentMacro;
         ArrayList<Macro> macros = loadMacros();
         Iterator<Macro> macroIterator = macros.iterator();
 
@@ -209,54 +256,43 @@ public class LightingModeActivity extends MainActivity {
                     Preset preset = presetsIterator.next();
                     if(preset.getId() == id){
                         macro.removePreset(preset);
-                        currentMacro = macro;
-                        saveMacro(currentMacro);
                         if(macro.getPresetList().isEmpty()){
                             macroIterator.remove();
                         }
+                        break;
                     }
-                }
-                for (Macro macroTemp: macros) {
-                    macroTemp.setPresetList(arrangePresetsIdsInMacro(macro.getPresetList(), id));
                 }
             }
         }
+
+        for (int id: presetsToDelete){
+            macroIterator = macros.iterator();
+            Macro macro;
+            while (macroIterator.hasNext()){
+                macro = macroIterator.next();
+                macro.setPresetList(arrangePresetsIdsInMacro(macro.getPresetList(), id));
+            }
+        }
+        saveMacros(macros);
         mMacros = macros;
     }
 
-    protected void saveMacro(Macro editedMacro){
+    /**
+     * Save a macro in the macro group.
+     */
+    protected void saveMacros(ArrayList<Macro> macros){
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 
-        AllMacros allMacros;
+        AllMacros allMacros = new AllMacros();
         Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
 
-        if(json == null){
-            allMacros = new AllMacros();
-        } else {
-            allMacros = gson.fromJson(json, AllMacros.class);
-        }
+        allMacros.setMacros(macros);
 
-        if(allMacros != null){
-            for (Macro macro: allMacros.getMacros()) {
-                if(macro.getId() == editedMacro.getId()){
-                    macro.setPresetList(editedMacro.getPresetList());
-                    if(macro.getPresetList().isEmpty()){
-                        int id = editedMacro.getId();
-                        allMacros.setMacros(arrangeMacrosIds(allMacros.getMacros(), id));
-                        allMacros.removeMacro(macro);
-                    }
-                    break;
-                }
-            }
-        }
-
-        json = gson.toJson(allMacros);
+        String json = gson.toJson(allMacros);
         prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
         prefsEditor.apply();
     }
-
 
     /**
      * Save presets list after it has been edited.
@@ -275,9 +311,9 @@ public class LightingModeActivity extends MainActivity {
     }
 
     /**
-     * Save presets as macro
+     * Save presets as macro.
      */
-    protected void saveMacroList(ArrayList<Macro> macros){
+    protected void savePresetsInMacro(ArrayList<Macro> macros){
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 
@@ -312,7 +348,7 @@ public class LightingModeActivity extends MainActivity {
     }
 
     /**
-     * Load presets from SharedPreferences
+     * Load presets from SharedPreferences.
      */
     private ArrayList<Preset> loadPresets(){
         mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
@@ -332,7 +368,7 @@ public class LightingModeActivity extends MainActivity {
     }
 
     /**
-     * Load all saved macros
+     * Load all saved macros.
      */
     private ArrayList<Macro> loadMacros(){
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
@@ -480,6 +516,8 @@ public class LightingModeActivity extends MainActivity {
                     Macro macro = mMacros.get(position - 1);
                     macroItemViewHolder.cardView.setTag(R.id.ID, macro.getId());
                     macroItemViewHolder.cardView.setTag(R.id.groupType, Constants.MACRO);
+                    macroItemViewHolder.aSwitch.setTag(R.id.ID, macro.getId());
+                    macroItemViewHolder.aSwitch.setTag(R.id.groupType, Constants.MACRO);
                     macroItemViewHolder.nameTextView.setText(macro.getName());
                     macroItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     macroItemViewHolder.groupTextView.setText(getMacroItemSubString(macro));
@@ -509,6 +547,8 @@ public class LightingModeActivity extends MainActivity {
                     }
                     presetItemViewHolder.cardView.setTag(R.id.ID, preset.getId());
                     presetItemViewHolder.cardView.setTag(R.id.groupType, Constants.PRESET);
+                    presetItemViewHolder.aSwitch.setTag(R.id.ID, preset.getId());
+                    presetItemViewHolder.aSwitch.setTag(R.id.groupType, Constants.PRESET);
                     presetItemViewHolder.nameTextView.setText(preset.getPresetName());
                     presetItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     String name = preset.getDevicesGroup().getName();
@@ -613,8 +653,68 @@ public class LightingModeActivity extends MainActivity {
                         mSelectedPresets.add((int) view.getTag(R.id.ID));
                     }
                 }
-            } else{
-                //TODO switch on devices
+            }
+        }
+
+        /**
+         * Switch on a preset or a macro
+         * @param id is the id number of the Macro/Preset
+         * @param groupType is the type of group either Macro or Preset
+         */
+        private void switchOnDevices(int id, String groupType){
+            if(groupType.equals(Constants.PRESET)){
+                Preset presetClicked = null;
+                for(Preset preset : mPresets){
+                    if (preset.getId() == id){
+                        presetClicked = preset;
+                        break;
+                    }
+                }
+                sendPresetCommandToDevices(presetClicked);
+            }
+            else {
+                Macro clickedMacro = null;
+                for(Macro macro: mMacros){
+                    if(id == macro.getId()){
+                        clickedMacro = macro;
+                    }
+                }
+
+                if(clickedMacro != null){
+                    for(Preset preset : clickedMacro.getPresetList()){
+                        sendPresetCommandToDevices(preset);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Send the preset command to the devices
+         * @param presetClicked the preset that has been activated
+         */
+        private void sendPresetCommandToDevices(Preset presetClicked){
+            ArrayList<Integer> devicesIds = presetClicked.getDevicesGroup().getDeviceArrayList();
+            ArrayList<Device> devices = ((Application) getApplication()).getScannedDevices().getDevicesList();
+
+            for(int deviceID: devicesIds){
+                for(Device device : devices){
+                    if(device.getId() == deviceID){
+                        AndroidNetworking.post("http://" + device.getIpAddress() + "/play")
+                                .addByteBody(presetClicked.getCommand().getBytes())
+                                .setPriority(Priority.IMMEDIATE)
+                                .build()
+                                .getAsJSONArray(new JSONArrayRequestListener() {
+                                    @Override
+                                    public void onResponse(JSONArray response) {
+                                        // do anything with response
+                                    }
+                                    @Override
+                                    public void onError(ANError error) {
+                                        // handle error
+                                    }
+                                });
+                    }
+                }
             }
         }
 
@@ -636,6 +736,7 @@ public class LightingModeActivity extends MainActivity {
             switch (motionEvent.getAction()){
                 case MotionEvent.ACTION_DOWN:
                     imageView.setImageDrawable(getDrawable(R.drawable.ic_play_circle_filled_black_36dp));
+                    switchOnDevices((int) view.getTag(R.id.ID), (String) view.getTag(R.id.groupType));
                     return false;
                 case MotionEvent.ACTION_UP:
                     imageView.setImageDrawable(getDrawable(R.drawable.ic_play_circle_filled_white_36dp));
@@ -647,6 +748,9 @@ public class LightingModeActivity extends MainActivity {
             return false;
         }
 
+        /**
+         * Create and return the preset names in a Macro.
+         */
         private String getMacroItemSubString(Macro macro){
             String subText = "";
             for(int i = 0; i < macro.getPresetList().size(); i++){

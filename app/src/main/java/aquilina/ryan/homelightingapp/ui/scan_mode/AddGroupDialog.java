@@ -74,7 +74,7 @@ public class AddGroupDialog extends DialogFragment{
      * Checks if text is valid
      */
     private boolean isValidText(String text){
-        return text.equals("");
+        return !text.equals("");
     }
 
     /**

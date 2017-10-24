@@ -15,7 +15,7 @@
                 android:orientation="vertical"
                 android:background="@color/colorPrimary"
                 app:cardBackgroundColor="@color/colorPrimary"
-                android:layout_marginTop="@dimen/activity_horizontal_margin"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:layout_marginStart="@dimen/activity_horizontal_margin">
 
@@ -43,7 +43,6 @@
                 android:id="@+id/holo_picker_controls"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
                 android:layout_marginRight="16dp"
                 android:layout_marginLeft="16dp"
                 android:visibility="gone">
@@ -58,10 +57,10 @@
 
                 <android.support.v7.widget.AppCompatButton
                         android:id="@+id/blink_button"
-                        android:layout_width="62dp"
+                        android:layout_width="65dp"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="Blink"
+                        android:text="@string/blink"
                         android:textColor="@color/colorPrimaryText"
                         android:textSize="12sp"
                         android:backgroundTint="@color/custom_button_color_state_list"
@@ -69,9 +68,9 @@
 
                 <android.support.v7.widget.AppCompatButton
                         android:id="@+id/pulse_button"
-                        android:layout_width="62dp"
+                        android:layout_width="65dp"
                         android:layout_height="wrap_content"
-                        android:text="pulse"
+                        android:text="@string/pulse"
                         android:textColor="@color/colorPrimaryText"
                         android:textSize="12sp"
                         android:backgroundTint="@color/custom_button_color_state_list"
@@ -96,10 +95,10 @@
 
                 <android.support.v7.widget.AppCompatButton
                         android:id="@+id/hue_button"
-                        android:layout_width="62dp"
+                        android:layout_width="65dp"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="hue"
+                        android:text="@string/hue"
                         android:textColor="@color/colorPrimaryText"
                         android:textSize="13sp"
                         android:backgroundTint="@color/custom_button_color_state_list"
@@ -107,9 +106,9 @@
 
                 <android.support.v7.widget.AppCompatButton
                         android:id="@+id/hue2_button"
-                        android:layout_width="62dp"
+                        android:layout_width="65dp"
                         android:layout_height="wrap_content"
-                        android:text="hue2"
+                        android:text="@string/hue_two"
                         android:textColor="@color/colorPrimaryText"
                         android:textSize="13sp"
                         android:backgroundTint="@color/custom_button_color_state_list"
@@ -119,6 +118,15 @@
 
         <com.larswerkman.holocolorpicker.SVBar
                 android:id="@+id/svbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"/>
+
+        <com.larswerkman.holocolorpicker.OpacityBar
+                android:id="@+id/opacitybar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -231,9 +239,11 @@
                 android:text="@string/preview_preset_button"
                 android:textColor="@color/colorPrimaryText"
                 android:backgroundTint="@color/colorAccent"
-                android:padding="8dp"
-                android:layout_margin="@dimen/activity_horizontal_margin"
-                android:alpha="0.2"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="8dp"
+                android:alpha="0.3"
                 android:visibility="gone"/>
 
         <android.support.v7.widget.AppCompatButton
@@ -243,8 +253,9 @@
                 android:text="@string/save_preset_button"
                 android:textColor="@color/colorPrimaryText"
                 android:backgroundTint="@color/colorAccent"
-                android:padding="8dp"
-                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                android:layout_marginBottom="@dimen/activity_horizontal_margin"
                 android:alpha="0.2"
                 android:visibility="gone"/>
     </LinearLayout>

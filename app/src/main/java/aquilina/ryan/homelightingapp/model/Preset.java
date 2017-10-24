@@ -1,5 +1,7 @@
 package aquilina.ryan.homelightingapp.model;
 
+import android.support.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
