@@ -10,17 +10,20 @@ package aquilina.ryan.homelightingapp.ui.lighting_mode;
 
 import com.google.gson.Gson;
 
+import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -35,6 +38,8 @@ import org.json.JSONArray;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
@@ -44,12 +49,15 @@ import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
+import aquilina.ryan.homelightingapp.ui.design_mode.DesignActivity;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
+import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class LightingModeActivity extends MainActivity {
     private RecyclerView mPresetsRecyclerView;
     private Menu mMenu;
+    private TextView mHintTextView;
 
     private ArrayList<Preset> mPresets;
     private ArrayList<Integer> mSelectedPresets;
@@ -57,32 +65,37 @@ public class LightingModeActivity extends MainActivity {
     private ArrayList<Integer> mSelectedMacros;
     private PresetAdapter mAdapter;
 
-    private SharedPreferences mPrefs;
+    private Common common;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_presets);
+        setContentView(R.layout.activity_lighting_mode);
+        common = new Common();
 
         // Set views.
         mPresetsRecyclerView = findViewById(R.id.presets_recycler_list);
+        mHintTextView = findViewById(R.id.text_view_hint);
 
         // Set view's data/design
         mPresets = new ArrayList<>();
+        mMacros = new ArrayList<>();
         mSelectedPresets = new ArrayList<>();
         mSelectedMacros = new ArrayList<>();
         mAdapter = new PresetAdapter();
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mPresetsRecyclerView.setLayoutManager(layoutManager);
         mPresetsRecyclerView.setAdapter(mAdapter);
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mPresets = loadPresets();
-        mMacros = loadMacros();
+        mPresets = common.loadPresets(getApplicationContext());
+        mMacros = common.loadMacros(this);
+        if(!mPresets.isEmpty() || !mMacros.isEmpty()){
+            mHintTextView.setVisibility(View.GONE);
+        }
         mAdapter.notifyDataSetChanged();
     }
 
@@ -136,12 +149,12 @@ public class LightingModeActivity extends MainActivity {
      * Switch off a list of devices.
      */
     private void switchOffLights(){
-        // TODO add the proper command
         ArrayList<Device> onlineDevices = getOnlineDevice();
 
         if(onlineDevices != null){
             for(Device device : onlineDevices){
-                AndroidNetworking.post("http://" + device.getIpAddress() + "/stop")
+                AndroidNetworking.post("http://" + device.getIpAddress() + "/play")
+                        .addByteBody(("blank").getBytes())
                         .setPriority(Priority.IMMEDIATE)
                         .build()
                         .getAsJSONArray(new JSONArrayRequestListener() {
@@ -163,176 +176,47 @@ public class LightingModeActivity extends MainActivity {
      */
     private void deleteCheckedItems(){
         if(!mSelectedPresets.isEmpty()){
-            ArrayList<Preset> presets = loadPresets();
+            ArrayList<Preset> presets = common.loadPresets(this);
 
             for(int id: mSelectedPresets){
                 for(int i = 0; i <= presets.size(); i++){
                     Preset preset = presets.get(i);
                     if(preset.getId() == id){
                         presets.remove(preset);
-                        presets = arrangePresetsIds(presets, i);
+                        presets = common.arrangePresetsIds(presets, i);
                         break;
                     }
                 }
             }
 
-            removePresetsFromMacros(mSelectedPresets);
+            mMacros = common.removePresetsFromMacros(mSelectedPresets,this);
             mSelectedPresets.clear();
-            savePresetList(presets);
+            mPresets = common.savePresetList(presets, this);
         }
 
         if(!mSelectedMacros.isEmpty()){
-            ArrayList<Macro> macros = loadMacros();
+            ArrayList<Macro> macros = common.loadMacros(this);
 
             for(int id: mSelectedMacros){
                 for(int i = 0; i <= macros.size(); i++){
                     Macro macro = macros.get(i);
                     if(macro.getId() == id){
                         macros.remove(macro);
-                        macros = arrangeMacrosIds(macros, i);
+                        macros = common.arrangeMacrosIds(macros, i);
                         break;
                     }
                 }
             }
 
             mSelectedMacros.clear();
-            savePresetsInMacro(macros);
+            mMacros = common.savePresetsInMacro(macros,this);;
         }
 
         mAdapter.setDeleteMode(false);
         mAdapter.notifyDataSetChanged();
-    }
-
-    /**
-     * Arrange ids of presets inside other macros.
-     */
-    private ArrayList<Preset> arrangePresetsIdsInMacro(ArrayList<Preset> presets, int removedPresetId){
-        int currentId;
-        for(int i = 0; i < presets.size(); i ++){
-            currentId = presets.get(i).getId();
-            if(currentId > removedPresetId){
-                presets.get(i).setId(currentId - 1);
-            }
+        if(mMacros.isEmpty() && mPresets.isEmpty()){
+            mHintTextView.setVisibility(View.VISIBLE);
         }
-        return presets;
-    }
-
-    /**
-     * Arranges the id of the remaining presets.
-     */
-    private ArrayList<Preset> arrangePresetsIds(ArrayList<Preset> presets, int i){
-        for(Preset preset : presets){
-            if(preset.getId() > i){
-                preset.setId(preset.getId() - 1);
-            }
-        }
-        return presets;
-    }
-
-    /**
-     * Arranges the id of the remaining macros.
-     */
-    private ArrayList<Macro> arrangeMacrosIds(ArrayList<Macro> macros, int i){
-        for (int j = i; j < macros.size(); j++ ){
-            macros.get(j).setId(j);
-        }
-        return macros;
-    }
-
-    /**
-     * Remove presets from macros.
-     */
-    private void removePresetsFromMacros(ArrayList<Integer> presetsToDelete){
-        ArrayList<Macro> macros = loadMacros();
-        Iterator<Macro> macroIterator = macros.iterator();
-
-        while(macroIterator.hasNext()){
-            Macro macro = macroIterator.next();
-            ArrayList<Preset> presets = macro.getPresetList();
-            Iterator<Preset> presetsIterator = presets.iterator();
-
-            for (int id: presetsToDelete) {
-                while (presetsIterator.hasNext()){
-                    Preset preset = presetsIterator.next();
-                    if(preset.getId() == id){
-                        macro.removePreset(preset);
-                        if(macro.getPresetList().isEmpty()){
-                            macroIterator.remove();
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        for (int id: presetsToDelete){
-            macroIterator = macros.iterator();
-            Macro macro;
-            while (macroIterator.hasNext()){
-                macro = macroIterator.next();
-                macro.setPresetList(arrangePresetsIdsInMacro(macro.getPresetList(), id));
-            }
-        }
-        saveMacros(macros);
-        mMacros = macros;
-    }
-
-    /**
-     * Save a macro in the macro group.
-     */
-    protected void saveMacros(ArrayList<Macro> macros){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor prefsEditor = mPrefs.edit();
-
-        AllMacros allMacros = new AllMacros();
-        Gson gson = new Gson();
-
-        allMacros.setMacros(macros);
-
-        String json = gson.toJson(allMacros);
-        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
-        prefsEditor.apply();
-    }
-
-    /**
-     * Save presets list after it has been edited.
-     */
-    private void savePresetList(ArrayList<Preset> presets){
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor prefsEditor = mPrefs.edit();
-        Gson gson = new Gson();
-
-        AllPresets allPresets = new AllPresets(presets);
-
-        String json = gson.toJson(allPresets);
-        prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
-        prefsEditor.apply();
-        mPresets = presets;
-    }
-
-    /**
-     * Save presets as macro.
-     */
-    protected void savePresetsInMacro(ArrayList<Macro> macros){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor prefsEditor = mPrefs.edit();
-
-        AllMacros allMacros;
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
-
-        if(json == null){
-            allMacros = new AllMacros();
-        } else {
-            allMacros = gson.fromJson(json, AllMacros.class);
-        }
-
-        allMacros.setMacros(macros);
-
-        json = gson.toJson(allMacros);
-        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
-        prefsEditor.apply();
-        mMacros = macros;
     }
 
     /**
@@ -348,42 +232,6 @@ public class LightingModeActivity extends MainActivity {
     }
 
     /**
-     * Load presets from SharedPreferences.
-     */
-    private ArrayList<Preset> loadPresets(){
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
-
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_PRESETS, null);
-
-        AllPresets allPresets = gson.fromJson(json, AllPresets.class);
-        ArrayList<Preset> presets = new ArrayList<>();
-
-        if(allPresets != null){
-            for (int i = 0; i < allPresets.getAllPresets().size(); i++){
-                presets.add(allPresets.getAllPresets().get(i));
-            }
-        }
-        return presets;
-    }
-
-    /**
-     * Load all saved macros.
-     */
-    private ArrayList<Macro> loadMacros(){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
-
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
-
-        if(json == null){
-            return new ArrayList<>();
-        } else {
-            return gson.fromJson(json, AllMacros.class).getMacros();
-        }
-    }
-
-    /**
      * Refresh the recycler view to un-check all checked items.
      */
     private void removeCheckItems(){
@@ -392,6 +240,8 @@ public class LightingModeActivity extends MainActivity {
         mAdapter = new PresetAdapter();
         mPresetsRecyclerView.setAdapter(mAdapter);
     }
+
+
 
     private static class TitleViewHolder extends RecyclerView.ViewHolder{
         TextView titleTextView;
@@ -695,26 +545,52 @@ public class LightingModeActivity extends MainActivity {
         private void sendPresetCommandToDevices(Preset presetClicked){
             ArrayList<Integer> devicesIds = presetClicked.getDevicesGroup().getDeviceArrayList();
             ArrayList<Device> devices = ((Application) getApplication()).getScannedDevices().getDevicesList();
+            ArrayList<String> devicesIpAddresses = new ArrayList<>();
 
             for(int deviceID: devicesIds){
                 for(Device device : devices){
                     if(device.getId() == deviceID){
-                        AndroidNetworking.post("http://" + device.getIpAddress() + "/play")
-                                .addByteBody(presetClicked.getCommand().getBytes())
-                                .setPriority(Priority.IMMEDIATE)
-                                .build()
-                                .getAsJSONArray(new JSONArrayRequestListener() {
-                                    @Override
-                                    public void onResponse(JSONArray response) {
-                                        // do anything with response
-                                    }
-                                    @Override
-                                    public void onError(ANError error) {
-                                        // handle error
-                                    }
-                                });
+                       devicesIpAddresses.add(device.getIpAddress());
                     }
                 }
+            }
+
+            ExecutorService executorService = Executors.newFixedThreadPool(devicesIpAddresses.size());
+            for(String ipAddress: devicesIpAddresses){
+                Runnable worker = new WorkerThread(presetClicked.getCommand(), ipAddress);
+                executorService.execute(worker);
+            }
+        }
+
+        /**
+         * Asynchronous sending of post commands
+         */
+        private class WorkerThread implements Runnable{
+            String command;
+            String ipAddress;
+
+            public WorkerThread(String command, String ipAddress) {
+                this.command = command;
+                this.ipAddress = ipAddress;
+            }
+
+            @Override
+            public void run() {
+                Log.d("PostCommand", "to " + ipAddress + " with command : " + command);
+                AndroidNetworking.post("http://" + ipAddress + "/play")
+                        .addByteBody(command.getBytes())
+                        .setPriority(Priority.IMMEDIATE)
+                        .build()
+                        .getAsJSONArray(new JSONArrayRequestListener() {
+                            @Override
+                            public void onResponse(JSONArray response) {
+                                // do anything with response
+                            }
+                            @Override
+                            public void onError(ANError error) {
+                                // handle error
+                            }
+                        });
             }
         }
 

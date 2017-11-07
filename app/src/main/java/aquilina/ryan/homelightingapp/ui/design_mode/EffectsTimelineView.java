@@ -132,10 +132,15 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         view.setSelected(false);
     }
 
-    public void changeStartCircleColor(int color){
-        if(mStartCircleView.isSelected()){
+    public void changeStartCircleColor(int color, boolean bypass){
+        if(bypass){
             mStartCircleView.setCircleColor(color);
             mStartCircleView.invalidate();
+        } else {
+            if(mStartCircleView.isSelected()){
+                mStartCircleView.setCircleColor(color);
+                mStartCircleView.invalidate();
+            }
         }
     }
 
@@ -159,12 +164,16 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     }
 
     public void setStartCircleViewFocus(boolean bool){
+        unSelectView(mStopCircleView);
+        selectView(mStartCircleView);
         mStartCircleView.setInFocus(bool);
+
     }
 
     public void setStopCircleViewFocus(boolean bool){
-        mStopCircleView.setInFocus(bool);
+        unSelectView(mStartCircleView);
         selectView(mStopCircleView);
+        mStopCircleView.setInFocus(bool);
     }
 
     public boolean getStartCircleViewFocus(){
@@ -173,6 +182,22 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
 
     public boolean getStopCircleViewFocus(){
         return mStopCircleView.isInFocus();
+    }
+
+    public CircleView getmStartCircleView() {
+        return mStartCircleView;
+    }
+
+    public void setmStartCircleView(CircleView mStartCircleView) {
+        this.mStartCircleView = mStartCircleView;
+    }
+
+    public CircleView getmStopCircleView() {
+        return mStopCircleView;
+    }
+
+    public void setmStopCircleView(CircleView mStopCircleView) {
+        this.mStopCircleView = mStopCircleView;
     }
 
     public void setTypeface(Typeface mTypeface) {

@@ -8,10 +8,6 @@
 
 package aquilina.ryan.homelightingapp.ui.group_managment;
 
-import com.google.gson.Gson;
-
-import android.app.DialogFragment;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.CardView;
@@ -22,64 +18,61 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
-import aquilina.ryan.homelightingapp.model.AllMacros;
-import aquilina.ryan.homelightingapp.model.AllPresets;
-import aquilina.ryan.homelightingapp.model.Device;
-import aquilina.ryan.homelightingapp.model.Macro;
-import aquilina.ryan.homelightingapp.model.Preset;
+import aquilina.ryan.homelightingapp.model.DevicesGroup;
+import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
-import aquilina.ryan.homelightingapp.utils.Constants;
+import aquilina.ryan.homelightingapp.utils.Common;
 
 public class GroupManagementActivity extends MainActivity {
-    private RecyclerView mGroupsRecyclerView;
     private Menu mMenu;
-    private Button mSaveMacroButton;
+    private LinearLayout mHintTextView;
 
-    private ArrayList<Preset> mPresets;
-    private ArrayList<Integer> mSelectedPresets;
+    private ArrayList<DevicesGroup> mGroups;
+    private ArrayList<Integer> mToDeleteGroups;
     private GroupsAdapter mAdapter;
 
-    private SharedPreferences mPrefs;
+    private Common common;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_groups);
+        common = new Common();
 
         // Set views
-        mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
-        mSaveMacroButton = findViewById(R.id.save_macro_button);
+        RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
+        mHintTextView = findViewById(R.id.text_view_hint);
 
         // Set view's data
-        mPresets = new ArrayList<>();
-        mSelectedPresets = new ArrayList<>();
-        mSelectedPresets = new ArrayList<>();
+        mGroups = new ArrayList<>();
+        mToDeleteGroups = new ArrayList<>();
         mAdapter = new GroupsAdapter();
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mGroupsRecyclerView.setLayoutManager(layoutManager);
         mGroupsRecyclerView.setAdapter(mAdapter);
-
-        // Set view's functionality
-        mSaveMacroButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                DialogFragment dialogFragment = AddMacroDialog.newInstance();
-                dialogFragment.show(getFragmentManager(), "AddMacroDialog");
-            }
-        });
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mPresets = loadGroups();
+        mGroups = common.loadGroups(this);
+        if(mGroups != null){
+            if(mGroups.isEmpty()){
+                mHintTextView.setVisibility(View.VISIBLE);
+            } else {
+                mHintTextView.setVisibility(View.GONE);
+            }
+        } else {
+            mHintTextView.setVisibility(View.GONE);
+        }
         mAdapter.notifyDataSetChanged();
     }
 
@@ -108,100 +101,16 @@ public class GroupManagementActivity extends MainActivity {
                 mAdapter.setDeleteMode(false);
                 return true;
             case R.id.delete_button:
-                deleteCheckedGroups();
+                mGroups = common.deleteGroups(mToDeleteGroups, this);
+                mAdapter.notifyDataSetChanged();
                 mAdapter.setDeleteMode(false);
+                if(mGroups.isEmpty()){
+                    mHintTextView.setVisibility(View.VISIBLE);
+                }
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
-
-    /**
-     *  Delete checked groups.
-     */
-    private void deleteCheckedGroups(){
-        ArrayList<Preset> presets;
-        presets = loadGroups();
-
-        for(int id: mSelectedPresets){
-            for(int i = 0; i <= presets.size(); i++){
-                Preset preset = presets.get(i);
-                if(preset.getId() == id){
-                    presets.remove(preset);
-                    presets = arrangePresetsIds(presets, i);
-                    break;
-                }
-            }
-        }
-
-        removePresetsFromMacros(mSelectedPresets);
-        saveGroupList(presets);
-    }
-
-    /**
-     * Arranges the id of the remaining presets.
-     */
-    private ArrayList<Preset> arrangePresetsIds(ArrayList<Preset> presets, int i){
-        for (int j = i; j < presets.size(); j++ ){
-            presets.get(j).setId(j);
-        }
-        return presets;
-    }
-
-    /**
-     * Remove presets from macros.
-     */
-    private void removePresetsFromMacros(ArrayList<Integer> presetsToDelete){
-        // TODO implement the proper algorithm
-        Macro currentMacro;
-        ArrayList<Macro> macros = loadMacros();
-        for (Macro macro: macros) {
-            ArrayList<Preset> presets = macro.getPresetList();
-            for (int id: presetsToDelete) {
-                for (Preset preset: presets) {
-                    if(preset.getId() == id){
-                        macro.removePreset(preset);
-                        currentMacro = macro;
-                        saveMacro(currentMacro);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Load all saved macros.
-     */
-    private ArrayList<Macro> loadMacros(){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
-
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
-
-        if(json == null){
-            return new ArrayList<>();
-        } else {
-            return gson.fromJson(json, AllMacros.class).getMacros();
-        }
-    }
-
-    /**
-     * Once the checked groups are deleted, save the changes.
-     */
-    private void saveGroupList(ArrayList<Preset> presets){
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor prefsEditor = mPrefs.edit();
-        Gson gson = new Gson();
-
-        AllPresets allPresets = new AllPresets(presets);
-
-        String json = gson.toJson(allPresets);
-        prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
-        prefsEditor.apply();
-        mPresets = presets;
-        mAdapter.notifyDataSetChanged();
-    }
-
 
     /**
      * Enables/Disables the delete menu item.
@@ -215,96 +124,6 @@ public class GroupManagementActivity extends MainActivity {
         }
     }
 
-    /**
-     * Load presets from SharedPreferences.
-     */
-    private ArrayList<Preset> loadGroups(){
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
-
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_PRESETS, null);
-
-        AllPresets allPresets = gson.fromJson(json, AllPresets.class);
-        ArrayList<Preset> presets = new ArrayList<>();
-
-        if(allPresets != null){
-            return allPresets.getAllPresets();
-        }
-        return presets;
-    }
-
-    /**
-     * Save presets as macro.
-     */
-    protected void saveMacro(String macroName){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor prefsEditor = mPrefs.edit();
-
-        AllMacros allMacros;
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
-
-        if(json == null){
-            allMacros = new AllMacros();
-        } else {
-            allMacros = gson.fromJson(json, AllMacros.class);
-        }
-
-        ArrayList<Preset> presets = new ArrayList<>();
-        for(int id: mSelectedPresets){
-            for(Preset preset: mPresets){
-                if(preset.getId() == id){
-                    presets.add(preset);
-                    break;
-                }
-            }
-        }
-
-        Macro macro = new Macro(allMacros.getMacros().size() + 1, macroName, presets);
-        allMacros.addMacro(macro);
-
-        json = gson.toJson(allMacros);
-        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
-        prefsEditor.apply();
-        mAdapter.setDeleteMode(false);
-    }
-
-    protected void saveMacro(Macro editedMacro){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor prefsEditor = mPrefs.edit();
-
-        AllMacros allMacros;
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
-
-        if(json == null){
-            allMacros = new AllMacros();
-        } else {
-            allMacros = gson.fromJson(json, AllMacros.class);
-        }
-
-        if(allMacros != null){
-            for (Macro macro: allMacros.getMacros()) {
-                if(macro.getId() == editedMacro.getId()){
-                    macro.setPresetList(editedMacro.getPresetList());
-                    if(macro.getPresetList().isEmpty()){
-                        allMacros.removeMacro(macro);
-                    }
-                    break;
-                }
-            }
-        }
-        json = gson.toJson(allMacros);
-        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
-        prefsEditor.apply();
-    }
-
-    private void removeCheckedItems(){
-        mSelectedPresets.clear();
-        mAdapter = new GroupsAdapter();
-        mGroupsRecyclerView.setAdapter(mAdapter);
-    }
-
     private static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
         TextView textView;
         TextView subTextView;
@@ -312,7 +131,7 @@ public class GroupManagementActivity extends MainActivity {
         CheckBox checkBox;
         ViewHolder.ViewHolderClickListener mListener;
 
-        private ViewHolder(View itemView, ViewHolder.ViewHolderClickListener mListener) {
+        public ViewHolder(View itemView, ViewHolder.ViewHolderClickListener mListener) {
             super(itemView);
             this.textView = itemView.findViewById(R.id.group_name);
             this.subTextView = itemView.findViewById(R.id.associated_devices);
@@ -334,7 +153,7 @@ public class GroupManagementActivity extends MainActivity {
             return true;
         }
 
-        private interface ViewHolderClickListener{
+        public interface ViewHolderClickListener{
             void onCardViewClick(View view);
             void onCardViewLongClick(View view);
         }
@@ -344,24 +163,18 @@ public class GroupManagementActivity extends MainActivity {
 
         private boolean isDeleteMode = false;
 
-        private boolean isDeleteMode() {
+        public boolean isDeleteMode() {
             return isDeleteMode;
         }
 
-        private void setDeleteMode(boolean deleteMode) {
+        public void setDeleteMode(boolean deleteMode) {
             isDeleteMode = deleteMode;
             mAdapter.notifyDataSetChanged();
-
             if(deleteMode){
                 enableDeleteMenuItem(true);
-                mSaveMacroButton.setVisibility(View.VISIBLE);
-                enableBackButton(true);
             }
             else{
                 enableDeleteMenuItem(false);
-                mSaveMacroButton.setVisibility(View.GONE);
-                enableBackButton(false);
-                removeCheckedItems();
             }
         }
 
@@ -375,15 +188,15 @@ public class GroupManagementActivity extends MainActivity {
                         CheckBox cb = view.findViewById(R.id.item_checkbox);
                         if(cb.isChecked()){
                             cb.setChecked(false);
-                            for(int i = 0; i < mSelectedPresets.size(); i++){
-                                if(mSelectedPresets.get(i) == ((int) view.getTag())){
-                                    mSelectedPresets.remove(i);
+                            for(int i = 0; i < mToDeleteGroups.size(); i++){
+                                if(mToDeleteGroups.get(i) == view.getTag()){
+                                    mToDeleteGroups.remove(i);
                                 }
                             }
                         }
                         else{
                             cb.setChecked(true);
-                            mSelectedPresets.add((int) view.getTag());
+                            mToDeleteGroups.add((Integer) view.getTag());
                         }
                     }
                 }
@@ -392,26 +205,19 @@ public class GroupManagementActivity extends MainActivity {
                 public void onCardViewLongClick(View view) {
                     setDeleteMode(true);
                     ((CheckBox)view.findViewById(R.id.item_checkbox)).setChecked(true);
-                    mSelectedPresets.add((int) view.getTag());
+                    mToDeleteGroups.add((Integer) view.getTag());
                 }
             });
         }
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            Preset preset = mPresets.get(position);
+            DevicesGroup group = mGroups.get(position);
 
-            holder.cardView.setTag(preset.getId());
-            holder.textView.setText(preset.getPresetName());
+            holder.cardView.setTag(group.getId());
+            holder.textView.setText(group.getName());
             holder.textView.setTypeface(mTextTypeFace);
-            String name = preset.getDevicesGroup().getName();
-            if(name == null){
-                int id =  preset.getDevicesGroup().getDeviceArrayList().get(0);
-                Device device = ((Application) getApplicationContext()).getDeviceById(id);
-                name = device.getName();
-            }
-            holder.subTextView.setText(name);
-            holder.subTextView.setTypeface(mSubTextTypeFace);
+            holder.subTextView.setText(getGroupItemsSubString(group));
             if(isDeleteMode){
                 holder.checkBox.setVisibility(View.VISIBLE);
             } else{
@@ -421,7 +227,7 @@ public class GroupManagementActivity extends MainActivity {
 
         @Override
         public int getItemCount() {
-            return mPresets.size();
+            return mGroups.size();
         }
 
         @Override
@@ -432,6 +238,29 @@ public class GroupManagementActivity extends MainActivity {
         @Override
         public int getItemViewType(int position) {
             return position;
+        }
+
+        /**
+         * Create and return the preset names in a Macro.
+         */
+        private String getGroupItemsSubString(DevicesGroup group){
+            ScannedDevices scannedDevices = ((Application)getApplication()).getScannedDevices();
+            String subText;
+            StringBuilder builder = new StringBuilder();
+            for(int i = 0; i < group.getDeviceArrayList().size(); i++){
+                builder.append(scannedDevices.getDevicesList().get(group.getDeviceArrayList().get(i)).getIpAddress());
+                if(i != group.getDeviceArrayList().size() - 1){
+                    builder.append(", ");
+                }
+            }
+
+            subText = builder.toString();
+            if(subText.length() > 50){
+                subText = subText.substring(0, 50);
+                subText += ".....";
+            }
+
+            return subText;
         }
     }
 }

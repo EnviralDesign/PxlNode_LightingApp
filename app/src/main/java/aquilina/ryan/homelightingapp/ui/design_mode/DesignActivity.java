@@ -1,3 +1,11 @@
+/*
+ * Created by Ryan Aquilina on 10/25/17 10:36 AM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 10/25/17 10:25 AM
+ */
+
 package aquilina.ryan.homelightingapp.ui.design_mode;
 
 import com.google.gson.Gson;
@@ -5,6 +13,7 @@ import com.google.gson.Gson;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.DataSetObserver;
 import android.graphics.Color;
@@ -27,12 +36,14 @@ import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import com.larswerkman.holocolorpicker.ColorPicker;
-import com.larswerkman.holocolorpicker.OpacityBar;
-import com.larswerkman.holocolorpicker.SVBar;
+import com.larswerkman.holocolorpicker.SaturationBar;
+import com.larswerkman.holocolorpicker.ValueBar;
 
 import org.json.JSONArray;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
@@ -43,6 +54,7 @@ import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
+import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
@@ -55,6 +67,7 @@ public class DesignActivity extends MainActivity {
     private SharedPreferences mPrefs;
 
     private MaterialSpinner mSpinner;
+    private ColorPicker mColorPicker;
     private Button mBlinkButton;
     private Button mHueButton;
     private Button mHueTwoButton;
@@ -66,8 +79,9 @@ public class DesignActivity extends MainActivity {
     private EffectsTimelineView mEffectsTimeLineView;
     private LinearLayout mEffectsControlLayout;
     private RelativeLayout mHoloPickerControls;
-    private SVBar mSvBar;
-    private OpacityBar mOpBar;
+    private TextView mHintTextView;
+    private SaturationBar mSaturationBar;
+    private ValueBar mValueBar;
 
     private ArrayList<Integer> selectedDevices;
 
@@ -75,23 +89,28 @@ public class DesignActivity extends MainActivity {
     private int repetition;
     private int duration;
     private int startColor;
-    private int endColor;
+    private int stopColor;
+    private int currentSpinnerPosition = 0;
+    private String currentEffect = Constants.DESIGN_EFFECT_NONE;
     private String currentCommand = "hue rgb255,255,255 t1 f1";
+    private DesignConfiguration designConfiguration;
 
     private long lastTime = 0;
     private Common common;
+    private Boolean areVariablesAvailable = false;
+    private Boolean isFirstChange = true;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_design);
-
         getWindow().setBackgroundDrawable(null);
+
         // Set up views
         super.setSelectedNavMenuItem(R.id.nav_design);
-        ColorPicker mColorPicker = findViewById(R.id.picker);
-        mSvBar = findViewById(R.id.svbar);
-        mOpBar = findViewById(R.id.opacitybar);
+        mColorPicker = findViewById(R.id.picker);
+        mSaturationBar = findViewById(R.id.saturationBar);
+        mValueBar = findViewById(R.id.valueBar);
         mColorPicker.setShowOldCenterColor(false);
         mSpinner = findViewById(R.id.item_spinner);
         mBlinkButton = findViewById(R.id.blink_button);
@@ -105,6 +124,7 @@ public class DesignActivity extends MainActivity {
         mPreviewPresetButton = findViewById(R.id.preview_preset_button);
         mEffectsControlLayout = findViewById(R.id.effects_controls_linear_layout);
         mHoloPickerControls = findViewById(R.id.holo_picker_controls);
+        mHintTextView = findViewById(R.id.text_view_hint);
 
         final TextView repetitionText = findViewById(R.id.repetitions_textview);
         final TextView durationText = findViewById(R.id.duration_textview);
@@ -113,20 +133,19 @@ public class DesignActivity extends MainActivity {
         mSingleItemList = new ArrayList<>();
         mGroupedItemList = new ArrayList<>();
         selectedDevices = new ArrayList<>();
-        duration = 1;
-        repetition = 1;
         AndroidNetworking.initialize(getApplicationContext());
         common = new Common();
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
-        setPickerProperties();
-        startColor = ContextCompat.getColor(getBaseContext(), R.color.colorPrimary);
-        endColor = ContextCompat.getColor(getBaseContext(), R.color.colorPrimary);
+        mBlinkButton.setTag(Constants.DESIGN_EFFECT_BLINK);
+        mPulseButton.setTag(Constants.DESIGN_EFFECT_PULSE);
+        mHueButton.setTag(Constants.DESIGN_EFFECT_HUE);
+        mHueTwoButton.setTag(Constants.DESIGN_EFFECT_HUE_TWO);
 
         // Set up view's functionality & design
         repetitionText.setTypeface(mSubTextTypeFace);
         durationText.setTypeface(mSubTextTypeFace);
-        mColorPicker.addSVBar(mSvBar);
-        mColorPicker.addOpacityBar(mOpBar);
+        mColorPicker.addSaturationBar(mSaturationBar);
+        mColorPicker.addValueBar(mValueBar);
         mColorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
             @Override
             public void onColorChanged(int color) {
@@ -150,6 +169,7 @@ public class DesignActivity extends MainActivity {
                     enableEffectsControl(false);
                     isEffectEnabled = false;
                     mEffectsTimeLineView.refreshView();
+                    currentEffect = Constants.DESIGN_EFFECT_NONE;
                 }
                 else {
                     mBlinkButton.setSelected(false);
@@ -159,6 +179,7 @@ public class DesignActivity extends MainActivity {
                     view.setSelected(true);
                     enableEffectsControl(true);
                     isEffectEnabled = true;
+                    currentEffect = (String) view.getTag();
                 }
             }
         };
@@ -193,34 +214,34 @@ public class DesignActivity extends MainActivity {
         mPreviewPresetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                formulateCommand(startColor, endColor, duration, repetition);
+                formulateCommand(startColor, stopColor, duration, repetition);
             }
         });
         mPreviewPresetButton.setEnabled(false);
         mSavePresetButton.setTypeface(mHeaderTypeFace);
         mEffectsTimeLineView.setTypeface(mSubTextTypeFace);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        loadListsWithData();
         mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                currentSpinnerPosition = i + 1;
+                selectedDevices.clear();
                 if(i == -1){
                     hideAllLightingView();
                 } else if (i >= 0 && i < mGroupedItemList.size()){
                     selectedDevices = mGroupedItemList.get(i).getDeviceArrayList();
-                    showAllLightingViews();
+                    if(!areVariablesAvailable) {
+                        showAllLightingViews();
+                        isFirstChange = false;
+                    }
                 } else if (i == (mGroupedItemList.size())){
-                    selectedDevices = new ArrayList<>();
                     hideAllLightingView();
                 } else {
                     selectedDevices.add(mSingleItemList.get(i - (mGroupedItemList.size() + 1)).getId());
-                    showAllLightingViews();
+                    if(!areVariablesAvailable){
+                        showAllLightingViews();
+                        isFirstChange = false;
+                    }
                 }
-                setVariablesDefault();
             }
 
             @Override
@@ -228,6 +249,99 @@ public class DesignActivity extends MainActivity {
 
             }
         });
+
+        Bundle bundle = getIntent().getExtras();
+        if(bundle != null){
+            areVariablesAvailable = true;
+            setVariables(bundle);
+        } else {
+            setVariables(savedInstanceState);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        loadListsWithData();
+        super.onStart();
+    }
+
+    @Override
+    protected void onPause() {
+        if(areVariablesAvailable){
+            saveDesignConfigurationVariables();
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(Constants.DESIGN_START_COLOR, startColor);
+        outState.putInt(Constants.DESIGN_STOP_COLOR, stopColor);
+        outState.putInt(Constants.DESIGN_CENTER_COLOR, mColorPicker.getColor());
+        outState.putInt(Constants.DESIGN_REPETITION, repetition);
+        outState.putInt(Constants.DESIGN_DURATION, duration);
+        outState.putString(Constants.DESIGN_CURRENT_EFFECT, currentEffect);
+        outState.putString(Constants.DESIGN_CURRENT_COMMAND, currentCommand);
+        outState.putInt(Constants.DESIGN_CURRENT_SPINNER_POSITION, currentSpinnerPosition);
+        super.onSaveInstanceState(outState);
+    }
+
+    private void setVariables(Bundle bundle){
+        setPickerProperties();
+        if(bundle != null){
+            currentSpinnerPosition = bundle.getInt(Constants.DESIGN_CURRENT_SPINNER_POSITION);
+            mSpinner.setSelection(currentSpinnerPosition);
+            mHintTextView.setVisibility(View.GONE);
+            mColorPicker.setColor(bundle.getInt(Constants.DESIGN_CENTER_COLOR));
+            currentCommand = bundle.getString(Constants.DESIGN_CURRENT_COMMAND);
+            currentEffect = bundle.getString(Constants.DESIGN_CURRENT_EFFECT);
+            mHoloPickerControls.setVisibility(View.VISIBLE);
+            mSaturationBar.setVisibility(View.VISIBLE);
+            mValueBar.setVisibility(View.VISIBLE);
+            mSavePresetButton.setVisibility(View.VISIBLE);
+            mSavePresetButton.setAlpha(1);
+            mHoloPickerControls.setVisibility(View.VISIBLE);
+            mSaturationBar.setVisibility(View.VISIBLE);
+            mValueBar.setVisibility(View.VISIBLE);
+            mSavePresetButton.setVisibility(View.VISIBLE);
+            if(!currentEffect.equals(Constants.DESIGN_EFFECT_NONE)){
+                switch (currentEffect){
+                    case Constants.DESIGN_EFFECT_BLINK:
+                        mBlinkButton.setSelected(true);
+                        break;
+                    case Constants.DESIGN_EFFECT_PULSE:
+                        mPulseButton.setSelected(true);
+                        break;
+                    case Constants.DESIGN_EFFECT_HUE:
+                        mHueButton.setSelected(true);
+                        break;
+                    case Constants.DESIGN_EFFECT_HUE_TWO:
+                        mHueTwoButton.setSelected(true);
+                        break;
+                }
+                mEffectsControlLayout.setVisibility(View.VISIBLE);
+                mPreviewPresetButton.setEnabled(true);
+                mPreviewPresetButton.setVisibility(View.VISIBLE);
+                mPreviewPresetButton.setAlpha(1);
+                mEffectsTimeLineView.setStopCircleViewFocus(true);
+                isEffectEnabled = true;
+                duration = bundle.getInt(Constants.DESIGN_DURATION);
+                repetition = bundle.getInt(Constants.DESIGN_REPETITION);
+                startColor = bundle.getInt(Constants.DESIGN_START_COLOR);
+                stopColor = bundle.getInt(Constants.DESIGN_STOP_COLOR);
+                mDurationPicker.setValue(duration);
+                mRepetitionPicker.setValue(repetition);
+                mEffectsTimeLineView.changeStartCircleColor(startColor, true);
+                mEffectsTimeLineView.changeStopCircleColor(stopColor);
+                selectedDevices = bundle.getIntegerArrayList(Constants.DESIGN_SELECTED_DEVICES);
+                areVariablesAvailable = true;
+            }
+        } else {
+            duration = 1;
+            repetition = 1;
+            startColor = ContextCompat.getColor(getBaseContext(), R.color.colorPrimary);
+            stopColor = ContextCompat.getColor(getBaseContext(), R.color.colorPrimary);
+        }
     }
 
     /**
@@ -235,28 +349,25 @@ public class DesignActivity extends MainActivity {
      */
     private void updateDeviceColor(int color){
         long thisTime = System.currentTimeMillis();
+        areVariablesAvailable = true;
 
         // Send 10 commands every 1 second
         Long time = thisTime - lastTime;
         if((time) > 100){
-            if(mEffectsTimeLineView.getStopCircleViewFocus()){
+            if(mEffectsTimeLineView.getmStopCircleView().isSelected()){
                 mEffectsTimeLineView.changeStopCircleColor(color);
-                endColor = color;
+                stopColor = color;
                 mPreviewPresetButton.setEnabled(true);
                 mPreviewPresetButton.setAlpha(1);
             }
 
-            if(mEffectsTimeLineView.getStartCircleViewFocus()) {
-                mEffectsTimeLineView.changeStartCircleColor(color);
+            if(mEffectsTimeLineView.getmStartCircleView().isSelected()) {
+                mEffectsTimeLineView.changeStartCircleColor(color, false);
                 startColor = color;
             }
 
             Log.d("Color", Integer.toString(color));
-            if(isEffectEnabled){
-                formulateCommand(color, duration, repetition);
-            } else {
-                formulateCommand(color);
-            }
+            formulateCommand(color);
             lastTime = System.currentTimeMillis();
         }
     }
@@ -265,7 +376,7 @@ public class DesignActivity extends MainActivity {
      * Formulate command
      */
     private void formulateCommand(int color){
-        String command = "hue2 rgb" + Integer.toString(Color.red(color)) + "," + Integer.toString(Color.green(color))+ "," + Integer.toString(Color.blue(color)) + " t1 f1";
+        String command = "hue2 rgb" + Integer.toString(Color.red(color)) + "," + Integer.toString(Color.green(color))+ "," + Integer.toString(Color.blue(color)) + " t1 f2";
         currentCommand = command;
         getSelectedIpAddressesAndSendCommands(command);
     }
@@ -286,9 +397,9 @@ public class DesignActivity extends MainActivity {
             button = "pulse";
         }
 
-        command = button + " " + rgb + " t" + repetition + " f" + getFrames(duration);
+        command = "hue " + rgb + " t" + repetition + " f" + getFrames(duration);
         String startRGB = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
-        String endRGB = "rgb" + Integer.toString(Color.red(endColor)) + "," + Integer.toString(Color.green(endColor))+ "," + Integer.toString(Color.blue(endColor));
+        String endRGB = "rgb" + Integer.toString(Color.red(stopColor)) + "," + Integer.toString(Color.green(stopColor))+ "," + Integer.toString(Color.blue(stopColor));
         currentCommand = button + " " + startRGB + " " + endRGB + " t" + repetition + " f" + getFrames(duration);
         getSelectedIpAddressesAndSendCommands(command);
     }
@@ -337,8 +448,29 @@ public class DesignActivity extends MainActivity {
      *  Get selected Ip Addresses and send each one a command
      */
     private void getSelectedIpAddressesAndSendCommands(String command){
+        ExecutorService executorService = Executors.newFixedThreadPool(selectedDevices.size());
         for(Integer id: selectedDevices){
             String ipAddress = ((Application)getApplicationContext()).getDeviceById(id).getIpAddress();
+            Runnable worker = new WorkerThread(command, ipAddress);
+            executorService.execute(worker);
+        }
+    }
+
+    /**
+     * Asynchronous sending of post commands
+     */
+    private class WorkerThread implements Runnable{
+        String command;
+        String ipAddress;
+
+        public WorkerThread(String command, String ipAddress) {
+            this.command = command;
+            this.ipAddress = ipAddress;
+        }
+
+        @Override
+        public void run() {
+            Log.d("PostCommand", "to " + ipAddress + " with command : " + command);
             AndroidNetworking.post("http://" + ipAddress + "/play")
                     .addByteBody(command.getBytes())
                     .setPriority(Priority.IMMEDIATE)
@@ -360,12 +492,13 @@ public class DesignActivity extends MainActivity {
      * Shows the views
      */
     private void showAllLightingViews(){
+        mHintTextView.setVisibility(View.GONE);
         mHoloPickerControls.setVisibility(View.VISIBLE);
         mHoloPickerControls.setAlpha(0);
-        mSvBar.setVisibility(View.VISIBLE);
-        mSvBar.setAlpha(0);
-        mOpBar.setVisibility(View.VISIBLE);
-        mOpBar.setAlpha(0);
+        mSaturationBar.setVisibility(View.VISIBLE);
+        mSaturationBar.setAlpha(0);
+        mValueBar.setVisibility(View.VISIBLE);
+        mValueBar.setAlpha(0);
         mSavePresetButton.setVisibility(View.VISIBLE);
         mSavePresetButton.setAlpha(0);
 
@@ -375,16 +508,16 @@ public class DesignActivity extends MainActivity {
                 mHoloPickerControls.setVisibility(View.VISIBLE);
             }
         });
-        mSvBar.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
+        mSaturationBar.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                mSvBar.setVisibility(View.VISIBLE);
+                mSaturationBar.setVisibility(View.VISIBLE);
             }
         });
-        mOpBar.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
+        mValueBar.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                mOpBar.setVisibility(View.VISIBLE);
+                mValueBar.setVisibility(View.VISIBLE);
             }
         });
         mSavePresetButton.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
@@ -393,13 +526,17 @@ public class DesignActivity extends MainActivity {
                 mSavePresetButton.setVisibility(View.VISIBLE);
             }
         });
-        enableEffectsControl(false);
+
+        if(isFirstChange) {
+            enableEffectsControl(false);
+        }
     }
 
     /**
      * Hides all lighting views
      */
     private void hideAllLightingView(){
+        mHintTextView.setVisibility(View.VISIBLE);
         mHoloPickerControls.setVisibility(View.GONE);
         mHoloPickerControls.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
@@ -408,20 +545,20 @@ public class DesignActivity extends MainActivity {
                 mHoloPickerControls.setVisibility(View.GONE);
             }
         });
-        mSvBar.setVisibility(View.GONE);
-        mSvBar.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
+        mSaturationBar.setVisibility(View.GONE);
+        mSaturationBar.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                mSvBar.setVisibility(View.GONE);
+                mSaturationBar.setVisibility(View.GONE);
             }
         });
-        mOpBar.setVisibility(View.GONE);
-        mOpBar.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
+        mValueBar.setVisibility(View.GONE);
+        mValueBar.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                mOpBar.setVisibility(View.GONE);
+                mValueBar.setVisibility(View.GONE);
             }
         });
         mSavePresetButton.setVisibility(View.GONE);
@@ -485,13 +622,48 @@ public class DesignActivity extends MainActivity {
             preset.getDevicesGroup().getDeviceArrayList().add(device.getId());
         }
 
-        preset.setCommand(currentCommand);
+        String startRGB = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
+        String endRGB = "rgb" + Integer.toString(Color.red(stopColor)) + "," + Integer.toString(Color.green(stopColor))+ "," + Integer.toString(Color.blue(stopColor));
+
+        String button = "";
+        String command;
+
+        if(mHueButton.isSelected()){
+            button = "hue";
+        } else if (mBlinkButton.isSelected()){
+            button = "blink";
+        } else if (mHueTwoButton.isSelected()){
+            button = "hue2";
+        } else if (mPulseButton.isSelected()){
+            button = "pulse";
+        }
+
+        command = button + " " + startRGB + " " + endRGB + " t" + repetition + " f" + getFrames(duration);
+
+        preset.setCommand(command);
         allPresets.addPreset(preset);
         json = gson.toJson(allPresets);
         prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
         prefsEditor.apply();
         refreshLayout();
+        designConfiguration = null;
+        areVariablesAvailable = false;
         common.showToast(this, "Preset saved");
+    }
+
+    /**
+     * Stores the configuration variables for later use.
+     */
+    private void saveDesignConfigurationVariables(){
+        SharedPreferences Prefs = getSharedPreferences(Constants.DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = Prefs.edit();
+
+        designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, selectedDevices);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(designConfiguration);
+        prefsEditor.putString(Constants.DESIGN_CONFIGURATION, json);
+        prefsEditor.apply();
     }
 
     /**
@@ -499,12 +671,19 @@ public class DesignActivity extends MainActivity {
      */
     private void refreshLayout(){
         mEffectsTimeLineView.refreshView();
+        enableEffectsControl(false);
+        mSpinner.setSelection(0);
         mBlinkButton.setSelected(false);
         mHueButton.setSelected(false);
         mHueTwoButton.setSelected(false);
         mPulseButton.setSelected(false);
-        enableEffectsControl(false);
-        mSpinner.setSelection(0);
+        mDurationPicker.setValue(1);
+        mRepetitionPicker.setValue(1);
+        repetition = 1;
+        duration = 1;
+        startColor = ContextCompat.getColor(this, R.color.colorPrimary);
+        stopColor = ContextCompat.getColor(this, R.color.colorPrimary);
+        isEffectEnabled = false;
     }
 
     /**
@@ -526,6 +705,11 @@ public class DesignActivity extends MainActivity {
 
         if(scannedDevices != null){
             mSingleItemList = scannedDevices.getDevicesList();
+            if(mSingleItemList.isEmpty()){
+                setContentView(R.layout.activity_error);
+            }
+        } else{
+            setContentView(R.layout.activity_error);
         }
     }
 
@@ -536,14 +720,14 @@ public class DesignActivity extends MainActivity {
         // Repetition Picker configuration
         String[] displayValues;
         ArrayList<String> valuesList = new ArrayList<>();
-        for(int i = 0; i < 99; i++){
+        for(int i = 1; i < 99; i++){
             valuesList.add(Integer.toString(i));
         }
         valuesList.add("∞");
         displayValues = valuesList.toArray(new String[valuesList.size()]);
         mRepetitionPicker.setDisplayedValues(displayValues);
         mRepetitionPicker.setMinValue(1);
-        mRepetitionPicker.setMaxValue(100);
+        mRepetitionPicker.setMaxValue(99);
         mRepetitionPicker.setValue(1);
 
         // Duration Picker configuration
@@ -596,24 +780,6 @@ public class DesignActivity extends MainActivity {
     }
 
     /**
-     * Sets every view back to default.
-     */
-    private void setVariablesDefault(){
-        mBlinkButton.setSelected(false);
-        mHueButton.setSelected(false);
-        mHueTwoButton.setSelected(false);
-        mPulseButton.setSelected(false);
-        mEffectsTimeLineView.refreshView();
-        mDurationPicker.setValue(1);
-        mRepetitionPicker.setValue(1);
-        repetition = 1;
-        duration = 1;
-        startColor = ContextCompat.getColor(this, R.color.colorPrimary);
-        endColor = ContextCompat.getColor(this, R.color.colorPrimary);
-        isEffectEnabled = false;
-    }
-
-    /**
      * Customize the Spinner Adapter to allow for
      * two separate lists to be loaded under two
      * section headers.
@@ -631,6 +797,7 @@ public class DesignActivity extends MainActivity {
                     TextView textView = view.findViewById(R.id.spinner_section_header_text_view);
                     textView.setTypeface(mTextTypeFace);
                     textView.setText(getString(R.string.spinner_group_section_header));
+                    view.setOnClickListener(null);
                 }
                 return view;
             } else if (i > 0 && i < mGroupedItemList.size()){
@@ -656,6 +823,7 @@ public class DesignActivity extends MainActivity {
                     TextView textView = view.findViewById(R.id.spinner_section_header_text_view);
                     textView.setTypeface(mTextTypeFace);
                     textView.setText(getString(R.string.spinner_fixture_section_header));
+                    view.setOnClickListener(null);
                 }
                 return view;
             } else {

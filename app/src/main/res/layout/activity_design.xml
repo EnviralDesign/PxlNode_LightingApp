@@ -4,6 +4,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/colorSecondaryDark">
+
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -116,8 +117,8 @@
             </LinearLayout>
         </RelativeLayout>
 
-        <com.larswerkman.holocolorpicker.SVBar
-                android:id="@+id/svbar"
+        <com.larswerkman.holocolorpicker.SaturationBar
+                android:id="@+id/saturationBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -125,8 +126,8 @@
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"/>
 
-        <com.larswerkman.holocolorpicker.OpacityBar
-                android:id="@+id/opacitybar"
+        <com.larswerkman.holocolorpicker.ValueBar
+                android:id="@+id/valueBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -258,5 +259,17 @@
                 android:layout_marginBottom="@dimen/activity_horizontal_margin"
                 android:alpha="0.2"
                 android:visibility="gone"/>
+
+        <TextView
+                android:id="@+id/text_view_hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/text_view_choose_a_device_or_group"
+                android:textSize="16sp"
+                android:textColor="@color/colorPrimaryText"
+                android:fontFamily="@font/raleway_bold"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:textAlignment="center"/>
     </LinearLayout>
 </ScrollView>

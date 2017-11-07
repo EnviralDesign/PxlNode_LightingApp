@@ -1,8 +1,13 @@
 package aquilina.ryan.homelightingapp.ui.main_activity;
 
+import com.google.gson.Gson;
+
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Typeface;
+import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -22,11 +27,17 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import javax.crypto.Mac;
+
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.ui.design_mode.DesignActivity;
+import aquilina.ryan.homelightingapp.ui.design_mode.DesignConfiguration;
 import aquilina.ryan.homelightingapp.ui.group_managment.GroupManagementActivity;
+import aquilina.ryan.homelightingapp.ui.group_managment.MacroManagementActivity;
+import aquilina.ryan.homelightingapp.ui.group_managment.PresetManagementActivity;
 import aquilina.ryan.homelightingapp.ui.lighting_mode.LightingModeActivity;
 import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
+import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,9 +67,9 @@ public class MainActivity extends AppCompatActivity {
         super.setContentView(fullLayout);
 
         AssetManager am = getAssets();
-        mHeaderTypeFace = Typeface.createFromAsset(am, "fonts/Raleway-Bold.ttf");
-        mTextTypeFace = Typeface.createFromAsset(am, "fonts/TitilliumWeb-Regular.ttf");
-        mSubTextTypeFace = Typeface.createFromAsset(am, "fonts/TitilliumWeb-Italic.ttf");
+        mHeaderTypeFace = Typeface.createFromAsset(am, "fonts/raleway_bold.ttf");
+        mTextTypeFace = Typeface.createFromAsset(am, "fonts/titilliumweb_regular.ttf");
+        mSubTextTypeFace = Typeface.createFromAsset(am, "fonts/titilliumweb_italic.ttf");
         TextView title = findViewById(R.id.appBarTitle);
         title.setTypeface(mHeaderTypeFace);
 
@@ -84,6 +95,10 @@ public class MainActivity extends AppCompatActivity {
                 if (id == R.id.nav_design) {
                     if(!mNavigationView.getMenu().findItem(R.id.nav_design).isChecked()){
                         intent = new Intent(getApplicationContext(), DesignActivity.class);
+                        Bundle bundle = loadDesignConfigurationVariables();
+                        if(bundle != null){
+                            intent.putExtras(bundle);
+                        }
                         startActivity(intent);
                     }
                 } else if (id == R.id.nav_lighting_mode) {
@@ -96,9 +111,19 @@ public class MainActivity extends AppCompatActivity {
                         intent = new Intent(getApplicationContext(), ScanActivity.class);
                         startActivity(intent);
                     }
-                } else if (id == R.id.nav_group_management) {
-                    if (!mNavigationView.getMenu().findItem(R.id.nav_group_management).isChecked()) {
+                } else if (id == R.id.nav_group_node_groups) {
+                    if (!mNavigationView.getMenu().findItem(R.id.nav_group_node_groups).isChecked()) {
                         intent = new Intent(getApplicationContext(), GroupManagementActivity.class);
+                        startActivity(intent);
+                    }
+                } else if(id == R.id.nav_group_presets){
+                    if (!mNavigationView.getMenu().findItem(R.id.nav_group_presets).isChecked()) {
+                        intent = new Intent(getApplicationContext(),PresetManagementActivity.class);
+                        startActivity(intent);
+                    }
+                } else if(id == R.id.nav_group_macros){
+                    if (!mNavigationView.getMenu().findItem(R.id.nav_group_macros).isChecked()) {
+                        intent = new Intent(getApplicationContext(), MacroManagementActivity.class);
                         startActivity(intent);
                     }
                 }
@@ -151,6 +176,34 @@ public class MainActivity extends AppCompatActivity {
             //the method we have create in activity
             applyFontToMenuItem(mi);
         }
+    }
+
+    /**
+     * Loads the configuration variables if found.
+     */
+    private Bundle loadDesignConfigurationVariables(){
+        SharedPreferences Prefs = getSharedPreferences(Constants.DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        String json = Prefs.getString(Constants.DESIGN_CONFIGURATION, null);
+
+        Gson gson = new Gson();
+        DesignConfiguration designConfiguration = gson.fromJson(json, DesignConfiguration.class);
+
+        if(designConfiguration != null){
+            Bundle bundle = new Bundle();
+            bundle.putInt(Constants.DESIGN_START_COLOR, designConfiguration.getStartColor());
+            bundle.putInt(Constants.DESIGN_STOP_COLOR, designConfiguration.getEndColor());
+            bundle.putInt(Constants.DESIGN_CENTER_COLOR, designConfiguration.getCentreCircleColor());
+            bundle.putInt(Constants.DESIGN_REPETITION, designConfiguration.getRepetitions());
+            bundle.putInt(Constants.DESIGN_DURATION, designConfiguration.getDuration());
+            bundle.putString(Constants.DESIGN_CURRENT_EFFECT, designConfiguration.getEffect());
+            bundle.putString(Constants.DESIGN_CURRENT_COMMAND, designConfiguration.getCommand());
+            bundle.putInt(Constants.DESIGN_CURRENT_SPINNER_POSITION, designConfiguration.getSpinnerPosition());
+            bundle.putIntegerArrayList(Constants.DESIGN_SELECTED_DEVICES, designConfiguration.getSelectedDevices());
+
+            return bundle;
+        }
+
+        return null;
     }
 
     /**

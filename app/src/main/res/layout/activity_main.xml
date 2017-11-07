@@ -7,7 +7,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-
     <android.support.design.widget.AppBarLayout
             android:id="@+id/app_bar"
             android:layout_height="wrap_content"
@@ -47,14 +46,18 @@
 
         <android.support.design.widget.NavigationView
                 android:id="@+id/nav_view"
+                android:scrollbars="none"
+                app:headerLayout="@layout/nav_header"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:background="@color/colorPrimary"
-                app:itemTextColor="@color/colorPrimaryText"
-                app:itemIconTint="@color/colorPrimaryText"
+                android:theme="@style/NavigationDrawerTheme"
                 android:layout_gravity="start"
                 android:fitsSystemWindows="true"
-                app:menu="@menu/activity_main_drawer"/>
+                app:menu="@menu/activity_main_drawer"
+                app:elevation="4dp"
+                app:itemTextColor="@color/colorPrimaryText"
+                app:itemIconTint="@color/colorPrimaryText"/>
 
     </android.support.v4.widget.DrawerLayout>
 </LinearLayout>

@@ -62,6 +62,7 @@ public class ScanActivity extends MainActivity {
 
     private FloatingActionButton mAddToGroupButton;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private TextView mNoDevicesTextView;
 
     private SharedPreferences mPrefs;
 
@@ -79,6 +80,7 @@ public class ScanActivity extends MainActivity {
         mAddToGroupButton =  findViewById(R.id.add_to_group_fab);
         mAddToGroupButton.setVisibility(View.INVISIBLE);
         mSwipeRefreshLayout = findViewById(R.id.swiperefresh);
+        mNoDevicesTextView = findViewById(R.id.no_devices_found);
 
         // set up data
         mCheckedDevicesList = new ArrayList<>();
@@ -101,6 +103,7 @@ public class ScanActivity extends MainActivity {
                 showSaveGroupDialog();
             }
         });
+        mNoDevicesTextView.setVisibility(View.GONE);
     }
 
 
@@ -155,6 +158,8 @@ public class ScanActivity extends MainActivity {
             mSwipeRefreshLayout.setRefreshing(false);
             mDeviceAdapter.notifyDataSetChanged();
             common.showToast(getApplicationContext(), "No connections are available");
+            mNoDevicesTextView.setText(getString(R.string.text_view_no_connection));
+            mNoDevicesTextView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -206,7 +211,7 @@ public class ScanActivity extends MainActivity {
     /**
      * Saves the group of devices locally
      */
-    protected boolean saveGroupLocally(String groupName){
+    protected void saveGroupLocally(String groupName){
         AllGroups allGroups;
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 
@@ -224,7 +229,7 @@ public class ScanActivity extends MainActivity {
         prefsEditor.putString(Constants.GROUP_OF_DEVICES_GROUPS, json);
         removeCheckedItems();
         common.showToast(getApplicationContext(), getString(R.string.toast_group_saved));
-        return prefsEditor.commit();
+        prefsEditor.commit();
     }
 
     /**
@@ -254,13 +259,13 @@ public class ScanActivity extends MainActivity {
 
     @Nullable
     private Device getDeviceConnectedToWifi(String subIP, int i){
-        int TIMEOUT_VALUE = 1000;
+        int TIMEOUT_VALUE = 1500;
 
         HttpURLConnection urlConnection;
         URL url;
         String strLine;
         try{
-            url = new URL("http://" + subIP + Integer.toString(i) + "/getstatus");
+            url = new URL("http://" + subIP + Integer.toString(i) + "/mcu_info");
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setConnectTimeout(TIMEOUT_VALUE);
             urlConnection.setReadTimeout(TIMEOUT_VALUE);
@@ -269,8 +274,17 @@ public class ScanActivity extends MainActivity {
             InputStream inputStream = urlConnection.getInputStream();
             strLine = convertStreamToString(inputStream);
             if(!strLine.isEmpty()){
-                if(strLine.substring(0,39).equals("<!doctype html><html><body>Connected to")){
-                    return new Device("Device " + Integer.toString(i), subIP + Integer.toString(i));
+                if(strLine.substring(0,5).equals("name:")){
+                    int nameLength = 0;
+                    for(int j = 0;j <= strLine.length(); j++){
+                        if(strLine.charAt(j) != ','){
+                            nameLength += 1;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    return new Device((strLine.substring(5, nameLength)), subIP + Integer.toString(i));
                 }
             }
             Log.w("Good Device Ip", subIP + Integer.toString(i));
@@ -309,7 +323,7 @@ public class ScanActivity extends MainActivity {
      */
     private boolean saveSingleFixturesLocally(){
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
-         ScannedDevices singleGroup = new ScannedDevices(mScannedDevicesList);
+        ScannedDevices singleGroup = new ScannedDevices(mScannedDevicesList);
 
         Gson gson = new Gson();
         String json = gson.toJson(singleGroup);
@@ -423,6 +437,13 @@ public class ScanActivity extends MainActivity {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             mDeviceAdapter.notifyDataSetChanged();
+            if(mScannedDevicesList.isEmpty()){
+                mNoDevicesTextView.setText(getString(R.string.text_view_no_devices_found));
+                mNoDevicesTextView.setVisibility(View.VISIBLE);
+            }
+            else{
+                mNoDevicesTextView.setVisibility(View.GONE);
+            }
         }
     }
 

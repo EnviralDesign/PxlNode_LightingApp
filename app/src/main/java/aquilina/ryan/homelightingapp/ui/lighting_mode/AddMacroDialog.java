@@ -1,12 +1,12 @@
 /*
- * Created by Ryan Aquilina on 10/18/17 4:42 PM
+ * Created by Ryan Aquilina on 10/30/17 1:28 PM
  * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
  * Copyright (c) 2017.  All rights reserved
  *
- * Last modified 10/2/17 2:32 PM
+ * Last modified 10/30/17 12:40 PM
  */
 
-package aquilina.ryan.homelightingapp.ui.group_managment;
+package aquilina.ryan.homelightingapp.ui.lighting_mode;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import aquilina.ryan.homelightingapp.R;
+import aquilina.ryan.homelightingapp.ui.group_managment.PresetManagementActivity;
 
 public class AddMacroDialog extends DialogFragment {
 
@@ -85,6 +86,6 @@ public class AddMacroDialog extends DialogFragment {
      * Saves the preset locally
      */
     private void saveMacro(){
-        ((GroupManagementActivity) getActivity()).saveMacro(mMacroName);
+        ((PresetManagementActivity) getActivity()).saveMacro(mMacroName);
     }
 }

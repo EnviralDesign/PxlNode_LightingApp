@@ -39,4 +39,10 @@
         <item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
     </style>
 
+    <style name="NavigationDrawerTheme">
+        <item name="android:textColorSecondary">@color/colorSecondaryText</item>
+        <item name="android:listDivider">@color/colorSecondaryText</item>
+        <item name="android:fontFamily">@font/titilliumweb_regular</item>
+    </style>
+
 </resources>

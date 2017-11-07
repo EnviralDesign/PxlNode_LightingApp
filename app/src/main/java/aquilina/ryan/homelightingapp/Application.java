@@ -8,10 +8,16 @@
 
 package aquilina.ryan.homelightingapp;
 
+import com.google.gson.Gson;
+
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
+import aquilina.ryan.homelightingapp.ui.design_mode.DesignConfiguration;
+import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class Application extends android.app.Application {
 
@@ -22,6 +28,11 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
         // Required initialization logic here!
+
+        SharedPreferences Prefs = getSharedPreferences(Constants.DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = Prefs.edit();
+        prefsEditor.putString(Constants.DESIGN_CONFIGURATION, null);
+        prefsEditor.apply();
     }
 
     public void setScannedDevices(ScannedDevices mScannedDevices) {
@@ -58,5 +69,10 @@ public class Application extends android.app.Application {
     @Override
     public void onLowMemory() {
         super.onLowMemory();
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
     }
 }

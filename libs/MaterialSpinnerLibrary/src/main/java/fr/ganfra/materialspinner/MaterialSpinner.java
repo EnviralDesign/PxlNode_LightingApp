@@ -518,7 +518,6 @@ public class MaterialSpinner extends AppCompatSpinner implements ValueAnimator.A
         final OnItemSelectedListener onItemSelectedListener = new OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
                 if (hint != null || floatingLabelText != null) {
                     if (!floatingLabelVisible && position != 0) {
                         showFloatingLabel();

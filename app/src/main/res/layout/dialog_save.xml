@@ -49,32 +49,23 @@
     <LinearLayout
             android:id="@+id/contentPanel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
-        <ScrollView
-                android:id="@+id/scrollView"
+        <EditText
+                android:id="@+id/dialog_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="2dip"
-                android:paddingBottom="12dip"
-                android:paddingStart="16dip"
-                android:paddingEnd="10dip"
-                android:overScrollMode="ifContentScrolls">
-
-            <EditText
-                    android:id="@+id/dialog_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:imeOptions="actionDone|flagNoExtractUi"
-                    android:inputType="textCapSentences"
-                    android:textSize="16sp"
-                    android:textAlignment="viewStart"
-                    android:textColor="@color/colorPrimaryText"
-                    android:hint="@string/dialog_edit_text_hint"
-                    style="@style/MyEditTextTheme"/>
-        </ScrollView>
+                android:imeOptions="actionDone|flagNoExtractUi"
+                android:inputType="textCapSentences"
+                android:textSize="16sp"
+                android:layout_marginStart="16dip"
+                android:layout_marginEnd="16dip"
+                android:textAlignment="viewStart"
+                android:textColor="@color/colorPrimaryText"
+                android:hint="@string/dialog_edit_text_hint"
+                style="@style/MyEditTextTheme"/>
     </LinearLayout>
 
     <LinearLayout android:id="@+id/buttonPanel"

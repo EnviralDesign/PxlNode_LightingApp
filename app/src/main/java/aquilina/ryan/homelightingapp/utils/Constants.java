@@ -15,6 +15,7 @@ public final class Constants {
     /* SharedPreferences Constants */
     public static final String DEVICES_SHARED_PREFERENCES = "devices_shared_preferences";
     public static final String PRESETS_SHARED_PREFERENCES = "presets_shared_preferences";
+    public static final String DESIGN_SHARED_PREFERENCES = "design_shared_preferences";
 
     /* Devices constants*/
     public static final String GROUP_OF_DEVICES_GROUPS = "group_of_devices_groups";
@@ -27,4 +28,21 @@ public final class Constants {
     /* Macros Constants */
     public static final String MACRO = "macro";
     public static final String GROUP_OF_MACROS = "group_of_macros";
+
+    /* Configuration Constants */
+    public static final String DESIGN_CONFIGURATION = "design_configuration";
+    public static final String DESIGN_EFFECT_PULSE = "pulse";
+    public static final String DESIGN_EFFECT_BLINK = "blink";
+    public static final String DESIGN_EFFECT_HUE = "hue";
+    public static final String DESIGN_EFFECT_HUE_TWO = "hue_two";
+    public static final String DESIGN_EFFECT_NONE = "none";
+    public static final String DESIGN_START_COLOR = "start_color";
+    public static final String DESIGN_STOP_COLOR = "stop_color";
+    public static final String DESIGN_REPETITION = "repetition";
+    public static final String DESIGN_DURATION = "duration";
+    public static final String DESIGN_CENTER_COLOR = "center_color";
+    public static final String DESIGN_CURRENT_EFFECT = "current_effect";
+    public static final String DESIGN_CURRENT_COMMAND = "current_command";
+    public static final String DESIGN_CURRENT_SPINNER_POSITION = "current_spinner_position";
+    public static final String DESIGN_SELECTED_DEVICES = "selected_devices";
 }

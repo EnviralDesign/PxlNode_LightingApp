@@ -12,7 +12,10 @@
     <string name="nav_scan_mode_name">Scan For Devices</string>
     <string name="nav_design_mode_name">Look Design</string>
     <string name="nav_light_mode_name">Lighting Mode</string>
-    <string name="nav_group_management_name">Group Management</string>
+    <string name="nav_group_management_name">GROUP MANAGEMENT</string>
+    <string name="nav_group_management_node_groups">Groups</string>
+    <string name="nav_group_management_presets">Presets</string>
+    <string name="nav_group_management_macros">Macros</string>
 
     <!--Toolbar Strings-->
     <string name="action_refresh">Refresh</string>
@@ -26,6 +29,8 @@
     <string name="device_name">device name</string>
     <string name="device_ip_address">ip address</string>
     <string name="toast_group_saved">Group created</string>
+    <string name="text_view_no_devices_found">no devices where found</string>
+    <string name="text_view_no_connection">no connections are available</string>
 
     <!--Design Mode Strings-->
     <string name="spinner_hint">Select Group or Item</string>
@@ -41,6 +46,8 @@
     <string name="hue">Hue</string>
     <string name="hue_two">Hue2</string>
     <string name="pulse">Pulse</string>
+    <string name="text_view_choose_a_device_or_group">Use the dropdown menu to choose a device or group.</string>
+    <string name="text_view_no_device_online">no devices is online</string>
 
     <!-- Lighting Mode Strings-->
     <string name="button_save_macro">SAVE MACRO</string>
@@ -48,4 +55,10 @@
     <string name="dialog_save_macro_hint">Enter macro name</string>
     <string name="recycler_view_macros_title">MACROS</string>
     <string name="recycler_view_presets_title">PRESETS</string>
+    <string name="text_view_create_preset_or_macro">no presets or macros created yet</string>
+
+    <!-- Group Management Strings -->
+    <string name="text_view_create_group">no groups found</string>
+    <string name="text_view_create_presets">no presets found</string>
+    <string name="text_view_create_macros">no macros found</string>
 </resources>
