@@ -8,10 +8,6 @@
 
 package aquilina.ryan.homelightingapp.ui.lighting_mode;
 
-import com.google.gson.Gson;
-
-import android.app.DialogFragment;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -23,7 +19,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -37,19 +32,15 @@ import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import org.json.JSONArray;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
-import aquilina.ryan.homelightingapp.model.AllMacros;
-import aquilina.ryan.homelightingapp.model.AllPresets;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
-import aquilina.ryan.homelightingapp.ui.design_mode.DesignActivity;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
@@ -74,6 +65,7 @@ public class LightingModeActivity extends MainActivity {
         common = new Common();
 
         // Set views.
+        mNavigationView.setCheckedItem(R.id.nav_lighting_mode);
         mPresetsRecyclerView = findViewById(R.id.presets_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
 
@@ -209,7 +201,7 @@ public class LightingModeActivity extends MainActivity {
             }
 
             mSelectedMacros.clear();
-            mMacros = common.savePresetsInMacro(macros,this);;
+            mMacros = common.savePresetsInMacro(macros,this);
         }
 
         mAdapter.setDeleteMode(false);
@@ -531,10 +523,32 @@ public class LightingModeActivity extends MainActivity {
                 }
 
                 if(clickedMacro != null){
-                    for(Preset preset : clickedMacro.getPresetList()){
-                        sendPresetCommandToDevices(preset);
+                    sendMacroCommands(clickedMacro);
+                }
+            }
+        }
+
+        /**
+         * Switch on the presets inside the macro.
+         * @param macro macro chosen to be switched on.
+         */
+        private void sendMacroCommands(Macro macro){
+            ArrayList<DeviceAndCommand> commandsList = new ArrayList<>();
+            ArrayList<Device> devices = ((Application) getApplication()).getScannedDevices().getDevicesList();
+
+            if(!macro.getPresetList().isEmpty()){
+                for (Preset preset : macro.getPresetList()) {
+                    for (Integer deviceID : preset.getDevicesGroup().getDeviceArrayList()) {
+                        commandsList.add(new DeviceAndCommand(devices.get(deviceID).getIpAddress(), preset.getCommand()));
                     }
                 }
+
+                ExecutorService executorService = Executors.newFixedThreadPool(commandsList.size());
+                for(DeviceAndCommand deviceAndCommand :commandsList){
+                    Runnable worker = new WorkerThread(deviceAndCommand.getCommand(), deviceAndCommand.getDeviceIp());
+                    executorService.execute(worker);
+                }
+                executorService.shutdown();
             }
         }
 
@@ -543,22 +557,27 @@ public class LightingModeActivity extends MainActivity {
          * @param presetClicked the preset that has been activated
          */
         private void sendPresetCommandToDevices(Preset presetClicked){
-            ArrayList<Integer> devicesIds = presetClicked.getDevicesGroup().getDeviceArrayList();
-            ArrayList<Device> devices = ((Application) getApplication()).getScannedDevices().getDevicesList();
-            ArrayList<String> devicesIpAddresses = new ArrayList<>();
+            if(presetClicked != null){
+                ArrayList<Integer> devicesIds = presetClicked.getDevicesGroup().getDeviceArrayList();
+                ArrayList<Device> devices = ((Application) getApplication()).getScannedDevices().getDevicesList();
+                ArrayList<String> devicesIpAddresses = new ArrayList<>();
 
-            for(int deviceID: devicesIds){
-                for(Device device : devices){
-                    if(device.getId() == deviceID){
-                       devicesIpAddresses.add(device.getIpAddress());
+                if(!devices.isEmpty()){
+                    for(int deviceID: devicesIds){
+                        for(Device device : devices){
+                            if(device.getId() == deviceID){
+                                devicesIpAddresses.add(device.getIpAddress());
+                            }
+                        }
                     }
-                }
-            }
 
-            ExecutorService executorService = Executors.newFixedThreadPool(devicesIpAddresses.size());
-            for(String ipAddress: devicesIpAddresses){
-                Runnable worker = new WorkerThread(presetClicked.getCommand(), ipAddress);
-                executorService.execute(worker);
+                    ExecutorService executorService = Executors.newFixedThreadPool(devicesIpAddresses.size());
+                    for(String ipAddress: devicesIpAddresses){
+                        Runnable worker = new WorkerThread(presetClicked.getCommand(), ipAddress);
+                        executorService.execute(worker);
+                    }
+                    executorService.shutdown();
+                }
             }
         }
 
@@ -642,6 +661,25 @@ public class LightingModeActivity extends MainActivity {
             }
 
             return subText;
+        }
+
+        private class DeviceAndCommand {
+            String deviceIp;
+            String command;
+
+            public DeviceAndCommand(String deviceIp, String command) {
+                this.deviceIp = deviceIp;
+                this.command = command;
+            }
+
+            public String getDeviceIp() {
+                return deviceIp;
+            }
+
+            public String getCommand() {
+                return command;
+            }
+
         }
     }
 }

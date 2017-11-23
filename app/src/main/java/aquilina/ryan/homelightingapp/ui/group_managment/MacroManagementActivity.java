@@ -51,6 +51,7 @@ public class MacroManagementActivity extends MainActivity{
         setContentView(R.layout.activity_macros);
 
         // Set views
+        mNavigationView.setCheckedItem(R.id.nav_group_macros);
         RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
 

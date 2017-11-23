@@ -63,7 +63,18 @@
                         android:layout_marginBottom="16dp"
                         android:text="@string/blink"
                         android:textColor="@color/colorPrimaryText"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
+                        android:backgroundTint="@color/custom_button_color_state_list"
+                        style="Widget.AppCompat.Button.Colored"/>
+
+                <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/huehsl_button"
+                        android:layout_width="65dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="@string/huehsl"
+                        android:textColor="@color/colorPrimaryText"
+                        android:textSize="10sp"
                         android:backgroundTint="@color/custom_button_color_state_list"
                         style="Widget.AppCompat.Button.Colored"/>
 
@@ -73,7 +84,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/pulse"
                         android:textColor="@color/colorPrimaryText"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:backgroundTint="@color/custom_button_color_state_list"
                         style="Widget.AppCompat.Button.Colored"/>
             </LinearLayout>
@@ -101,9 +112,21 @@
                         android:layout_marginBottom="16dp"
                         android:text="@string/hue"
                         android:textColor="@color/colorPrimaryText"
-                        android:textSize="13sp"
+                        android:textSize="10sp"
                         android:backgroundTint="@color/custom_button_color_state_list"
                         style="Widget.AppCompat.Button.Colored"/>
+
+                <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/huehsb_button"
+                        android:layout_width="65dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="@string/huehsb"
+                        android:textColor="@color/colorPrimaryText"
+                        android:textSize="10sp"
+                        android:backgroundTint="@color/custom_button_color_state_list"
+                        style="Widget.AppCompat.Button.Colored"/>
+
 
                 <android.support.v7.widget.AppCompatButton
                         android:id="@+id/hue2_button"
@@ -111,7 +134,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/hue_two"
                         android:textColor="@color/colorPrimaryText"
-                        android:textSize="13sp"
+                        android:textSize="10sp"
                         android:backgroundTint="@color/custom_button_color_state_list"
                         style="Widget.AppCompat.Button.Colored"/>
             </LinearLayout>

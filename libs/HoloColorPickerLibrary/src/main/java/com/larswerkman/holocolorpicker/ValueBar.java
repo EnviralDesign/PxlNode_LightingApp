@@ -443,7 +443,7 @@ public class ValueBar extends View {
 		calculateColor(mBarPointerPosition);
 		mBarPointerPaint.setColor(mColor);
 		if (mPicker != null) {
-			mPicker.setNewCenterColor(mColor);
+			//mPicker.setNewCenterColor(mColor);
 			if(mPicker.hasOpacityBar())
 				mPicker.changeOpacityBarColor(mColor);
 		}

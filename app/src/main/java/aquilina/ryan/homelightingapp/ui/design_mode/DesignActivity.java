@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.DataSetObserver;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -54,7 +55,6 @@ import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
-import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
@@ -72,6 +72,8 @@ public class DesignActivity extends MainActivity {
     private Button mHueButton;
     private Button mHueTwoButton;
     private Button mPulseButton;
+    private Button mHueHsbButton;
+    private Button mHueHslButton;
     private NumberPickerView mDurationPicker;
     private NumberPickerView mRepetitionPicker;
     private Button mSavePresetButton;
@@ -84,8 +86,8 @@ public class DesignActivity extends MainActivity {
     private ValueBar mValueBar;
 
     private ArrayList<Integer> selectedDevices;
+    private ExecutorService executorService;
 
-    private boolean isEffectEnabled = false;
     private int repetition;
     private int duration;
     private int startColor;
@@ -99,6 +101,8 @@ public class DesignActivity extends MainActivity {
     private Common common;
     private Boolean areVariablesAvailable = false;
     private Boolean isFirstChange = true;
+    private HoverThread hoverThread;
+    private boolean isHovering = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -108,6 +112,7 @@ public class DesignActivity extends MainActivity {
 
         // Set up views
         super.setSelectedNavMenuItem(R.id.nav_design);
+        mNavigationView.setCheckedItem(R.id.nav_design);
         mColorPicker = findViewById(R.id.picker);
         mSaturationBar = findViewById(R.id.saturationBar);
         mValueBar = findViewById(R.id.valueBar);
@@ -117,6 +122,8 @@ public class DesignActivity extends MainActivity {
         mHueButton = findViewById(R.id.hue_button);
         mHueTwoButton = findViewById(R.id.hue2_button);
         mPulseButton =  findViewById(R.id.pulse_button);
+        mHueHsbButton = findViewById(R.id.huehsb_button);
+        mHueHslButton = findViewById(R.id.huehsl_button);
         mDurationPicker = findViewById(R.id.duration_picker);
         mRepetitionPicker = findViewById(R.id.repetitions_picker);
         mEffectsTimeLineView = findViewById(R.id.effects_timeline);
@@ -140,6 +147,9 @@ public class DesignActivity extends MainActivity {
         mPulseButton.setTag(Constants.DESIGN_EFFECT_PULSE);
         mHueButton.setTag(Constants.DESIGN_EFFECT_HUE);
         mHueTwoButton.setTag(Constants.DESIGN_EFFECT_HUE_TWO);
+        mHueHslButton.setTag(Constants.DESIGN_EFFECT_HUE_HSL);
+        mHueHsbButton.setTag(Constants.DESIGN_EFFECT_HUE_HSB);
+        hoverThread = new HoverThread();
 
         // Set up view's functionality & design
         repetitionText.setTypeface(mSubTextTypeFace);
@@ -149,13 +159,19 @@ public class DesignActivity extends MainActivity {
         mColorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
             @Override
             public void onColorChanged(int color) {
-                updateDeviceColor(color);
+                updateDeviceColorIncrementally(color);
             }
         });
         mColorPicker.setOnColorSelectedListener(new ColorPicker.OnColorSelectedListener() {
             @Override
             public void onColorSelected(int color) {
-                updateDeviceColor(color);
+                updateDeviceColorIncrementally(color);
+            }
+        });
+        mColorPicker.setOnColorReleasedListener(new ColorPicker.OnColorReleaseListener() {
+            @Override
+            public void onColorReleased(int color) {
+                updateDeviceColorInstant(color);
             }
         });
         CustomSpinnerAdapter mCustomSpinnerAdapter = new CustomSpinnerAdapter();
@@ -167,7 +183,6 @@ public class DesignActivity extends MainActivity {
                 if(view.isSelected()){
                     view.setSelected(false);
                     enableEffectsControl(false);
-                    isEffectEnabled = false;
                     mEffectsTimeLineView.refreshView();
                     currentEffect = Constants.DESIGN_EFFECT_NONE;
                 }
@@ -176,9 +191,10 @@ public class DesignActivity extends MainActivity {
                     mHueButton.setSelected(false);
                     mHueTwoButton.setSelected(false);
                     mPulseButton.setSelected(false);
+                    mHueHsbButton.setSelected(false);
+                    mHueHslButton.setSelected(false);
                     view.setSelected(true);
                     enableEffectsControl(true);
-                    isEffectEnabled = true;
                     currentEffect = (String) view.getTag();
                 }
             }
@@ -205,6 +221,10 @@ public class DesignActivity extends MainActivity {
         mHueTwoButton.setTypeface(mHeaderTypeFace);
         mPulseButton.setOnClickListener(mOnClickListener);
         mPulseButton.setTypeface(mHeaderTypeFace);
+        mHueHslButton.setOnClickListener(mOnClickListener);
+        mHueHslButton.setTypeface(mHeaderTypeFace);
+        mHueHsbButton.setOnClickListener(mOnClickListener);
+        mHueHsbButton.setTypeface(mHeaderTypeFace);
         mSavePresetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -274,6 +294,14 @@ public class DesignActivity extends MainActivity {
     }
 
     @Override
+    protected void onStop() {
+        if(executorService != null) {
+            executorService.shutdownNow();
+        }
+        super.onStop();
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt(Constants.DESIGN_START_COLOR, startColor);
         outState.putInt(Constants.DESIGN_STOP_COLOR, stopColor);
@@ -304,6 +332,7 @@ public class DesignActivity extends MainActivity {
             mSaturationBar.setVisibility(View.VISIBLE);
             mValueBar.setVisibility(View.VISIBLE);
             mSavePresetButton.setVisibility(View.VISIBLE);
+            selectedDevices = bundle.getIntegerArrayList(Constants.DESIGN_SELECTED_DEVICES);
             if(!currentEffect.equals(Constants.DESIGN_EFFECT_NONE)){
                 switch (currentEffect){
                     case Constants.DESIGN_EFFECT_BLINK:
@@ -318,13 +347,18 @@ public class DesignActivity extends MainActivity {
                     case Constants.DESIGN_EFFECT_HUE_TWO:
                         mHueTwoButton.setSelected(true);
                         break;
+                    case Constants.DESIGN_EFFECT_HUE_HSB:
+                        mHueHsbButton.setSelected(true);
+                        break;
+                    case Constants.DESIGN_EFFECT_HUE_HSL:
+                        mHueHslButton.setSelected(true);
+                        break;
                 }
                 mEffectsControlLayout.setVisibility(View.VISIBLE);
                 mPreviewPresetButton.setEnabled(true);
                 mPreviewPresetButton.setVisibility(View.VISIBLE);
                 mPreviewPresetButton.setAlpha(1);
                 mEffectsTimeLineView.setStopCircleViewFocus(true);
-                isEffectEnabled = true;
                 duration = bundle.getInt(Constants.DESIGN_DURATION);
                 repetition = bundle.getInt(Constants.DESIGN_REPETITION);
                 startColor = bundle.getInt(Constants.DESIGN_START_COLOR);
@@ -333,7 +367,6 @@ public class DesignActivity extends MainActivity {
                 mRepetitionPicker.setValue(repetition);
                 mEffectsTimeLineView.changeStartCircleColor(startColor, true);
                 mEffectsTimeLineView.changeStopCircleColor(stopColor);
-                selectedDevices = bundle.getIntegerArrayList(Constants.DESIGN_SELECTED_DEVICES);
                 areVariablesAvailable = true;
             }
         } else {
@@ -345,31 +378,48 @@ public class DesignActivity extends MainActivity {
     }
 
     /**
-     * Update command variables
+     * Update command variables in a pre-determined rate
      */
-    private void updateDeviceColor(int color){
+    private void updateDeviceColorIncrementally(int color){
         long thisTime = System.currentTimeMillis();
         areVariablesAvailable = true;
 
         // Send 10 commands every 1 second
         Long time = thisTime - lastTime;
         if((time) > 100){
-            if(mEffectsTimeLineView.getmStopCircleView().isSelected()){
-                mEffectsTimeLineView.changeStopCircleColor(color);
-                stopColor = color;
-                mPreviewPresetButton.setEnabled(true);
-                mPreviewPresetButton.setAlpha(1);
-            }
-
-            if(mEffectsTimeLineView.getmStartCircleView().isSelected()) {
-                mEffectsTimeLineView.changeStartCircleColor(color, false);
-                startColor = color;
-            }
-
-            Log.d("Color", Integer.toString(color));
-            formulateCommand(color);
-            lastTime = System.currentTimeMillis();
+            updateDeviceColorInstant(color);
         }
+        if(hoverThread.getStatus() == AsyncTask.Status.RUNNING || hoverThread.getStatus() == AsyncTask.Status.PENDING){
+            isHovering = false;
+            hoverThread.cancel(true);
+        }
+        hoverThread = new HoverThread();
+        hoverThread.execute();
+    }
+
+    /**
+     * Update command variables and send command instantly
+     *
+     * @param color new color change
+     */
+    private void updateDeviceColorInstant(int color){
+        if(mEffectsTimeLineView.getmStopCircleView().isSelected()){
+            mEffectsTimeLineView.changeStopCircleColor(color);
+            stopColor = color;
+            mPreviewPresetButton.setEnabled(true);
+            mPreviewPresetButton.setAlpha(1);
+        }
+
+        if(mEffectsTimeLineView.getmStartCircleView().isSelected()) {
+            mEffectsTimeLineView.changeStartCircleColor(color, false);
+            startColor = color;
+        }
+
+        Log.d("Color", Integer.toString(color));
+        if(!selectedDevices.isEmpty()){
+            formulateCommand(color);
+        }
+        lastTime = System.currentTimeMillis();
     }
 
     /**
@@ -381,11 +431,10 @@ public class DesignActivity extends MainActivity {
         getSelectedIpAddressesAndSendCommands(command);
     }
 
-    private void formulateCommand(int color, int duration, int repetition){
-        String rgb = "rgb" + Integer.toString(Color.red(color)) + "," + Integer.toString(Color.green(color))+ "," + Integer.toString(Color.blue(color));
-
+    private void formulateCommand(int startColor, int endColor, int duration, int repetition){
+        Boolean isHSL = false;
+        Boolean isHSB = false;
         String button = "";
-        String command;
 
         if(mHueButton.isSelected()){
             button = "hue";
@@ -395,35 +444,51 @@ public class DesignActivity extends MainActivity {
             button = "hue2";
         } else if (mPulseButton.isSelected()){
             button = "pulse";
+        } else if (mHueHslButton.isSelected()){
+            isHSL = true;
+            button = "huehsl";
+        } else if (mHueHsbButton.isSelected()){
+            isHSB = true;
+            button = "huehsb";
         }
 
-        command = "hue " + rgb + " t" + repetition + " f" + getFrames(duration);
-        String startRGB = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
-        String endRGB = "rgb" + Integer.toString(Color.red(stopColor)) + "," + Integer.toString(Color.green(stopColor))+ "," + Integer.toString(Color.blue(stopColor));
-        currentCommand = button + " " + startRGB + " " + endRGB + " t" + repetition + " f" + getFrames(duration);
+        String startColorString;
+        String stopColorString;
+
+        if(isHSL){
+            float[] hsv = new float[3];
+            Color.RGBToHSV(Color.red(startColor), Color.green(startColor), Color.blue(startColor), hsv);
+            startColorString = "hsl" + Integer.toString((int) hsv[0]) + "," + getPercentageValue(Float.toString(hsv[1])) + "," + getPercentageValue(Float.toString(hsv[2]));
+            stopColorString = "hsl" + Integer.toString((int) hsv[0])+ "," + getPercentageValue(Float.toString(hsv[1])) + "," + getPercentageValue(Float.toString(hsv[2]));
+        } else if (isHSB){
+            float[] hsv = new float[3];
+            Color.RGBToHSV(Color.red(startColor), Color.green(startColor), Color.blue(startColor), hsv);
+            startColorString = "hsb" + Integer.toString((int) hsv[0]) + "," + getPercentageValue(Float.toString(hsv[1])) + "," + getPercentageValue(Float.toString(hsv[2]));
+            stopColorString = "hsb" + Integer.toString((int) hsv[0]) + "," + getPercentageValue(Float.toString(hsv[1])) + "," + getPercentageValue(Float.toString(hsv[2]));
+        } else {
+            startColorString = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
+            stopColorString = "rgb" + Integer.toString(Color.red(endColor)) + "," + Integer.toString(Color.green(endColor))+ "," + Integer.toString(Color.blue(endColor));
+        }
+
+        String command;
+
+        command = button + " " + startColorString + " " + stopColorString + " t" + repetition + " f" + getFrames(duration);
+        currentCommand = command;
         getSelectedIpAddressesAndSendCommands(command);
     }
 
-    private void formulateCommand(int startColor, int endColor, int duration, int repetition){
-        String startRGB = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
-        String endRGB = "rgb" + Integer.toString(Color.red(endColor)) + "," + Integer.toString(Color.green(endColor))+ "," + Integer.toString(Color.blue(endColor));
 
-        String button = "";
-        String command;
-
-        if(mHueButton.isSelected()){
-            button = "hue";
-        } else if (mBlinkButton.isSelected()){
-            button = "blink";
-        } else if (mHueTwoButton.isSelected()){
-            button = "hue2";
-        } else if (mPulseButton.isSelected()){
-            button = "pulse";
+    /**
+     *  Get the Saturation or Hue percentage
+     */
+    private String getPercentageValue(String value){
+        if(value.charAt(0) == '1'){
+            return "100";
         }
-
-        command = button + " " + startRGB + " " + endRGB + " t" + repetition + " f" + getFrames(duration);
-        currentCommand = command;
-        getSelectedIpAddressesAndSendCommands(command);
+        else
+        {
+            return value.substring(2, 4);
+        }
     }
 
     /**
@@ -448,7 +513,7 @@ public class DesignActivity extends MainActivity {
      *  Get selected Ip Addresses and send each one a command
      */
     private void getSelectedIpAddressesAndSendCommands(String command){
-        ExecutorService executorService = Executors.newFixedThreadPool(selectedDevices.size());
+        executorService = Executors.newFixedThreadPool(selectedDevices.size());
         for(Integer id: selectedDevices){
             String ipAddress = ((Application)getApplicationContext()).getDeviceById(id).getIpAddress();
             Runnable worker = new WorkerThread(command, ipAddress);
@@ -636,6 +701,10 @@ public class DesignActivity extends MainActivity {
             button = "hue2";
         } else if (mPulseButton.isSelected()){
             button = "pulse";
+        } else if (mHueHslButton.isSelected()){
+            button = "huehsb";
+        } else if (mHueHsbButton.isSelected()){
+            button = "huehsl";
         }
 
         command = button + " " + startRGB + " " + endRGB + " t" + repetition + " f" + getFrames(duration);
@@ -645,7 +714,6 @@ public class DesignActivity extends MainActivity {
         json = gson.toJson(allPresets);
         prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
         prefsEditor.apply();
-        refreshLayout();
         designConfiguration = null;
         areVariablesAvailable = false;
         common.showToast(this, "Preset saved");
@@ -664,26 +732,6 @@ public class DesignActivity extends MainActivity {
         String json = gson.toJson(designConfiguration);
         prefsEditor.putString(Constants.DESIGN_CONFIGURATION, json);
         prefsEditor.apply();
-    }
-
-    /**
-     * Sets layout back to default
-     */
-    private void refreshLayout(){
-        mEffectsTimeLineView.refreshView();
-        enableEffectsControl(false);
-        mSpinner.setSelection(0);
-        mBlinkButton.setSelected(false);
-        mHueButton.setSelected(false);
-        mHueTwoButton.setSelected(false);
-        mPulseButton.setSelected(false);
-        mDurationPicker.setValue(1);
-        mRepetitionPicker.setValue(1);
-        repetition = 1;
-        duration = 1;
-        startColor = ContextCompat.getColor(this, R.color.colorPrimary);
-        stopColor = ContextCompat.getColor(this, R.color.colorPrimary);
-        isEffectEnabled = false;
     }
 
     /**
@@ -910,5 +958,32 @@ public class DesignActivity extends MainActivity {
             return false;
         }
 
+    }
+
+    private class HoverThread extends AsyncTask<Void, Void, Void>{
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            long thisTime = System.currentTimeMillis();
+            long lastTime;
+            long time = 0;
+            isHovering = true;
+
+            while(time < 250 && isHovering){
+                lastTime = System.currentTimeMillis();
+                time = lastTime - thisTime;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if(isHovering){
+                Log.d("Action", "HOVER");
+                updateDeviceColorInstant(mColorPicker.getColor());
+                isHovering = false;
+            }
+        }
     }
 }

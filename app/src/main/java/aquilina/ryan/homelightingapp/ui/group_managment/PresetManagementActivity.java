@@ -57,6 +57,7 @@ public class PresetManagementActivity extends MainActivity {
         setContentView(R.layout.activity_presets);
 
         // Set views
+        mNavigationView.setCheckedItem(R.id.nav_group_presets);
         RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
         mSaveButton = findViewById(R.id.save_macro_button);

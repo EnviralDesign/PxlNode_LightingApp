@@ -35,6 +35,8 @@ public final class Constants {
     public static final String DESIGN_EFFECT_BLINK = "blink";
     public static final String DESIGN_EFFECT_HUE = "hue";
     public static final String DESIGN_EFFECT_HUE_TWO = "hue_two";
+    public static final String DESIGN_EFFECT_HUE_HSB = "hue_hsb";
+    public static final String DESIGN_EFFECT_HUE_HSL = "hue_hsl";
     public static final String DESIGN_EFFECT_NONE = "none";
     public static final String DESIGN_START_COLOR = "start_color";
     public static final String DESIGN_STOP_COLOR = "stop_color";

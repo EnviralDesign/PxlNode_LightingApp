@@ -48,6 +48,7 @@ public class GroupManagementActivity extends MainActivity {
         common = new Common();
 
         // Set views
+        mNavigationView.setCheckedItem(R.id.nav_group_node_groups);
         RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
 

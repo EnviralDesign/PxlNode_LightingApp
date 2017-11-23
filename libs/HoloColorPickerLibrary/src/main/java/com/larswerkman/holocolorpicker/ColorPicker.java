@@ -25,6 +25,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
@@ -234,9 +235,19 @@ public class ColorPicker extends View {
 	private OnColorChangedListener onColorChangedListener;
 
 	/**
+	 * {@code onColorReleaseListener} instance of the onColorReleaseListener
+	 */
+	private OnColorReleaseListener onColorReleaseListener;
+
+	/**
 	 * {@code onColorSelectedListener} instance of the onColorSelectedListener
 	 */
 	protected OnColorSelectedListener onColorSelectedListener;
+
+	/**
+	 * {@code WorkerThread} instance of thread
+	 */
+	private WorkerThreadAsyncTask hoverThread;
 
 	public ColorPicker(Context context) {
 		super(context);
@@ -265,6 +276,13 @@ public class ColorPicker extends View {
 	}
 
 	/**
+	 * An interface that is called whenever the user releases the pointer.
+	 */
+	public interface OnColorReleaseListener{
+		public void onColorReleased(int color);
+	}
+
+	/**
 	 * An interface that is called whenever a new color has been selected.
 	 * Currently it is always called when the color wheel has been released.
 	 * 
@@ -289,6 +307,24 @@ public class ColorPicker extends View {
 	 */
 	public OnColorChangedListener getOnColorChangedListener() {
 		return this.onColorChangedListener;
+	}
+
+	/**
+	 * Set a onColorReleasedListener
+	 *
+	 * @param listener {@code OnColorReleaseListener}
+	 */
+	public void setOnColorReleasedListener(OnColorReleaseListener listener){
+		this.onColorReleaseListener = listener;
+	}
+
+	/**
+	 * Gets the onColorReleaseListener
+	 *
+	 * @return {@code OnColorReleaseListener}
+	 */
+	public OnColorReleaseListener getOnColorReleaseListener(){
+		return this.onColorReleaseListener;
 	}
 
 	/**
@@ -345,6 +381,8 @@ public class ColorPicker extends View {
 		mColorPointerHaloRadius = a.getDimensionPixelSize(
 				R.styleable.ColorPicker_color_pointer_halo_radius,
 				b.getDimensionPixelSize(R.dimen.color_pointer_halo_radius));
+
+		hoverThread = new WorkerThreadAsyncTask();
 
 		a.recycle();
 
@@ -655,6 +693,7 @@ public class ColorPicker extends View {
 
 				invalidate();
 			}
+
 			// If user did not press pointer or center, report event not handled
 			else{
 				getParent().requestDisallowInterceptTouchEvent(false);
@@ -662,7 +701,8 @@ public class ColorPicker extends View {
 			}
 			break;
 		case MotionEvent.ACTION_UP:
-			Log.d("Action", "UP");
+//			Log.d("Action", "UP");
+			Log.d("Action", Integer.toString(event.getAction()));
 			mUserIsMovingPointer = false;
 			mCenterHaloPaint.setAlpha(0x00);
 
@@ -670,6 +710,8 @@ public class ColorPicker extends View {
 				onColorSelectedListener.onColorSelected(mCenterNewColor);
 				oldSelectedListenerColor = mCenterNewColor;
 			}
+
+			onColorReleaseListener.onColorReleased(mCenterNewColor);
 
 			invalidate();
 			break;
@@ -679,6 +721,7 @@ public class ColorPicker extends View {
 				onColorSelectedListener.onColorSelected(mCenterNewColor);
 				oldSelectedListenerColor = mCenterNewColor;
 			}
+			onColorReleaseListener.onColorReleased(mCenterNewColor);
 			break;
 		default:
 			Log.d("Action", Integer.toString(event.getActionMasked()));
@@ -884,6 +927,14 @@ public class ColorPicker extends View {
 		int currentColor = calculateColor(mAngle);
 		mPointerColor.setColor(currentColor);
 		setNewCenterColor(currentColor);
+	}
+
+	private class WorkerThreadAsyncTask extends AsyncTask<Void, Void, Void>{
+		@Override
+		protected Void doInBackground(Void... voids) {
+
+			return null;
+		}
 	}
 
         public void setTouchAnywhereOnColorWheelEnabled(boolean TouchAnywhereOnColorWheelEnabled){

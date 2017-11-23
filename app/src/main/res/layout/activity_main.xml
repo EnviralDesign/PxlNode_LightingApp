@@ -1,63 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<android.support.v4.widget.DrawerLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/activity_main"
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-    <android.support.design.widget.AppBarLayout
-            android:id="@+id/app_bar"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:theme="@style/AppTheme.AppBarOverlay">
+        tools:openDrawer="start">
 
-        <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="@color/colorSecondaryDark"
-                app:popupTheme="@style/AppTheme.PopupOverlay"
-                android:gravity="center_vertical|start">
-
-            <TextView
-                    android:id="@+id/appBarTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/app_name"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/colorPrimaryText"/>
-
-        </android.support.v7.widget.Toolbar>
-    </android.support.design.widget.AppBarLayout>
-
-    <android.support.v4.widget.DrawerLayout
-            android:id="@+id/drawer_layout"
+    <LinearLayout
+            android:id="@+id/activity_main"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:openDrawer="start">
+            android:orientation="vertical">
+        <android.support.design.widget.AppBarLayout
+                android:id="@+id/app_bar"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:theme="@style/AppTheme.AppBarOverlay">
+
+            <android.support.v7.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@color/colorSecondaryDark"
+                    app:popupTheme="@style/AppTheme.PopupOverlay"
+                    android:gravity="center_vertical|start">
+
+                <TextView
+                        android:id="@+id/appBarTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/app_name"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorPrimaryText"/>
+
+            </android.support.v7.widget.Toolbar>
+        </android.support.design.widget.AppBarLayout>
 
         <FrameLayout
                 android:id="@+id/activity_content"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
+        
+    </LinearLayout>
 
-        <android.support.design.widget.NavigationView
-                android:id="@+id/nav_view"
-                android:scrollbars="none"
-                app:headerLayout="@layout/nav_header"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:background="@color/colorPrimary"
-                android:theme="@style/NavigationDrawerTheme"
-                android:layout_gravity="start"
-                android:fitsSystemWindows="true"
-                app:menu="@menu/activity_main_drawer"
-                app:elevation="4dp"
-                app:itemTextColor="@color/colorPrimaryText"
-                app:itemIconTint="@color/colorPrimaryText"/>
+    <android.support.design.widget.NavigationView
+            android:id="@+id/nav_view"
+            android:scrollbars="none"
+            app:headerLayout="@layout/nav_header"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@color/colorPrimary"
+            android:theme="@style/NavigationDrawerTheme"
+            android:layout_gravity="start"
+            android:fitsSystemWindows="true"
+            app:menu="@menu/activity_main_drawer"
+            app:elevation="4dp"
+            app:itemTextColor="@color/colorPrimaryText"
+            app:itemIconTint="@color/colorPrimaryText"/>
 
-    </android.support.v4.widget.DrawerLayout>
-</LinearLayout>
+</android.support.v4.widget.DrawerLayout>

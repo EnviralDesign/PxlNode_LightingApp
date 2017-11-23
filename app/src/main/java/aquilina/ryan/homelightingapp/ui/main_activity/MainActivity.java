@@ -41,7 +41,7 @@ import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class MainActivity extends AppCompatActivity {
 
-    protected LinearLayout fullLayout;
+    protected DrawerLayout fullLayout;
     protected FrameLayout actContent;
     protected NavigationView mNavigationView;
 
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     public void setContentView(@LayoutRes int layoutResID) {
         // base layout
         final ViewGroup nullParent = null;
-        fullLayout = (LinearLayout) getLayoutInflater().inflate(R.layout.activity_main, nullParent);
+        fullLayout = (DrawerLayout) getLayoutInflater().inflate(R.layout.activity_main, nullParent);
         actContent = fullLayout.findViewById(R.id.activity_content);
 
         // Setting the content of layout that is provided through layoutResID

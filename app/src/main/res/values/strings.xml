@@ -43,6 +43,8 @@
     <string name="dialog_save_preset_title">Save Preset</string>
     <string name="dialog_preset_edit_text_hint">Enter preset name</string>
     <string name="blink">Blink</string>
+    <string name="huehsb">HUEHSB</string>
+    <string name="huehsl">HUEHSL</string>
     <string name="hue">Hue</string>
     <string name="hue_two">Hue2</string>
     <string name="pulse">Pulse</string>
