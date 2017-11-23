@@ -152,6 +152,15 @@ public class PresetManagementActivity extends MainActivity {
         prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
         prefsEditor.apply();
         mPresets = presets;
+        if(mPresets != null){
+            if(mPresets.isEmpty()){
+                mHintTextView.setVisibility(View.VISIBLE);
+            } else {
+                mHintTextView.setVisibility(View.GONE);
+            }
+        } else {
+            mHintTextView.setVisibility(View.VISIBLE);
+        }
         mAdapter.notifyDataSetChanged();
     }
 
@@ -332,6 +341,9 @@ public class PresetManagementActivity extends MainActivity {
 
         @Override
         public int getItemCount() {
+            if(mPresets == null){
+                return 0;
+            }
             return mPresets.size();
         }
 

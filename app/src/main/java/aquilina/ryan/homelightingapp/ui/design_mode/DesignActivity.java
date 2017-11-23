@@ -678,13 +678,20 @@ public class DesignActivity extends MainActivity {
             return;
         } else if (i > 0 && i <= mGroupedItemList.size()){
             DevicesGroup devicesGroup = (DevicesGroup) mSpinner.getSelectedItem();
+            if(devicesGroup == null){
+                return;
+            }
             preset.setDevicesGroup(devicesGroup);
         } else if (i == (mGroupedItemList.size() + 1)){
             common.showToast(this, "Choose a group or a device");
             return;
         } else {
             Device device = mSingleItemList.get(i - (mGroupedItemList.size() + 2));
+            if(device == null){
+                return;
+            }
             preset.getDevicesGroup().getDeviceArrayList().add(device.getId());
+
         }
 
         String startRGB = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));

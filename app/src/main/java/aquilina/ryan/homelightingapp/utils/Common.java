@@ -228,11 +228,13 @@ public class Common {
                         groups.remove(group);
                         while(presetIterator.hasNext()){
                             Preset preset = presetIterator.next();
-                            if(preset.getDevicesGroup().getName().equals(group.getName())){
-                                ArrayList<Integer> presetsToDelete = new ArrayList<>();
-                                presetsToDelete.add(preset.getId());
-                                removePresetsFromMacros(presetsToDelete, context);
-                                presetIterator.remove();
+                            if(preset.getDevicesGroup().getName() != null){
+                                if(preset.getDevicesGroup().getName().equals(group.getName())){
+                                    ArrayList<Integer> presetsToDelete = new ArrayList<>();
+                                    presetsToDelete.add(preset.getId());
+                                    removePresetsFromMacros(presetsToDelete, context);
+                                    presetIterator.remove();
+                                }
                             }
                         }
                         arrangeGroupsIds(groups, i);

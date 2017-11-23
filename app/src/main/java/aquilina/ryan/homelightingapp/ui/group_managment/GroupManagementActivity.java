@@ -72,7 +72,7 @@ public class GroupManagementActivity extends MainActivity {
                 mHintTextView.setVisibility(View.GONE);
             }
         } else {
-            mHintTextView.setVisibility(View.GONE);
+            mHintTextView.setVisibility(View.VISIBLE);
         }
         mAdapter.notifyDataSetChanged();
     }
@@ -105,7 +105,13 @@ public class GroupManagementActivity extends MainActivity {
                 mGroups = common.deleteGroups(mToDeleteGroups, this);
                 mAdapter.notifyDataSetChanged();
                 mAdapter.setDeleteMode(false);
-                if(mGroups.isEmpty()){
+                if(mGroups != null){
+                    if(mGroups.isEmpty()){
+                        mHintTextView.setVisibility(View.VISIBLE);
+                    } else {
+                        mHintTextView.setVisibility(View.GONE);
+                    }
+                } else {
                     mHintTextView.setVisibility(View.VISIBLE);
                 }
                 return true;
@@ -228,6 +234,9 @@ public class GroupManagementActivity extends MainActivity {
 
         @Override
         public int getItemCount() {
+            if(mGroups == null){
+                return 0;
+            }
             return mGroups.size();
         }
 

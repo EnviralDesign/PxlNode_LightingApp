@@ -133,7 +133,10 @@ public class MacroManagementActivity extends MainActivity{
             } else {
                 mHintTextView.setVisibility(View.GONE);
             }
+        } else {
+            mHintTextView.setVisibility(View.VISIBLE);
         }
+
         saveMacros(macros);
     }
 
@@ -288,6 +291,9 @@ public class MacroManagementActivity extends MainActivity{
 
         @Override
         public int getItemCount() {
+            if(mMacros == null){
+                return 0;
+            }
             return mMacros.size();
         }
 
