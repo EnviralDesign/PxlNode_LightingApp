@@ -18,6 +18,7 @@ public final class Constants {
     public static final String DESIGN_SHARED_PREFERENCES = "design_shared_preferences";
 
     /* Devices constants*/
+    public static final String ALL_DEVICES = "all_devices";
     public static final String GROUP_OF_DEVICES_GROUPS = "group_of_devices_groups";
     public static final String GROUP_OF_SINGLE_DEVICES = "group_of_single_devices";
 

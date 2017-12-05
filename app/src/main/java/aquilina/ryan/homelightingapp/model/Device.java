@@ -11,29 +11,14 @@ package aquilina.ryan.homelightingapp.model;
 import java.io.Serializable;
 
 public class Device implements Serializable{
-    private int id;
     private String name;
     private String ipAddress;
     private int port;
     private int leds;
 
-    public Device(int id, String name, String ipAddress) {
-        this.id = id;
-        this.name = name;
-        this.ipAddress = ipAddress;
-    }
-
     public Device(String name, String ipAddress) {
         this.name = name;
         this.ipAddress = ipAddress;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getName() {

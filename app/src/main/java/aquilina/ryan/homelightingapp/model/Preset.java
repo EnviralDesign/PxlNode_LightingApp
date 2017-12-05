@@ -1,9 +1,6 @@
 package aquilina.ryan.homelightingapp.model;
 
-import android.support.annotation.Nullable;
-
 import java.io.Serializable;
-import java.util.ArrayList;
 
 public class Preset implements Serializable{
     private int id;

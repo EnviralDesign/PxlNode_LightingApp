@@ -28,16 +28,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
-import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.AllMacros;
 import aquilina.ryan.homelightingapp.model.AllPresets;
+import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
-import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.lighting_mode.AddMacroDialog;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
+import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class PresetManagementActivity extends MainActivity {
@@ -47,8 +48,12 @@ public class PresetManagementActivity extends MainActivity {
 
     private ArrayList<Preset> mPresets;
     private ArrayList<Integer> mSelectedPresets;
+    private HashMap<String, Device> mDevicesSparseArray;
+
     private GroupsAdapter mAdapter;
     private Button mSaveButton;
+
+    private Common common;
 
     private SharedPreferences mPrefs;
     @Override
@@ -61,11 +66,14 @@ public class PresetManagementActivity extends MainActivity {
         RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
         mSaveButton = findViewById(R.id.save_macro_button);
+        mTitleTextView.setText(R.string.presets_title);
 
         // Set view's data
         mPresets = new ArrayList<>();
         mSelectedPresets = new ArrayList<>();
         mAdapter = new GroupsAdapter();
+        mDevicesSparseArray = new HashMap<>();
+        common = new Common();
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mGroupsRecyclerView.setLayoutManager(layoutManager);
         mGroupsRecyclerView.setAdapter(mAdapter);
@@ -82,6 +90,7 @@ public class PresetManagementActivity extends MainActivity {
     protected void onStart() {
         super.onStart();
         mPresets = loadPresets();
+        mDevicesSparseArray = common.loadDevices(this);
         mAdapter.notifyDataSetChanged();
     }
 
@@ -129,29 +138,17 @@ public class PresetManagementActivity extends MainActivity {
                 for(Preset preset: presets){
                     if(preset.getId() == i){
                         presets.remove(preset);
+                        presets = common.arrangePresetsIds(presets, i);
                         break;
                     }
                 }
             }
         }
 
-        savePresets(presets);
-    }
+        common.removePresetsFromMacros(mSelectedPresets,this);
+        mSelectedPresets.clear();
 
-    /**
-     * Once the checked presets are deleted, save the changes.
-     */
-    private void savePresets(ArrayList<Preset> presets){
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor prefsEditor = mPrefs.edit();
-        Gson gson = new Gson();
-
-        AllPresets allPresets = new AllPresets(presets);
-
-        String json = gson.toJson(allPresets);
-        prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
-        prefsEditor.apply();
-        mPresets = presets;
+        mPresets = common.savePresetList(presets, this);
         if(mPresets != null){
             if(mPresets.isEmpty()){
                 mHintTextView.setVisibility(View.VISIBLE);
@@ -163,7 +160,6 @@ public class PresetManagementActivity extends MainActivity {
         }
         mAdapter.notifyDataSetChanged();
     }
-
 
     /**
      * Enables/Disables the delete menu item.
@@ -358,17 +354,23 @@ public class PresetManagementActivity extends MainActivity {
         }
 
         /**
-         * Create and return the preset names in a Macro.
+         * Create and return the device name in a preset.
          */
         private String getPresetItemsSubString(Preset preset){
-            ScannedDevices scannedDevices = ((Application)getApplication()).getScannedDevices();
             String subText;
-            ArrayList<Integer> deviceArrayList = preset.getDevicesGroup().getDeviceArrayList();
+            ArrayList<String> devicesIPList = preset.getDevicesGroup().getDeviceIPArrayList();
             StringBuilder builder = new StringBuilder();
-            for(int i = 0; i < deviceArrayList.size(); i++){
-                builder.append(scannedDevices.getDevicesList().get(deviceArrayList.get(i)).getIpAddress());
-                if(i != deviceArrayList.size() - 1){
-                    builder.append(", ");
+
+            for(int i = 0; i < devicesIPList.size(); i++){
+                String deviceIP = devicesIPList.get(i);
+                if(deviceIP != null){
+                    String name = mDevicesSparseArray.get(deviceIP).getName();
+                    if(name != null){
+                        builder.append(name);
+                        if(i != devicesIPList.size() - 1){
+                            builder.append(", ");
+                        }
+                    }
                 }
             }
 

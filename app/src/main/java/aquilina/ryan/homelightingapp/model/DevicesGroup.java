@@ -14,16 +14,16 @@ import java.util.ArrayList;
 public class DevicesGroup implements Serializable{
     private int id;
     private String name;
-    private ArrayList<Integer> deviceArrayList;
+    private ArrayList<String> deviceIPArrayList;
 
     public DevicesGroup() {
-        this.deviceArrayList = new ArrayList<>();
+        this.deviceIPArrayList = new ArrayList<>();
     }
 
-    public DevicesGroup(int id, String name, ArrayList<Integer> deviceArrayList) {
+    public DevicesGroup(int id, String name, ArrayList<String> deviceIPArrayList) {
         this.id = id;
         this.name = name;
-        this.deviceArrayList = deviceArrayList;
+        this.deviceIPArrayList = deviceIPArrayList;
     }
 
     public int getId() {
@@ -42,11 +42,11 @@ public class DevicesGroup implements Serializable{
         this.name = name;
     }
 
-    public ArrayList<Integer> getDeviceArrayList() {
-        return deviceArrayList;
+    public ArrayList<String> getDeviceIPArrayList() {
+        return deviceIPArrayList;
     }
 
-    public void setDeviceArrayList(ArrayList<Integer> deviceArrayList) {
-        this.deviceArrayList = deviceArrayList;
+    public void setDeviceIPArrayList(ArrayList<String> deviceIPArrayList) {
+        this.deviceIPArrayList = deviceIPArrayList;
     }
 }

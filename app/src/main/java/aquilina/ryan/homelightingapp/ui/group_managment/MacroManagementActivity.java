@@ -27,12 +27,9 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.AllMacros;
-import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Macro;
-import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
@@ -54,6 +51,7 @@ public class MacroManagementActivity extends MainActivity{
         mNavigationView.setCheckedItem(R.id.nav_group_macros);
         RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
+        mTitleTextView.setText(R.string.macros_title);
 
         // Set view's data
         mMacros = new ArrayList<>();
@@ -314,9 +312,12 @@ public class MacroManagementActivity extends MainActivity{
             String subText;
             StringBuilder builder = new StringBuilder();
             for(int i = 0; i < macro.getPresetList().size(); i++){
-                builder.append(macro.getPresetList().get(i).getPresetName());
-                if(i != macro.getPresetList().size() - 1){
-                    builder.append(", ");
+                String presetName = macro.getPresetList().get(i).getPresetName();
+                if(presetName != null){
+                    builder.append(presetName);
+                    if(i != macro.getPresetList().size() - 1){
+                        builder.append(", ");
+                    }
                 }
             }
 

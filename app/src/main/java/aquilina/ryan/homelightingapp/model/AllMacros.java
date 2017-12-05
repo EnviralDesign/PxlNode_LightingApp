@@ -37,4 +37,13 @@ public class AllMacros implements Serializable {
     public void removeMacro(Macro macro){
         macros.remove(macro);
     }
+
+    public Macro getMacroById(int id){
+        for (Macro macro: macros) {
+            if(macro.getId() == id){
+                return macro;
+            }
+        }
+        return null;
+    }
 }

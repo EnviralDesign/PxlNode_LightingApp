@@ -53,7 +53,7 @@ import aquilina.ryan.homelightingapp.model.AllPresets;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Preset;
-import aquilina.ryan.homelightingapp.model.ScannedDevices;
+import aquilina.ryan.homelightingapp.model.OnlineDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
@@ -85,7 +85,7 @@ public class DesignActivity extends MainActivity {
     private SaturationBar mSaturationBar;
     private ValueBar mValueBar;
 
-    private ArrayList<Integer> selectedDevices;
+    private ArrayList<String> selectedDevices;
     private ExecutorService executorService;
 
     private int repetition;
@@ -95,7 +95,6 @@ public class DesignActivity extends MainActivity {
     private int currentSpinnerPosition = 0;
     private String currentEffect = Constants.DESIGN_EFFECT_NONE;
     private String currentCommand = "hue rgb255,255,255 t1 f1";
-    private DesignConfiguration designConfiguration;
 
     private long lastTime = 0;
     private Common common;
@@ -132,6 +131,7 @@ public class DesignActivity extends MainActivity {
         mEffectsControlLayout = findViewById(R.id.effects_controls_linear_layout);
         mHoloPickerControls = findViewById(R.id.holo_picker_controls);
         mHintTextView = findViewById(R.id.text_view_hint);
+        mTitleTextView.setText(R.string.design_mode_title);
 
         final TextView repetitionText = findViewById(R.id.repetitions_textview);
         final TextView durationText = findViewById(R.id.duration_textview);
@@ -248,7 +248,7 @@ public class DesignActivity extends MainActivity {
                 if(i == -1){
                     hideAllLightingView();
                 } else if (i >= 0 && i < mGroupedItemList.size()){
-                    selectedDevices = mGroupedItemList.get(i).getDeviceArrayList();
+                    selectedDevices = mGroupedItemList.get(i).getDeviceIPArrayList();
                     if(!areVariablesAvailable) {
                         showAllLightingViews();
                         isFirstChange = false;
@@ -256,7 +256,7 @@ public class DesignActivity extends MainActivity {
                 } else if (i == (mGroupedItemList.size())){
                     hideAllLightingView();
                 } else {
-                    selectedDevices.add(mSingleItemList.get(i - (mGroupedItemList.size() + 1)).getId());
+                    selectedDevices.add(mSingleItemList.get(i - (mGroupedItemList.size() + 1)).getIpAddress());
                     if(!areVariablesAvailable){
                         showAllLightingViews();
                         isFirstChange = false;
@@ -332,7 +332,7 @@ public class DesignActivity extends MainActivity {
             mSaturationBar.setVisibility(View.VISIBLE);
             mValueBar.setVisibility(View.VISIBLE);
             mSavePresetButton.setVisibility(View.VISIBLE);
-            selectedDevices = bundle.getIntegerArrayList(Constants.DESIGN_SELECTED_DEVICES);
+            selectedDevices = bundle.getStringArrayList(Constants.DESIGN_SELECTED_DEVICES);
             if(!currentEffect.equals(Constants.DESIGN_EFFECT_NONE)){
                 switch (currentEffect){
                     case Constants.DESIGN_EFFECT_BLINK:
@@ -514,10 +514,13 @@ public class DesignActivity extends MainActivity {
      */
     private void getSelectedIpAddressesAndSendCommands(String command){
         executorService = Executors.newFixedThreadPool(selectedDevices.size());
-        for(Integer id: selectedDevices){
-            String ipAddress = ((Application)getApplicationContext()).getDeviceById(id).getIpAddress();
-            Runnable worker = new WorkerThread(command, ipAddress);
-            executorService.execute(worker);
+        for(String ip: selectedDevices){
+            Device selectedDevice = ((Application)getApplicationContext()).getDeviceByIP(ip);
+            if(selectedDevice != null){
+                String ipAddress = selectedDevice.getIpAddress();
+                Runnable worker = new WorkerThread(command, ipAddress);
+                executorService.execute(worker);
+            }
         }
     }
 
@@ -535,7 +538,6 @@ public class DesignActivity extends MainActivity {
 
         @Override
         public void run() {
-            Log.d("PostCommand", "to " + ipAddress + " with command : " + command);
             AndroidNetworking.post("http://" + ipAddress + "/play")
                     .addByteBody(command.getBytes())
                     .setPriority(Priority.IMMEDIATE)
@@ -550,6 +552,7 @@ public class DesignActivity extends MainActivity {
                             // handle error
                         }
                     });
+            Log.d("PostCommand", "to " + ipAddress + " with command : " + command);
         }
     }
 
@@ -690,7 +693,7 @@ public class DesignActivity extends MainActivity {
             if(device == null){
                 return;
             }
-            preset.getDevicesGroup().getDeviceArrayList().add(device.getId());
+            preset.getDevicesGroup().getDeviceIPArrayList().add(device.getIpAddress());
 
         }
 
@@ -721,8 +724,6 @@ public class DesignActivity extends MainActivity {
         json = gson.toJson(allPresets);
         prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
         prefsEditor.apply();
-        designConfiguration = null;
-        areVariablesAvailable = false;
         common.showToast(this, "Preset saved");
     }
 
@@ -733,7 +734,7 @@ public class DesignActivity extends MainActivity {
         SharedPreferences Prefs = getSharedPreferences(Constants.DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = Prefs.edit();
 
-        designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, selectedDevices);
+        DesignConfiguration designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, selectedDevices);
 
         Gson gson = new Gson();
         String json = gson.toJson(designConfiguration);
@@ -756,10 +757,10 @@ public class DesignActivity extends MainActivity {
 
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
-        ScannedDevices scannedDevices = gson.fromJson(json, ScannedDevices.class);
+        OnlineDevices onlineDevices = gson.fromJson(json, OnlineDevices.class);
 
-        if(scannedDevices != null){
-            mSingleItemList = scannedDevices.getDevicesList();
+        if(onlineDevices != null){
+            mSingleItemList = onlineDevices.getDevicesList();
             if(mSingleItemList.isEmpty()){
                 setContentView(R.layout.activity_error);
             }

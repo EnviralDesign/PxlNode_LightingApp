@@ -37,4 +37,13 @@ public class AllPresets implements Serializable{
     public void removePreset(Preset preset){
         allPresets.remove(preset);
     }
+
+    public Preset getPresetById(int id){
+        for (Preset preset: allPresets) {
+            if(preset.getId() == id){
+                return preset;
+            }
+        }
+        return null;
+    }
 }

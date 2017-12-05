@@ -37,12 +37,13 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.model.AllGroups;
-import aquilina.ryan.homelightingapp.model.ScannedDevices;
+import aquilina.ryan.homelightingapp.model.OnlineDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.Device;
@@ -55,7 +56,8 @@ public class ScanActivity extends MainActivity {
     private Common common;
 
     private ArrayList<Device> mScannedDevicesList;
-    private ArrayList<Integer> mCheckedDevicesList;
+    private ArrayList<String> mCheckedDevicesList;
+    private HashMap<String, Device> mDevicesMap;
 
     private RecyclerView mDevicesListView;
     private DeviceAdapter mDeviceAdapter;
@@ -81,8 +83,10 @@ public class ScanActivity extends MainActivity {
         mAddToGroupButton.setVisibility(View.INVISIBLE);
         mSwipeRefreshLayout = findViewById(R.id.swiperefresh);
         mNoDevicesTextView = findViewById(R.id.no_devices_found);
+        mTitleTextView.setText(R.string.scan_mode_title);
 
         // set up data
+        mDevicesMap = new HashMap<>();
         mCheckedDevicesList = new ArrayList<>();
         mDeviceAdapter = new DeviceAdapter();
         mScannedDevicesList = new ArrayList<>();
@@ -111,9 +115,11 @@ public class ScanActivity extends MainActivity {
     protected void onStart() {
         super.onStart();
 
+        mDevicesMap = common.loadDevices(this);
+
         Gson gson = new Gson();
         String json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
-        ScannedDevices singleGroup = gson.fromJson(json, ScannedDevices.class);
+        OnlineDevices singleGroup = gson.fromJson(json, OnlineDevices.class);
 
         if(singleGroup != null){
             if(singleGroup.getDevicesList().isEmpty()) {
@@ -139,7 +145,7 @@ public class ScanActivity extends MainActivity {
         int id = item.getItemId();
 
         switch (id){
-            case R.id.refresh_button:
+            case R.id.switch_off_devices_button:
                 getWifiStateAndConnect();
                 break;
         }
@@ -156,6 +162,7 @@ public class ScanActivity extends MainActivity {
             new ScanForDevices().execute();
         } else {
             mSwipeRefreshLayout.setRefreshing(false);
+            mScannedDevicesList.clear();
             mDeviceAdapter.notifyDataSetChanged();
             common.showToast(getApplicationContext(), "No connections are available");
             mNoDevicesTextView.setText(getString(R.string.text_view_no_connection));
@@ -323,7 +330,7 @@ public class ScanActivity extends MainActivity {
      */
     private boolean saveSingleFixturesLocally(){
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
-        ScannedDevices singleGroup = new ScannedDevices(mScannedDevicesList);
+        OnlineDevices singleGroup = new OnlineDevices(mScannedDevicesList);
 
         Gson gson = new Gson();
         String json = gson.toJson(singleGroup);
@@ -370,16 +377,16 @@ public class ScanActivity extends MainActivity {
                 @Override
                 public void onCardViewClick(View view) {
                     CheckBox cb = view.findViewById(R.id.item_checkbox);
-                    int id = (int) cb.getTag();
+                    String ip = (String) cb.getTag();
                     if(!cb.isChecked()){
                         cb.setChecked(true);
-                        mCheckedDevicesList.add(id);
+                        mCheckedDevicesList.add(ip);
                         changeVisibilityOfAddGroupButton();
                     }
                     else{
                         cb.setChecked(false);
                         for(int i = 0; i < mCheckedDevicesList.size(); i++){
-                            if(mCheckedDevicesList.get(i)== id){
+                            if(mCheckedDevicesList.get(i).equals(ip)){
                                 mCheckedDevicesList.remove(i);
                                 changeVisibilityOfAddGroupButton();
                                 return;
@@ -395,7 +402,7 @@ public class ScanActivity extends MainActivity {
             Device device = mScannedDevicesList.get(position);
 
             //assign data to views
-            holder.checkBox.setTag(device.getId());
+            holder.checkBox.setTag(device.getIpAddress());
             holder.deviceNameTextView.setText(device.getName());
             holder.deviceNameTextView.setTypeface(mTextTypeFace);
             holder.deviceIPAddressTextView.setText(device.getIpAddress());
@@ -431,12 +438,14 @@ public class ScanActivity extends MainActivity {
             super.onPreExecute();
             mSwipeRefreshLayout.setRefreshing(true);
             mScannedDevicesList.clear();
+            mDevicesMap = common.loadDevices(getApplicationContext());
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             mDeviceAdapter.notifyDataSetChanged();
+            common.saveDeviceHashmap(mDevicesMap, getApplicationContext());
             if(mScannedDevicesList.isEmpty()){
                 mNoDevicesTextView.setText(getString(R.string.text_view_no_devices_found));
                 mNoDevicesTextView.setVisibility(View.VISIBLE);
@@ -463,7 +472,7 @@ public class ScanActivity extends MainActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        device.setId(mScannedDevicesList.size());
+                        mDevicesMap.put(device.getIpAddress(), device);
                         mScannedDevicesList.add(device);
                         mDeviceAdapter.notifyDataSetChanged();
                     }

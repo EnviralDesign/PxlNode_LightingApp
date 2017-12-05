@@ -40,20 +40,16 @@ import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
-import aquilina.ryan.homelightingapp.model.ScannedDevices;
+import aquilina.ryan.homelightingapp.model.OnlineDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class LightingModeActivity extends MainActivity {
-    private RecyclerView mPresetsRecyclerView;
-    private Menu mMenu;
     private TextView mHintTextView;
 
     private ArrayList<Preset> mPresets;
-    private ArrayList<Integer> mSelectedPresets;
     private ArrayList<Macro> mMacros;
-    private ArrayList<Integer> mSelectedMacros;
     private PresetAdapter mAdapter;
 
     private Common common;
@@ -66,14 +62,13 @@ public class LightingModeActivity extends MainActivity {
 
         // Set views.
         mNavigationView.setCheckedItem(R.id.nav_lighting_mode);
-        mPresetsRecyclerView = findViewById(R.id.presets_recycler_list);
+        RecyclerView mPresetsRecyclerView = findViewById(R.id.presets_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
+        mTitleTextView.setText(R.string.lighting_mode_title);
 
         // Set view's data/design
         mPresets = new ArrayList<>();
         mMacros = new ArrayList<>();
-        mSelectedPresets = new ArrayList<>();
-        mSelectedMacros = new ArrayList<>();
         mAdapter = new PresetAdapter();
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mPresetsRecyclerView.setLayoutManager(layoutManager);
@@ -92,33 +87,15 @@ public class LightingModeActivity extends MainActivity {
     }
 
     @Override
-    public void onBackPressed() {
-        if(mAdapter.isDeleteMode()){
-            mAdapter.setDeleteMode(false);
-        }
-        else{
-            super.onBackPressed();
-        }
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_refresh_lights, menu);
-        mMenu = menu;
-        enableDeleteMenuItem(false);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case android.R.id.home:
-                mAdapter.setDeleteMode(false);
-                return true;
-            case R.id.delete_button:
-                deleteCheckedItems();
-                return true;
-            case R.id.refresh_button:
+            case R.id.switch_off_devices_button:
                 switchOffLights();
                 return true;
         }
@@ -129,10 +106,10 @@ public class LightingModeActivity extends MainActivity {
      * Get a list of online devices.
      */
     private ArrayList<Device> getOnlineDevice(){
-        ScannedDevices scannedDevices = ((Application)getApplication()).getScannedDevices();
+        OnlineDevices onlineDevices = ((Application)getApplication()).getScannedDevices();
 
-        if(scannedDevices != null){
-            return scannedDevices.getDevicesList();
+        if(onlineDevices != null){
+            return onlineDevices.getDevicesList();
         }
         return null;
     }
@@ -163,78 +140,6 @@ public class LightingModeActivity extends MainActivity {
         }
     }
 
-    /**
-     * Deletes all items in mSelected Items.
-     */
-    private void deleteCheckedItems(){
-        if(!mSelectedPresets.isEmpty()){
-            ArrayList<Preset> presets = common.loadPresets(this);
-
-            for(int id: mSelectedPresets){
-                for(int i = 0; i <= presets.size(); i++){
-                    Preset preset = presets.get(i);
-                    if(preset.getId() == id){
-                        presets.remove(preset);
-                        presets = common.arrangePresetsIds(presets, i);
-                        break;
-                    }
-                }
-            }
-
-            mMacros = common.removePresetsFromMacros(mSelectedPresets,this);
-            mSelectedPresets.clear();
-            mPresets = common.savePresetList(presets, this);
-        }
-
-        if(!mSelectedMacros.isEmpty()){
-            ArrayList<Macro> macros = common.loadMacros(this);
-
-            for(int id: mSelectedMacros){
-                for(int i = 0; i <= macros.size(); i++){
-                    Macro macro = macros.get(i);
-                    if(macro.getId() == id){
-                        macros.remove(macro);
-                        macros = common.arrangeMacrosIds(macros, i);
-                        break;
-                    }
-                }
-            }
-
-            mSelectedMacros.clear();
-            mMacros = common.savePresetsInMacro(macros,this);
-        }
-
-        mAdapter.setDeleteMode(false);
-        mAdapter.notifyDataSetChanged();
-        if(mMacros.isEmpty() && mPresets.isEmpty()){
-            mHintTextView.setVisibility(View.VISIBLE);
-        }
-    }
-
-    /**
-     * Enable or disable delete button in app bar.
-     */
-    private void enableDeleteMenuItem(boolean enable){
-        if(enable){
-            mMenu.findItem(R.id.delete_button).setVisible(true);
-        }
-        else{
-            mMenu.findItem(R.id.delete_button).setVisible(false);
-        }
-    }
-
-    /**
-     * Refresh the recycler view to un-check all checked items.
-     */
-    private void removeCheckItems(){
-        mSelectedPresets.clear();
-        mSelectedMacros.clear();
-        mAdapter = new PresetAdapter();
-        mPresetsRecyclerView.setAdapter(mAdapter);
-    }
-
-
-
     private static class TitleViewHolder extends RecyclerView.ViewHolder{
         TextView titleTextView;
 
@@ -244,7 +149,7 @@ public class LightingModeActivity extends MainActivity {
         }
     }
 
-    private static class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener, View.OnTouchListener{
+    private static class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnTouchListener{
         TextView nameTextView;
         TextView groupTextView;
         ImageView aSwitch;
@@ -262,7 +167,6 @@ public class LightingModeActivity extends MainActivity {
             this.mListener = mListener;
             aSwitch.setOnClickListener(this);
             cardView.setOnClickListener(this);
-            cardView.setOnLongClickListener(this);
             aSwitch.setOnTouchListener(this);
         }
 
@@ -272,19 +176,12 @@ public class LightingModeActivity extends MainActivity {
         }
 
         @Override
-        public boolean onLongClick(View view) {
-            mListener.onCardViewLongClick(view);
-            return true;
-        }
-
-        @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
             return mListener.onCardGestureListener(view, motionEvent);
         }
 
         private interface ViewHolderClickListener{
             void onCardViewClick(View view);
-            void onCardViewLongClick(View view);
             boolean onCardGestureListener(View view, MotionEvent motionEvent);
         }
     }
@@ -297,14 +194,10 @@ public class LightingModeActivity extends MainActivity {
         private static final int PRESET_ITEM = 3;
 
         private ItemViewHolder.ViewHolderClickListener mListener = new ItemViewHolder.ViewHolderClickListener(){
-            @Override
-            public void onCardViewClick(View view) {
-                itemOnClick(view);
-            }
 
             @Override
-            public void onCardViewLongClick(View view) {
-                itemOnLongClick(view);
+            public void onCardViewClick(View view) {
+//                itemOnClick(view);
             }
 
             @Override
@@ -312,26 +205,6 @@ public class LightingModeActivity extends MainActivity {
                 return itemOnGestureListener(view, motionEvent);
             }
         };
-
-        private boolean isDeleteMode = false;
-
-        private boolean isDeleteMode() {
-            return isDeleteMode;
-        }
-
-        private void setDeleteMode(boolean deleteMode) {
-            isDeleteMode = deleteMode;
-            mAdapter.notifyDataSetChanged();
-            if(deleteMode){
-                enableDeleteMenuItem(true);
-                enableBackButton(true);
-            }
-            else{
-                enableDeleteMenuItem(false);
-                enableBackButton(false);
-                removeCheckItems();
-            }
-        }
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -364,13 +237,8 @@ public class LightingModeActivity extends MainActivity {
                     macroItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     macroItemViewHolder.groupTextView.setText(getMacroItemSubString(macro));
                     macroItemViewHolder.groupTextView.setTypeface(mSubTextTypeFace);
-                    if(isDeleteMode){
-                        macroItemViewHolder.checkBox.setVisibility(View.VISIBLE);
-                        macroItemViewHolder.aSwitch.setVisibility(View.INVISIBLE);
-                    } else{
-                        macroItemViewHolder.checkBox.setVisibility(View.GONE);
-                        macroItemViewHolder.aSwitch.setVisibility(View.VISIBLE);
-                    }
+                    macroItemViewHolder.checkBox.setVisibility(View.GONE);
+                    macroItemViewHolder.aSwitch.setVisibility(View.VISIBLE);
                     break;
                 }
                 case PRESETS_TITLE:{
@@ -395,19 +263,19 @@ public class LightingModeActivity extends MainActivity {
                     presetItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     String name = preset.getDevicesGroup().getName();
                     if(name == null){
-                        int id = preset.getDevicesGroup().getDeviceArrayList().get(0);
-                        Device device = ((Application)getApplicationContext()).getDeviceById(id);
-                        name = device.getName();
+                        String ip = preset.getDevicesGroup().getDeviceIPArrayList().get(0);
+                        Device device = ((Application)getApplicationContext()).getDeviceByIP(ip);
+                        if(device != null){
+                            name = device.getName();
+                        }
+                        else{
+                            name = getString(R.string.device_not_online);
+                        }
                     }
                     presetItemViewHolder.groupTextView.setText(name);
                     presetItemViewHolder.groupTextView.setTypeface(mSubTextTypeFace);
-                    if(isDeleteMode){
-                        presetItemViewHolder.checkBox.setVisibility(View.VISIBLE);
-                        presetItemViewHolder.aSwitch.setVisibility(View.INVISIBLE);
-                    } else{
-                        presetItemViewHolder.checkBox.setVisibility(View.GONE);
-                        presetItemViewHolder.aSwitch.setVisibility(View.VISIBLE);
-                    }
+                    presetItemViewHolder.checkBox.setVisibility(View.GONE);
+                    presetItemViewHolder.aSwitch.setVisibility(View.VISIBLE);
                     break;
                 }
             }
@@ -466,38 +334,6 @@ public class LightingModeActivity extends MainActivity {
             }
         }
 
-        private void itemOnClick(View view){
-            if(isDeleteMode){
-                CheckBox cb = view.findViewById(R.id.item_checkbox);
-                if(cb.isChecked()){
-                    cb.setChecked(false);
-                    if((view.getTag(R.id.groupType)).equals(Constants.PRESET)){
-                        for(int i = 0; i < mSelectedPresets.size(); i++){
-                            if(mSelectedPresets.get(i) == ((int) view.getTag(R.id.ID))){
-                                mSelectedPresets.remove(i);
-                            }
-                        }
-                    } else {
-                        for(int i = 0; i < mSelectedMacros.size(); i++){
-                            if(mSelectedMacros.get(i) == ((int) view.getTag(R.id.ID))){
-                                mSelectedMacros.remove(i);
-                            }
-                        }
-                    }
-                }
-                else{
-                    cb.setChecked(true);
-                    String type = (String)view.getTag(R.id.groupType);
-                    if(type.equals(Constants.MACRO)){
-                        mSelectedMacros.add((int) view.getTag(R.id.ID));
-                    }
-                    else{
-                        mSelectedPresets.add((int) view.getTag(R.id.ID));
-                    }
-                }
-            }
-        }
-
         /**
          * Switch on a preset or a macro
          * @param id is the id number of the Macro/Preset
@@ -534,12 +370,12 @@ public class LightingModeActivity extends MainActivity {
          */
         private void sendMacroCommands(Macro macro){
             ArrayList<DeviceAndCommand> commandsList = new ArrayList<>();
-            ArrayList<Device> devices = ((Application) getApplication()).getScannedDevices().getDevicesList();
+            OnlineDevices onlineDevices = ((Application) getApplication()).getScannedDevices();
 
             if(!macro.getPresetList().isEmpty()){
                 for (Preset preset : macro.getPresetList()) {
-                    for (Integer deviceID : preset.getDevicesGroup().getDeviceArrayList()) {
-                        commandsList.add(new DeviceAndCommand(devices.get(deviceID).getIpAddress(), preset.getCommand()));
+                    for (String deviceIP : preset.getDevicesGroup().getDeviceIPArrayList()) {
+                        commandsList.add(new DeviceAndCommand(onlineDevices.getDeviceByIP(deviceIP).getIpAddress(), preset.getCommand()));
                     }
                 }
 
@@ -558,25 +394,27 @@ public class LightingModeActivity extends MainActivity {
          */
         private void sendPresetCommandToDevices(Preset presetClicked){
             if(presetClicked != null){
-                ArrayList<Integer> devicesIds = presetClicked.getDevicesGroup().getDeviceArrayList();
+                ArrayList<String> devicesIPs = presetClicked.getDevicesGroup().getDeviceIPArrayList();
                 ArrayList<Device> devices = ((Application) getApplication()).getScannedDevices().getDevicesList();
                 ArrayList<String> devicesIpAddresses = new ArrayList<>();
 
                 if(!devices.isEmpty()){
-                    for(int deviceID: devicesIds){
+                    for(String deviceIP : devicesIPs){
                         for(Device device : devices){
-                            if(device.getId() == deviceID){
+                            if(device.getIpAddress().equals(deviceIP)){
                                 devicesIpAddresses.add(device.getIpAddress());
                             }
                         }
                     }
 
-                    ExecutorService executorService = Executors.newFixedThreadPool(devicesIpAddresses.size());
-                    for(String ipAddress: devicesIpAddresses){
-                        Runnable worker = new WorkerThread(presetClicked.getCommand(), ipAddress);
-                        executorService.execute(worker);
+                    if(!devicesIpAddresses.isEmpty()){
+                        ExecutorService executorService = Executors.newFixedThreadPool(devicesIpAddresses.size());
+                        for(String ipAddress: devicesIpAddresses){
+                            Runnable worker = new WorkerThread(presetClicked.getCommand(), ipAddress);
+                            executorService.execute(worker);
+                        }
+                        executorService.shutdown();
                     }
-                    executorService.shutdown();
                 }
             }
         }
@@ -595,7 +433,6 @@ public class LightingModeActivity extends MainActivity {
 
             @Override
             public void run() {
-                Log.d("PostCommand", "to " + ipAddress + " with command : " + command);
                 AndroidNetworking.post("http://" + ipAddress + "/play")
                         .addByteBody(command.getBytes())
                         .setPriority(Priority.IMMEDIATE)
@@ -610,19 +447,7 @@ public class LightingModeActivity extends MainActivity {
                                 // handle error
                             }
                         });
-            }
-        }
-
-        private void itemOnLongClick(View view){
-            setDeleteMode(true);
-            ((CheckBox)view.findViewById(R.id.item_checkbox)).setChecked(true);
-
-            String type = (String)view.getTag(R.id.groupType);
-            if(type.equals(Constants.MACRO)){
-                mSelectedMacros.add((int) view.getTag(R.id.ID));
-            }
-            else{
-                mSelectedPresets.add((int) view.getTag(R.id.ID));
+                Log.d("PostCommand", "to " + ipAddress + " with command : " + command);
             }
         }
 

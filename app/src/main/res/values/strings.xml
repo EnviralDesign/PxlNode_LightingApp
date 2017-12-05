@@ -22,17 +22,19 @@
     <string name="action_add_group">Add to Group</string>
 
     <!--Scan Mode Strings-->
+    <string name="scan_mode_title">Scan Mode</string>
     <string name="dialog_save_group">Save Group</string>
     <string name="dialog_edit_text_hint">Enter group name</string>
     <string name="dialog_save_button">Save</string>
     <string name="dialog_cancel_button">Cancel</string>
-    <string name="device_name">device name</string>
+    <string name="device_name">deviceHashMap name</string>
     <string name="device_ip_address">ip address</string>
     <string name="toast_group_saved">Group created</string>
     <string name="text_view_no_devices_found">no devices where found</string>
     <string name="text_view_no_connection">no connections are available</string>
 
     <!--Design Mode Strings-->
+    <string name="design_mode_title">Design Mode</string>
     <string name="spinner_hint">Select Group or Item</string>
     <string name="spinner_group_section_header">GROUPS</string>
     <string name="spinner_fixture_section_header">FIXTURE</string>
@@ -49,17 +51,22 @@
     <string name="hue_two">Hue2</string>
     <string name="pulse">Pulse</string>
     <string name="text_view_choose_a_device_or_group">Use the dropdown menu to choose a device or group.</string>
-    <string name="text_view_no_device_online">no devices is online</string>
+    <string name="text_view_no_device_online">no online devices</string>
 
     <!-- Lighting Mode Strings-->
+    <string name="lighting_mode_title">Lighting Mode</string>
     <string name="button_save_macro">SAVE MACRO</string>
     <string name="dialog_save_macro_title">Save Macro</string>
     <string name="dialog_save_macro_hint">Enter macro name</string>
     <string name="recycler_view_macros_title">MACROS</string>
     <string name="recycler_view_presets_title">PRESETS</string>
     <string name="text_view_create_preset_or_macro">no presets or macros created yet</string>
+    <string name="device_not_online">device is not online</string>
 
     <!-- Group Management Strings -->
+    <string name="group_title">Groups</string>
+    <string name="presets_title">Presets</string>
+    <string name="macros_title">Macros</string>
     <string name="text_view_create_group">no groups found</string>
     <string name="text_view_create_presets">no presets found</string>
     <string name="text_view_create_macros">no macros found</string>

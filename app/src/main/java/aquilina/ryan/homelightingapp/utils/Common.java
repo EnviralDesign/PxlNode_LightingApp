@@ -12,14 +12,18 @@ import com.google.gson.Gson;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.SparseArray;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
+import aquilina.ryan.homelightingapp.model.AllDevices;
 import aquilina.ryan.homelightingapp.model.AllGroups;
 import aquilina.ryan.homelightingapp.model.AllMacros;
 import aquilina.ryan.homelightingapp.model.AllPresets;
+import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
@@ -88,9 +92,25 @@ public class Common {
         return null;
     }
 
-     /*
+    /**
+     * Load all saved devices
+     */
+    public HashMap<String, Device> loadDevices(Context context){
+        Gson gson = new Gson();
+        mPrefs = context.getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+
+        String json = mPrefs.getString(Constants.ALL_DEVICES, null);
+        AllDevices allDevices = gson.fromJson(json, AllDevices.class);
+
+        if(allDevices != null){
+            return allDevices.getDeviceHashMap();
+        }
+        return new HashMap<>();
+    }
+
+    /*
     * **********************************************************************************
-    * SAVING DATA
+    *   SAVING DATA
     * **********************************************************************************
     */
 
@@ -167,9 +187,55 @@ public class Common {
         return macros;
     }
 
+    /**
+     * Save device in AllDevices
+     */
+    public boolean saveDevice(Device device, Context context){
+        mPrefs = context.getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+
+        AllDevices allDevices;
+        Gson gson = new Gson();
+        String json = mPrefs.getString(Constants.ALL_DEVICES, null);
+
+        if(json == null){
+            allDevices = new AllDevices(new HashMap<String, Device>());
+        } else {
+            allDevices = gson.fromJson(json, AllDevices.class);
+        }
+
+        // Check if there is a device with the same ID
+        if(allDevices.getDeviceHashMap().get(device.getIpAddress()) == null){
+            allDevices.getDeviceHashMap().put(device.getIpAddress(), device);
+            json = gson.toJson(allDevices);
+            prefsEditor.putString(Constants.ALL_DEVICES, json);
+            prefsEditor.apply();
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    /**
+     * Saves devices Hashmap
+     */
+    public void saveDeviceHashmap(HashMap<String, Device> deviceHashMap, Context context){
+        mPrefs = context.getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+
+        AllDevices allDevices = new AllDevices(deviceHashMap);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(allDevices);
+
+        prefsEditor.putString(Constants.ALL_DEVICES, json);
+        prefsEditor.apply();
+    }
+
     /*
     * **********************************************************************************
-    *DELETING DATA
+    *   DELETING DATA
     * **********************************************************************************
     */
 
@@ -277,6 +343,15 @@ public class Common {
         for(Preset preset : presets){
             if(preset.getId() > i){
                 preset.setId(preset.getId() - 1);
+            }
+        }
+        return presets;
+    }
+
+    public ArrayList<Integer> arrangePresetsIdsIntegers(ArrayList<Integer> presets, int i){
+        for(int j = 0; j < presets.size(); j++){
+            if(presets.get(j) > i){
+                presets.set(j, presets.get(j) - 1);
             }
         }
         return presets;

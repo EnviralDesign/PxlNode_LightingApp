@@ -23,11 +23,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
-import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
+import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
-import aquilina.ryan.homelightingapp.model.ScannedDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 
@@ -37,6 +37,7 @@ public class GroupManagementActivity extends MainActivity {
 
     private ArrayList<DevicesGroup> mGroups;
     private ArrayList<Integer> mToDeleteGroups;
+    private HashMap<String, Device> mDevicesSparseArray;
     private GroupsAdapter mAdapter;
 
     private Common common;
@@ -51,11 +52,13 @@ public class GroupManagementActivity extends MainActivity {
         mNavigationView.setCheckedItem(R.id.nav_group_node_groups);
         RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
+        mTitleTextView.setText(R.string.group_title);
 
         // Set view's data
         mGroups = new ArrayList<>();
         mToDeleteGroups = new ArrayList<>();
         mAdapter = new GroupsAdapter();
+        mDevicesSparseArray = new HashMap<>();
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mGroupsRecyclerView.setLayoutManager(layoutManager);
         mGroupsRecyclerView.setAdapter(mAdapter);
@@ -64,6 +67,9 @@ public class GroupManagementActivity extends MainActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
+        mDevicesSparseArray = common.loadDevices(this);
+
         mGroups = common.loadGroups(this);
         if(mGroups != null){
             if(mGroups.isEmpty()){
@@ -251,16 +257,22 @@ public class GroupManagementActivity extends MainActivity {
         }
 
         /**
-         * Create and return the preset names in a Macro.
+         * Create and return the ip addresses in the group.
          */
         private String getGroupItemsSubString(DevicesGroup group){
-            ScannedDevices scannedDevices = ((Application)getApplication()).getScannedDevices();
             String subText;
             StringBuilder builder = new StringBuilder();
-            for(int i = 0; i < group.getDeviceArrayList().size(); i++){
-                builder.append(scannedDevices.getDevicesList().get(group.getDeviceArrayList().get(i)).getIpAddress());
-                if(i != group.getDeviceArrayList().size() - 1){
-                    builder.append(", ");
+
+            for(int i = 0; i < group.getDeviceIPArrayList().size(); i++){
+                String deviceIP = group.getDeviceIPArrayList().get(i);
+                if(deviceIP != null){
+                    String deviceName = mDevicesSparseArray.get(deviceIP).getName();
+                    if(deviceName != null){
+                        builder.append(deviceName);
+                        if(i != group.getDeviceIPArrayList().size() - 1){
+                            builder.append(", ");
+                        }
+                    }
                 }
             }
 

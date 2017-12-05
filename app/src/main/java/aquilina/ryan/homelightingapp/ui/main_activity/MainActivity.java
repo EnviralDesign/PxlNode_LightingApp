@@ -24,10 +24,7 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import javax.crypto.Mac;
 
 import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.ui.design_mode.DesignActivity;
@@ -40,10 +37,12 @@ import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class MainActivity extends AppCompatActivity {
+    private int mShortAnimationDuration;
 
     protected DrawerLayout fullLayout;
     protected FrameLayout actContent;
     protected NavigationView mNavigationView;
+    protected TextView mTitleTextView;
 
     protected Typeface mHeaderTypeFace;
     protected Typeface mTextTypeFace;
@@ -70,8 +69,9 @@ public class MainActivity extends AppCompatActivity {
         mHeaderTypeFace = Typeface.createFromAsset(am, "fonts/raleway_bold.ttf");
         mTextTypeFace = Typeface.createFromAsset(am, "fonts/titilliumweb_regular.ttf");
         mSubTextTypeFace = Typeface.createFromAsset(am, "fonts/titilliumweb_italic.ttf");
-        TextView title = findViewById(R.id.appBarTitle);
-        title.setTypeface(mHeaderTypeFace);
+        mShortAnimationDuration = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        mTitleTextView = findViewById(R.id.appBarTitle);
+        mTitleTextView.setTypeface(mHeaderTypeFace);
 
         mToolbar = fullLayout.findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
             bundle.putString(Constants.DESIGN_CURRENT_EFFECT, designConfiguration.getEffect());
             bundle.putString(Constants.DESIGN_CURRENT_COMMAND, designConfiguration.getCommand());
             bundle.putInt(Constants.DESIGN_CURRENT_SPINNER_POSITION, designConfiguration.getSpinnerPosition());
-            bundle.putIntegerArrayList(Constants.DESIGN_SELECTED_DEVICES, designConfiguration.getSelectedDevices());
+            bundle.putStringArrayList(Constants.DESIGN_SELECTED_DEVICES, designConfiguration.getSelectedDevicesIP());
 
             return bundle;
         }
@@ -239,5 +239,20 @@ public class MainActivity extends AppCompatActivity {
             mToggle.setToolbarNavigationClickListener(null);
             mToolBarNavigationListenerIsRegistered = false;
         }
+    }
+
+    private void crossFade(){
+        // Set the content view to 0% opacity but visible, so that it is visible
+        // (but fully transparent) during the animation.
+        fullLayout.setAlpha(0f);
+        fullLayout.setVisibility(View.VISIBLE);
+
+        // Animate the content view to 100% opacity, and clear any animation
+        // listener set on the view.
+        fullLayout.animate()
+                .alpha(1f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
+
     }
 }

@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="@string/text_view_no_device_online"
-            android:textSize="22sp"
+            android:textSize="16sp"
             android:textColor="@color/colorPrimaryText"
             android:fontFamily="@font/raleway_bold"
             android:layout_marginBottom="18dp"/>

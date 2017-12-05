@@ -17,12 +17,12 @@ public class DesignConfiguration {
     private int repetitions;
     private int duration;
     private int spinnerPosition;
-    private ArrayList<Integer> selectedDevices;
+    private ArrayList<String> selectedDevicesIP;
     private String effect;
     private String command;
 
 
-    public DesignConfiguration(int startColor, int endColor, int centreCircleColor, int repetitions, int duration, String effect, String command, int spinnerPosition, ArrayList<Integer> selectedDevices) {
+    public DesignConfiguration(int startColor, int endColor, int centreCircleColor, int repetitions, int duration, String effect, String command, int spinnerPosition, ArrayList<String> selectedDevicesIP) {
         this.startColor = startColor;
         this.endColor = endColor;
         this.centreCircleColor = centreCircleColor;
@@ -31,7 +31,7 @@ public class DesignConfiguration {
         this.effect = effect;
         this.command = command;
         this.spinnerPosition = spinnerPosition;
-        this.selectedDevices = selectedDevices;
+        this.selectedDevicesIP = selectedDevicesIP;
     }
 
     public int getStartColor() {
@@ -66,11 +66,11 @@ public class DesignConfiguration {
         return spinnerPosition;
     }
 
-    public ArrayList<Integer> getSelectedDevices() {
-        return selectedDevices;
+    public ArrayList<String> getSelectedDevicesIP() {
+        return selectedDevicesIP;
     }
 
-    public void setSelectedDevices(ArrayList<Integer> selectedDevices) {
-        this.selectedDevices = selectedDevices;
+    public void setSelectedDevicesIP(ArrayList<String> selectedDevicesIP) {
+        this.selectedDevicesIP = selectedDevicesIP;
     }
 }

@@ -8,46 +8,54 @@
 
 package aquilina.ryan.homelightingapp;
 
-import com.google.gson.Gson;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 
 import aquilina.ryan.homelightingapp.model.Device;
-import aquilina.ryan.homelightingapp.model.ScannedDevices;
-import aquilina.ryan.homelightingapp.ui.design_mode.DesignConfiguration;
+import aquilina.ryan.homelightingapp.model.OnlineDevices;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class Application extends android.app.Application {
 
-    private ScannedDevices mScannedDevices;
+    private OnlineDevices mOnlineDevices;
     // Called when the application is starting, before any other application objects have been created.
     // Overriding this method is totally optional!
     @Override
     public void onCreate() {
         super.onCreate();
-        // Required initialization logic here!
 
         SharedPreferences Prefs = getSharedPreferences(Constants.DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = Prefs.edit();
         prefsEditor.putString(Constants.DESIGN_CONFIGURATION, null);
         prefsEditor.apply();
+
+        // Check if the application version is installed for the first time
+        Prefs = getSharedPreferences(getPackageName(), MODE_PRIVATE);
+        if (Prefs.getBoolean("firstrun", true)) {
+           // Remove any data that might interfere.
+            Prefs.getAll().clear();
+            Prefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            Prefs.getAll().clear();
+            Prefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            Prefs.getAll().clear();
+            Prefs.edit().putBoolean("firstrun", false).apply();
+        }
     }
 
-    public void setScannedDevices(ScannedDevices mScannedDevices) {
-        this.mScannedDevices = mScannedDevices;
+    public void setScannedDevices(OnlineDevices mOnlineDevices) {
+        this.mOnlineDevices = mOnlineDevices;
     }
 
-    public ScannedDevices getScannedDevices() {
-        return mScannedDevices;
+    public OnlineDevices getScannedDevices() {
+        return mOnlineDevices;
     }
 
-    public Device getDeviceById(int id){
-        if(mScannedDevices != null){
-            if(!mScannedDevices.getDevicesList().isEmpty()){
-                for (Device device: mScannedDevices.getDevicesList()) {
-                    if(id == device.getId()){
+    public Device getDeviceByIP(String ip){
+        if(mOnlineDevices != null){
+            if(!mOnlineDevices.getDevicesList().isEmpty()){
+                for (Device device: mOnlineDevices.getDevicesList()) {
+                    if(ip.equals(device.getIpAddress())){
                         return device;
                     }
                 }
