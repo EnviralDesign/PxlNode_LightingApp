@@ -30,6 +30,7 @@ import com.androidnetworking.common.ANResponse;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONArrayRequestListener;
+import com.androidnetworking.interfaces.StringRequestListener;
 import com.androidnetworking.internal.ANRequestQueue;
 
 import org.json.JSONArray;
@@ -432,7 +433,6 @@ public class LightingModeActivity extends MainActivity {
 
                 queue.addRequest(request);
             }
-
         }
 
         /**
@@ -451,21 +451,19 @@ public class LightingModeActivity extends MainActivity {
             public void run() {
                 AndroidNetworking.post("http://" + ipAddress + "/play")
                         .addByteBody(command.getBytes())
-                        .setPriority(Priority.IMMEDIATE)
+                        .setPriority(Priority.HIGH)
                         .build()
-                        .getAsJSONArray(new JSONArrayRequestListener() {
+                        .getAsString(new StringRequestListener() {
                             @Override
-                            public void onResponse(JSONArray response) {
-                                // do anything with response
+                            public void onResponse(String response) {
                                 Log.d("PostCommand", "Success to " + ipAddress + " with command : " + command);
                             }
+
                             @Override
-                            public void onError(ANError error) {
-                                // handle error
+                            public void onError(ANError anError) {
                                 Log.d("PostCommand", "Fail to " + ipAddress + " with command : " + command);
                             }
                         });
-
             }
         }
 

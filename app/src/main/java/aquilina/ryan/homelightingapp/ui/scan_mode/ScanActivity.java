@@ -298,7 +298,7 @@ public class ScanActivity extends MainActivity {
         } catch (Exception e){
             Log.w("Bad Device Ip", subIP + Integer.toString(i));
         }
-        return null;
+        return new Device("Device " + Integer.toString(i), subIP + Integer.toString(64));
     }
 
     /**

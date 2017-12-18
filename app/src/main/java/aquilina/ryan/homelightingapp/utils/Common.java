@@ -303,7 +303,8 @@ public class Common {
                                 }
                             }
                         }
-                        arrangeGroupsIds(groups, i);
+                        groups = arrangeGroupsIds(groups, i);
+                        toDeleteGroupsID = arrangeArrayOfIdsIntegers(toDeleteGroupsID, i);
                         break;
                     }
                 }
@@ -348,13 +349,16 @@ public class Common {
         return presets;
     }
 
-    public ArrayList<Integer> arrangePresetsIdsIntegers(ArrayList<Integer> presets, int i){
-        for(int j = 0; j < presets.size(); j++){
-            if(presets.get(j) > i){
-                presets.set(j, presets.get(j) - 1);
+    /**
+     * Arrange an array of ids.
+     */
+    public ArrayList<Integer> arrangeArrayOfIdsIntegers(ArrayList<Integer> idIntegers, int i){
+        for(int j = 0; j < idIntegers.size(); j++){
+            if(idIntegers.get(j) > i){
+                idIntegers.set(j, idIntegers.get(j) - 1);
             }
         }
-        return presets;
+        return idIntegers;
     }
 
     /**
@@ -371,10 +375,11 @@ public class Common {
      * Arranges the id of the remaining groups.
      */
     public ArrayList<DevicesGroup> arrangeGroupsIds(ArrayList<DevicesGroup> groups, int i){
-        for (int j = i; j < groups.size(); j++ ){
-            groups.get(j).setId(j);
+        for(int j = 0; j <groups.size(); j++){
+            if(groups.get(j).getId() > i){
+                groups.get(j).setId(groups.get(j).getId() - 1);
+            }
         }
         return groups;
     }
-
 }
