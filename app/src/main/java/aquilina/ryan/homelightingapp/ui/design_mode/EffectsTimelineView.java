@@ -28,13 +28,32 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import aquilina.ryan.homelightingapp.R;
 
 public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener {
+
+    /**
+     * Instance used to draw the Start Circle.
+     */
     private CircleView mStartCircleView;
+
+    /**
+     * Instance used to draw the Stop Circle.
+     */
     private CircleView mStopCircleView;
 
-    private int mStartCircleColor;
-    private int mLineColor;
+    /**
+     * Default circle color.
+     */
+    private int mDefaultCircleColor;
 
+    /**
+     * Default line color.
+     */
+    private int mDefaultLineColor;
+
+    /**
+     * Instance of a typeface used for caption labels.
+     */
     private Typeface mTypeface;
+
 
     public EffectsTimelineView(Context context) {
         super(context);
@@ -51,8 +70,8 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         );
 
         try{
-            mStartCircleColor = a.getColor(R.styleable.EffectsTimelineView_startColor, Color.GRAY);
-            mLineColor = a.getColor(R.styleable.EffectsTimelineView_lineColor, ContextCompat.getColor(getContext(), R.color.colorPrimary));
+            mDefaultCircleColor = a.getColor(R.styleable.EffectsTimelineView_startColor, Color.GRAY);
+            mDefaultLineColor = a.getColor(R.styleable.EffectsTimelineView_lineColor, ContextCompat.getColor(getContext(), R.color.colorPrimary));
         }
         finally {
             a.recycle();
@@ -99,6 +118,10 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
 
     @Override
     public void onClick(View view) {
+
+        // Check whether the to allow the start circle to be
+        // in focus. The start circle can be in focus only if
+        // the stop circle's color was changed.
         if(view == mStartCircleView){
             if(mStopCircleView.isColorChanged){
                 if(mStartCircleView.isSelected()){
@@ -122,28 +145,46 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         }
     }
 
+    /**
+     * Animate the circle view and set the circle to selected.
+     * @param view {Takes a circle view or any view}
+     */
     public void selectView(View view){
         view.animate().scaleX(1.25f).scaleY(1.25f).setInterpolator(new AccelerateDecelerateInterpolator()).setDuration(50);
         view.setSelected(true);
     }
 
+    /**
+     * Animate the circle view and set the circle to unselected.
+     * @param view {Takes a circle view or any view}
+     */
     public void unSelectView(View view){
         view.animate().scaleX(1f).scaleY(1f).setInterpolator(new AccelerateDecelerateInterpolator()).setDuration(50);
         view.setSelected(false);
     }
 
+    /**
+     * Change the start circle's color.
+     * @param color {new color}
+     * @param bypass {A flag to bypass the stop circle's selected state}
+     */
     public void changeStartCircleColor(int color, boolean bypass){
         if(bypass){
             mStartCircleView.setCircleColor(color);
             mStartCircleView.invalidate();
         } else {
             if(mStartCircleView.isSelected()){
+                mStartCircleView.setInFocus(true);
                 mStartCircleView.setCircleColor(color);
                 mStartCircleView.invalidate();
             }
         }
     }
 
+    /**
+     * Change the stop circle's color
+     * @param color {new color}
+     */
     public void changeStopCircleColor(int color){
         if(mStopCircleView.isSelected()){
             mStopCircleView.setCircleColor(color);
@@ -153,6 +194,9 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         }
     }
 
+    /**
+     * Refresh the EffectsTimelineView to default.
+     */
     public void refreshView(){
         mStartCircleView.setCircleColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
         mStopCircleView.setCircleColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
@@ -163,6 +207,10 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         mStopCircleView.setColorChanged(false);
     }
 
+    /**
+     * Set start circle in focus.
+     * @param bool {set focus or unset the focus}
+     */
     public void setStartCircleViewFocus(boolean bool){
         unSelectView(mStopCircleView);
         selectView(mStartCircleView);
@@ -170,6 +218,19 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
 
     }
 
+    /**
+     * Set the start circle to default.
+     */
+    public void setStartCircleToDefault(){
+        mStartCircleView.setInFocus(false);
+        unSelectView(mStartCircleView);
+        mStartCircleView.setCircleColor(getResources().getColor(R.color.colorPrimary));
+    }
+
+    /**
+     * Set stop circle in focus
+     * @param bool {set focus or unset the focus}
+     */
     public void setStopCircleViewFocus(boolean bool){
         unSelectView(mStartCircleView);
         selectView(mStopCircleView);
@@ -184,7 +245,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         return mStopCircleView.isInFocus();
     }
 
-    public CircleView getmStartCircleView() {
+    public CircleView getStartCircleView() {
         return mStartCircleView;
     }
 
@@ -192,7 +253,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         this.mStartCircleView = mStartCircleView;
     }
 
-    public CircleView getmStopCircleView() {
+    public CircleView getStopCircleView() {
         return mStopCircleView;
     }
 
@@ -237,14 +298,14 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         public Timeline(Context context) {
             super(context);
 
-            lineColor = mLineColor;
+            lineColor = mDefaultLineColor;
             init(context);
         }
 
         public Timeline(Context context, @Nullable AttributeSet attrs) {
             super(context, attrs);
 
-            lineColor = mLineColor;
+            lineColor = mDefaultLineColor;
             init(context);
         }
 
@@ -284,7 +345,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         {
             super(context);
 
-            circleColor = mStartCircleColor;
+            circleColor = mDefaultCircleColor;
             init();
         }
 
@@ -292,7 +353,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         {
             super(context, attrs);
 
-            circleColor = mStartCircleColor;
+            circleColor = mDefaultCircleColor;
             init();
         }
 

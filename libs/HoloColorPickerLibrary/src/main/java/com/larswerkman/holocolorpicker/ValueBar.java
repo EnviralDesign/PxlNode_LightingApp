@@ -352,6 +352,10 @@ public class ValueBar extends View {
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_DOWN:
 		    	mIsMovingPointer = true;
+		    	if(mPicker != null){
+		    		mPicker.isValueBarUsed = true;
+		    		mPicker.isSaturationBarUsed = false;
+				}
 			// Check whether the user pressed on (or near) the pointer
 			if (dimen >= (mBarPointerHaloRadius)
 					&& dimen <= (mBarPointerHaloRadius + mBarLength)) {
@@ -443,9 +447,15 @@ public class ValueBar extends View {
 		calculateColor(mBarPointerPosition);
 		mBarPointerPaint.setColor(mColor);
 		if (mPicker != null) {
-			//mPicker.setNewCenterColor(mColor);
-			if(mPicker.hasOpacityBar())
+			if(mPicker.isValueBarUsed){
+				mPicker.setNewCenterColor(mColor);
+			}
+			if(mPicker.isValueBarUsed && mPicker.hasSaturationBar()){
+				mPicker.changeSaturationBarColor(mColor);
+			}
+			if(mPicker.hasOpacityBar()){
 				mPicker.changeOpacityBarColor(mColor);
+			}
 		}
 		invalidate();
 	}

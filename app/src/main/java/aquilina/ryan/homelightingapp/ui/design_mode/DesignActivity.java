@@ -154,8 +154,8 @@ public class DesignActivity extends MainActivity {
         // Set up view's functionality & design
         repetitionText.setTypeface(mSubTextTypeFace);
         durationText.setTypeface(mSubTextTypeFace);
-        mColorPicker.addSaturationBar(mSaturationBar);
         mColorPicker.addValueBar(mValueBar);
+        mColorPicker.addSaturationBar(mSaturationBar);
         mColorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
             @Override
             public void onColorChanged(int color) {
@@ -229,12 +229,14 @@ public class DesignActivity extends MainActivity {
             @Override
             public void onClick(View view) {
                 showSavePresetDialog();
+                mEffectsTimeLineView.setStartCircleToDefault();
             }
         });
         mPreviewPresetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 formulateCommand(startColor, stopColor, duration, repetition);
+                mEffectsTimeLineView.setStartCircleToDefault();
             }
         });
         mPreviewPresetButton.setEnabled(false);
@@ -387,7 +389,7 @@ public class DesignActivity extends MainActivity {
         // Send 10 commands every 1 second
         Long time = thisTime - lastTime;
         if((time) > 100){
-            updateDeviceColorInstant(color);
+            updateDeviceColorInstant(mColorPicker.getColor());
         }
         if(hoverThread.getStatus() == AsyncTask.Status.RUNNING || hoverThread.getStatus() == AsyncTask.Status.PENDING){
             isHovering = false;
@@ -403,14 +405,14 @@ public class DesignActivity extends MainActivity {
      * @param color new color change
      */
     private void updateDeviceColorInstant(int color){
-        if(mEffectsTimeLineView.getmStopCircleView().isSelected()){
+        if(mEffectsTimeLineView.getStopCircleView().isSelected()){
             mEffectsTimeLineView.changeStopCircleColor(color);
             stopColor = color;
             mPreviewPresetButton.setEnabled(true);
             mPreviewPresetButton.setAlpha(1);
         }
 
-        if(mEffectsTimeLineView.getmStartCircleView().isSelected()) {
+        if(mEffectsTimeLineView.getStartCircleView().isSelected()) {
             mEffectsTimeLineView.changeStartCircleColor(color, false);
             startColor = color;
         }
@@ -977,7 +979,7 @@ public class DesignActivity extends MainActivity {
             long time = 0;
             isHovering = true;
 
-            while(time < 250 && isHovering){
+            while(time < 100 && isHovering){
                 lastTime = System.currentTimeMillis();
                 time = lastTime - thisTime;
             }

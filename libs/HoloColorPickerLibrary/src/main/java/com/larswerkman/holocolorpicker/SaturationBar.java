@@ -351,6 +351,10 @@ public class SaturationBar extends View {
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_DOWN:
 		    	mIsMovingPointer = true;
+			if(mPicker != null){
+				mPicker.isSaturationBarUsed = true;
+				mPicker.isValueBarUsed = false;
+			}
 			// Check whether the user pressed on (or near) the pointer
 			if (dimen >= (mBarPointerHaloRadius)
 					&& dimen <= (mBarPointerHaloRadius + mBarLength)) {
@@ -446,8 +450,10 @@ public class SaturationBar extends View {
 		calculateColor(mBarPointerPosition);
 		mBarPointerPaint.setColor(mColor);
 		if (mPicker != null) {
-			mPicker.setNewCenterColor(mColor);
-			if(mPicker.hasValueBar())
+			if(mPicker.isSaturationBarUsed){
+				mPicker.setNewCenterColor(mColor);
+			}
+			if(mPicker.isSaturationBarUsed && mPicker.hasValueBar())
 				mPicker.changeValueBarColor(mColor);
 			else if(mPicker.hasOpacityBar())
 				mPicker.changeOpacityBarColor(mColor);

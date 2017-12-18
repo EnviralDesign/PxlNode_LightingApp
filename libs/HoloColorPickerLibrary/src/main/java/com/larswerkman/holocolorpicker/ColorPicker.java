@@ -249,6 +249,12 @@ public class ColorPicker extends View {
 	 */
 	private WorkerThreadAsyncTask hoverThread;
 
+	/**
+	 * Check which bar was used last.
+	 */
+	public boolean isSaturationBarUsed = false;
+	public boolean isValueBarUsed = false;
+
 	public ColorPicker(Context context) {
 		super(context);
 		init(null, 0);
@@ -344,7 +350,7 @@ public class ColorPicker extends View {
 	public OnColorSelectedListener getOnColorSelectedListener() {
 		return this.onColorSelectedListener;
 	}
-	
+
 	/**
 	 * Color of the latest entry of the onColorChangedListener.
 	 */
@@ -665,16 +671,17 @@ public class ColorPicker extends View {
 			break;
 		case MotionEvent.ACTION_MOVE:
 			Log.d("Action", "MOVE");
-//			Log.d("Action Movement", "x: " + Float.toString(x) + " y: " +Float.toString(y));
-//			Log.d("Action Event Time", Long.toString(event.getEventTime()));
-//			Log.d("Action History Size", Integer.toString(event.getHistorySize()));
-//			Log.d("Action Pointer Count", Integer.toString(event.getPointerCount()));
 			if (mUserIsMovingPointer) {
 				mAngle = (float) Math.atan2(y - mSlopY, x - mSlopX);
 				mPointerColor.setColor(calculateColor(mAngle));
 
-				setNewCenterColor(mCenterNewColor = calculateColor(mAngle));
-				
+				mCenterNewColor = calculateColor(mAngle);
+				mCenterNewPaint.setColor(mCenterNewColor);
+
+				if(!isSaturationBarUsed && !isValueBarUsed){
+					setNewCenterColor(mCenterNewColor = calculateColor(mAngle));
+				}
+
 				if (mOpacityBar != null) {
 					mOpacityBar.setColor(mColor);
 				}

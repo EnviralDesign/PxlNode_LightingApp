@@ -139,6 +139,7 @@ public class PresetManagementActivity extends MainActivity {
                     if(preset.getId() == i){
                         presets.remove(preset);
                         presets = common.arrangePresetsIds(presets, i);
+                        mSelectedPresets = common.arrangePresetsIdsIntegers(mSelectedPresets, i);
                         break;
                     }
                 }

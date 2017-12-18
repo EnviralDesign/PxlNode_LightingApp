@@ -25,12 +25,16 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.ANRequest;
+import com.androidnetworking.common.ANResponse;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONArrayRequestListener;
+import com.androidnetworking.internal.ANRequestQueue;
 
 import org.json.JSONArray;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -419,6 +423,18 @@ public class LightingModeActivity extends MainActivity {
             }
         }
 
+        private void sendPresetCommandToDeviceInstant(String command, ArrayList<String> ipAdresses){
+            ANRequestQueue queue = new ANRequestQueue();
+            for (String ipAdress: ipAdresses) {
+                ANRequest request = AndroidNetworking.post("http://" + ipAdress + "/play")
+                        .addByteBody(command.getBytes())
+                        .build();
+
+                queue.addRequest(request);
+            }
+
+        }
+
         /**
          * Asynchronous sending of post commands
          */
@@ -441,13 +457,15 @@ public class LightingModeActivity extends MainActivity {
                             @Override
                             public void onResponse(JSONArray response) {
                                 // do anything with response
+                                Log.d("PostCommand", "Success to " + ipAddress + " with command : " + command);
                             }
                             @Override
                             public void onError(ANError error) {
                                 // handle error
+                                Log.d("PostCommand", "Fail to " + ipAddress + " with command : " + command);
                             }
                         });
-                Log.d("PostCommand", "to " + ipAddress + " with command : " + command);
+
             }
         }
 
