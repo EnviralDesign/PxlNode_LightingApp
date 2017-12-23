@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class DevicesGroup implements Serializable{
+
     private int id;
     private String name;
     private ArrayList<String> deviceIPArrayList;

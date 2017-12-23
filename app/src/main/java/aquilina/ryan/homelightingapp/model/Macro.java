@@ -16,9 +16,6 @@ public class Macro implements Serializable {
     private String name;
     private ArrayList<Preset> presetList;
 
-    public Macro() {
-    }
-
     public Macro(int id, String name, ArrayList<Preset> presetList) {
         this.id = id;
         this.name = name;

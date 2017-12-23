@@ -1,3 +1,11 @@
+/*
+ * Created by Ryan Aquilina on 12/23/17 2:18 PM
+ * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+ * Copyright (c) 2017.  All rights reserved
+ *
+ * Last modified 12/22/17 1:53 PM
+ */
+
 package aquilina.ryan.homelightingapp.ui.main_activity;
 
 import com.google.gson.Gson;
@@ -21,7 +29,6 @@ import android.text.SpannableString;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -37,7 +44,6 @@ import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class MainActivity extends AppCompatActivity {
-    private int mShortAnimationDuration;
 
     protected DrawerLayout fullLayout;
     protected FrameLayout actContent;
@@ -52,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
     protected Toolbar mToolbar;
     protected DrawerLayout mDrawer;
 
-    private boolean mToolBarNavigationListenerIsRegistered = false;
 
     @Override
     public void setContentView(@LayoutRes int layoutResID) {
@@ -69,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
         mHeaderTypeFace = Typeface.createFromAsset(am, "fonts/raleway_bold.ttf");
         mTextTypeFace = Typeface.createFromAsset(am, "fonts/titilliumweb_regular.ttf");
         mSubTextTypeFace = Typeface.createFromAsset(am, "fonts/titilliumweb_italic.ttf");
-        mShortAnimationDuration = getResources().getInteger(android.R.integer.config_shortAnimTime);
         mTitleTextView = findViewById(R.id.appBarTitle);
         mTitleTextView.setTypeface(mHeaderTypeFace);
 
@@ -215,44 +219,29 @@ public class MainActivity extends AppCompatActivity {
         mi.setTitle(mNewTitle);
     }
 
-    protected void enableBackButton(boolean enable){
-        if(enable){
-            // remove hamburger
-            mToggle.setDrawerIndicatorEnabled(false);
-
-            // Show back button
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-            if(!mToolBarNavigationListenerIsRegistered){
-                mToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        onBackPressed();
-                    }
-                });
-
-                mToolBarNavigationListenerIsRegistered = true;
-            }
-        } else {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-            mToggle.setDrawerIndicatorEnabled(true);
-            mToggle.setToolbarNavigationClickListener(null);
-            mToolBarNavigationListenerIsRegistered = false;
-        }
-    }
-
-    private void crossFade(){
-        // Set the content view to 0% opacity but visible, so that it is visible
-        // (but fully transparent) during the animation.
-        fullLayout.setAlpha(0f);
-        fullLayout.setVisibility(View.VISIBLE);
-
-        // Animate the content view to 100% opacity, and clear any animation
-        // listener set on the view.
-        fullLayout.animate()
-                .alpha(1f)
-                .setDuration(mShortAnimationDuration)
-                .setListener(null);
-
-    }
+//    protected void enableBackButton(boolean enable){
+//        if(enable){
+//            // remove hamburger
+//            mToggle.setDrawerIndicatorEnabled(false);
+//
+//            // Show back button
+//            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//
+//            if(!mToolBarNavigationListenerIsRegistered){
+//                mToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        onBackPressed();
+//                    }
+//                });
+//
+//                mToolBarNavigationListenerIsRegistered = true;
+//            }
+//        } else {
+//            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+//            mToggle.setDrawerIndicatorEnabled(true);
+//            mToggle.setToolbarNavigationClickListener(null);
+//            mToolBarNavigationListenerIsRegistered = false;
+//        }
+//    }
 }

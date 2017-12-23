@@ -34,14 +34,14 @@ import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class MacroManagementActivity extends MainActivity{
+
     private Menu mMenu;
     private LinearLayout mHintTextView;
-
     private ArrayList<Macro> mMacros;
     private ArrayList<Integer> mSelectedMacros;
     private GroupsAdapter mAdapter;
-
     private SharedPreferences mPrefs;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -322,8 +322,8 @@ public class MacroManagementActivity extends MainActivity{
             }
 
             subText = builder.toString();
-            if(subText.length() > 50){
-                subText = subText.substring(0, 50);
+            if(subText.length() > 40){
+                subText = subText.substring(0, 40);
                 subText += ".....";
             }
 

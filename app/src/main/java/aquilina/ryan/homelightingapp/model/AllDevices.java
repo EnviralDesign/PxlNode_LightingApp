@@ -9,7 +9,6 @@
 package aquilina.ryan.homelightingapp.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class AllDevices implements Serializable {

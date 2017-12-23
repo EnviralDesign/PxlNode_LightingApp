@@ -298,7 +298,7 @@ public class ScanActivity extends MainActivity {
         } catch (Exception e){
             Log.w("Bad Device Ip", subIP + Integer.toString(i));
         }
-        return new Device("Device " + Integer.toString(i), subIP + Integer.toString(64));
+        return new Device("Device " + Integer.toString(i), subIP + Integer.toString(i));
     }
 
     /**
@@ -445,7 +445,7 @@ public class ScanActivity extends MainActivity {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             mDeviceAdapter.notifyDataSetChanged();
-            common.saveDeviceHashmap(mDevicesMap, getApplicationContext());
+            common.saveDeviceHashMap(mDevicesMap, getApplicationContext());
             if(mScannedDevicesList.isEmpty()){
                 mNoDevicesTextView.setText(getString(R.string.text_view_no_devices_found));
                 mNoDevicesTextView.setVisibility(View.VISIBLE);

@@ -32,14 +32,13 @@ import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 
 public class GroupManagementActivity extends MainActivity {
-    private Menu mMenu;
-    private LinearLayout mHintTextView;
 
     private ArrayList<DevicesGroup> mGroups;
     private ArrayList<Integer> mToDeleteGroups;
     private HashMap<String, Device> mDevicesSparseArray;
+    private Menu mMenu;
+    private LinearLayout mHintTextView;
     private GroupsAdapter mAdapter;
-
     private Common common;
 
     @Override
@@ -277,8 +276,8 @@ public class GroupManagementActivity extends MainActivity {
             }
 
             subText = builder.toString();
-            if(subText.length() > 50){
-                subText = subText.substring(0, 50);
+            if(subText.length() > 40){
+                subText = subText.substring(0, 40);
                 subText += ".....";
             }
 

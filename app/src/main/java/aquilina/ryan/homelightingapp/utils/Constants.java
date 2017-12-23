@@ -9,8 +9,6 @@
 package aquilina.ryan.homelightingapp.utils;
 
 public final class Constants {
-    /* General */
-    public static final int ID = 202;
 
     /* SharedPreferences Constants */
     public static final String DEVICES_SHARED_PREFERENCES = "devices_shared_preferences";

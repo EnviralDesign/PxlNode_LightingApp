@@ -45,17 +45,14 @@ public class PresetManagementActivity extends MainActivity {
 
     private Menu mMenu;
     private LinearLayout mHintTextView;
-
     private ArrayList<Preset> mPresets;
     private ArrayList<Integer> mSelectedPresets;
     private HashMap<String, Device> mDevicesSparseArray;
-
     private GroupsAdapter mAdapter;
     private Button mSaveButton;
-
     private Common common;
-
     private SharedPreferences mPrefs;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -376,8 +373,8 @@ public class PresetManagementActivity extends MainActivity {
             }
 
             subText = builder.toString();
-            if(subText.length() > 50){
-                subText = subText.substring(0, 50);
+            if(subText.length() > 40){
+                subText = subText.substring(0, 40);
                 subText += ".....";
             }
 

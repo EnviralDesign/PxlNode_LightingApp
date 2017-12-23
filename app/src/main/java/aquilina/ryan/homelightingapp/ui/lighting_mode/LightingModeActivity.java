@@ -9,6 +9,8 @@
 package aquilina.ryan.homelightingapp.ui.lighting_mode;
 
 import android.os.Bundle;
+import android.os.Process;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -24,18 +26,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.androidnetworking.AndroidNetworking;
-import com.androidnetworking.common.ANRequest;
-import com.androidnetworking.common.ANResponse;
-import com.androidnetworking.common.Priority;
-import com.androidnetworking.error.ANError;
-import com.androidnetworking.interfaces.JSONArrayRequestListener;
-import com.androidnetworking.interfaces.StringRequestListener;
-import com.androidnetworking.internal.ANRequestQueue;
-
-import org.json.JSONArray;
-
-import java.lang.reflect.Array;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,12 +44,11 @@ import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class LightingModeActivity extends MainActivity {
-    private TextView mHintTextView;
 
+    private TextView mHintTextView;
     private ArrayList<Preset> mPresets;
     private ArrayList<Macro> mMacros;
     private PresetAdapter mAdapter;
-
     private Common common;
 
     @Override
@@ -83,6 +75,8 @@ public class LightingModeActivity extends MainActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
+        // Load presets and macros
         mPresets = common.loadPresets(getApplicationContext());
         mMacros = common.loadMacros(this);
         if(!mPresets.isEmpty() || !mMacros.isEmpty()){
@@ -116,31 +110,62 @@ public class LightingModeActivity extends MainActivity {
         if(onlineDevices != null){
             return onlineDevices.getDevicesList();
         }
+
         return null;
     }
 
     /**
-     * Switch off a list of devices.
+     * Switch off a list of online devices.
      */
     private void switchOffLights(){
         ArrayList<Device> onlineDevices = getOnlineDevice();
 
         if(onlineDevices != null){
+            ExecutorService executorService = Executors.newFixedThreadPool(onlineDevices.size());
             for(Device device : onlineDevices){
-                AndroidNetworking.post("http://" + device.getIpAddress() + "/play")
-                        .addByteBody(("blank").getBytes())
-                        .setPriority(Priority.IMMEDIATE)
-                        .build()
-                        .getAsJSONArray(new JSONArrayRequestListener() {
-                            @Override
-                            public void onResponse(JSONArray response) {
-                                // do anything with response
-                            }
-                            @Override
-                            public void onError(ANError error) {
-                                // handle error
-                            }
-                        });
+                Runnable worker = new PostRequest("blank", device.getIpAddress());
+                executorService.execute(worker);
+            }
+            executorService.shutdown();
+        }
+    }
+
+    /**
+     * Send a post request with the command in the body.
+     */
+    private static class PostRequest implements Runnable{
+        String command;
+        String ipAddress;
+
+        public PostRequest(String command, String ipAddresses) {
+            this.command = command;
+            this.ipAddress = ipAddresses;
+        }
+
+        @Override
+        public void run() {
+            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
+            HttpURLConnection urlConnection;
+            URL url;
+            OutputStream os;
+            try{
+                url = new URL("http://" + ipAddress + "/play");
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setRequestProperty("Content-Length", Integer.toString(command.getBytes().length));
+                urlConnection.setUseCaches(false);
+                urlConnection.setDoInput(false);
+                urlConnection.setDoInput(true);
+                urlConnection.setConnectTimeout(100);
+                urlConnection.setReadTimeout(100);
+                os = urlConnection.getOutputStream();
+                os.write(command.getBytes("UTF-8"));
+                os.close();
+                urlConnection.getInputStream();
+                urlConnection.disconnect();
+                Log.d("PostCommand", "Success to http://" + ipAddress + "/play");
+            } catch (Exception e){
+                Log.d("PostCommand", "Fail to http://" + ipAddress + "/play");
             }
         }
     }
@@ -202,7 +227,7 @@ public class LightingModeActivity extends MainActivity {
 
             @Override
             public void onCardViewClick(View view) {
-//                itemOnClick(view);
+                // Do nothing.
             }
 
             @Override
@@ -224,6 +249,9 @@ public class LightingModeActivity extends MainActivity {
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
+            // Create a list of two separate types, with
+            // titles separating each type.
             switch (holder.getItemViewType()){
                 case MACRO_TITLE:{
                     TitleViewHolder macroTitleViewHolder = (TitleViewHolder) holder;
@@ -234,8 +262,8 @@ public class LightingModeActivity extends MainActivity {
                 case MACRO_ITEM:{
                     ItemViewHolder macroItemViewHolder = (ItemViewHolder) holder;
                     Macro macro = mMacros.get(position - 1);
-                    macroItemViewHolder.cardView.setTag(R.id.ID, macro.getId());
-                    macroItemViewHolder.cardView.setTag(R.id.groupType, Constants.MACRO);
+
+                    // Set the tags to identify the macro.
                     macroItemViewHolder.aSwitch.setTag(R.id.ID, macro.getId());
                     macroItemViewHolder.aSwitch.setTag(R.id.groupType, Constants.MACRO);
                     macroItemViewHolder.nameTextView.setText(macro.getName());
@@ -260,8 +288,8 @@ public class LightingModeActivity extends MainActivity {
                     } else {
                         preset = mPresets.get(position - (mMacros.size() + 2));
                     }
-                    presetItemViewHolder.cardView.setTag(R.id.ID, preset.getId());
-                    presetItemViewHolder.cardView.setTag(R.id.groupType, Constants.PRESET);
+
+                    // Set the tags to identify the preset.
                     presetItemViewHolder.aSwitch.setTag(R.id.ID, preset.getId());
                     presetItemViewHolder.aSwitch.setTag(R.id.groupType, Constants.PRESET);
                     presetItemViewHolder.nameTextView.setText(preset.getPresetName());
@@ -374,19 +402,19 @@ public class LightingModeActivity extends MainActivity {
          * @param macro macro chosen to be switched on.
          */
         private void sendMacroCommands(Macro macro){
-            ArrayList<DeviceAndCommand> commandsList = new ArrayList<>();
+            ArrayList<DeviceIPAndCommand> commandsList = new ArrayList<>();
             OnlineDevices onlineDevices = ((Application) getApplication()).getScannedDevices();
 
             if(!macro.getPresetList().isEmpty()){
                 for (Preset preset : macro.getPresetList()) {
                     for (String deviceIP : preset.getDevicesGroup().getDeviceIPArrayList()) {
-                        commandsList.add(new DeviceAndCommand(onlineDevices.getDeviceByIP(deviceIP).getIpAddress(), preset.getCommand()));
+                        commandsList.add(new DeviceIPAndCommand(onlineDevices.getDeviceByIP(deviceIP).getIpAddress(), preset.getCommand()));
                     }
                 }
 
                 ExecutorService executorService = Executors.newFixedThreadPool(commandsList.size());
-                for(DeviceAndCommand deviceAndCommand :commandsList){
-                    Runnable worker = new WorkerThread(deviceAndCommand.getCommand(), deviceAndCommand.getDeviceIp());
+                for(DeviceIPAndCommand deviceAndCommand :commandsList){
+                    Runnable worker = new PostRequest(deviceAndCommand.getCommand(), deviceAndCommand.getDeviceIp());
                     executorService.execute(worker);
                 }
                 executorService.shutdown();
@@ -400,70 +428,29 @@ public class LightingModeActivity extends MainActivity {
         private void sendPresetCommandToDevices(Preset presetClicked){
             if(presetClicked != null){
                 ArrayList<String> devicesIPs = presetClicked.getDevicesGroup().getDeviceIPArrayList();
-                ArrayList<Device> devices = ((Application) getApplication()).getScannedDevices().getDevicesList();
+                ArrayList<Device> onlineDevices = ((Application) getApplication()).getScannedDevices().getDevicesList();
                 ArrayList<String> devicesIpAddresses = new ArrayList<>();
 
-                if(!devices.isEmpty()){
+                // Get a list of the online devices inside the presets list.
+                if(!onlineDevices.isEmpty()){
                     for(String deviceIP : devicesIPs){
-                        for(Device device : devices){
+                        for(Device device : onlineDevices){
                             if(device.getIpAddress().equals(deviceIP)){
                                 devicesIpAddresses.add(device.getIpAddress());
                             }
                         }
                     }
 
+                    // Send command to each online device.
                     if(!devicesIpAddresses.isEmpty()){
                         ExecutorService executorService = Executors.newFixedThreadPool(devicesIpAddresses.size());
                         for(String ipAddress: devicesIpAddresses){
-                            Runnable worker = new WorkerThread(presetClicked.getCommand(), ipAddress);
+                            Runnable worker = new PostRequest(presetClicked.getCommand(), ipAddress);
                             executorService.execute(worker);
                         }
                         executorService.shutdown();
                     }
                 }
-            }
-        }
-
-        private void sendPresetCommandToDeviceInstant(String command, ArrayList<String> ipAdresses){
-            ANRequestQueue queue = new ANRequestQueue();
-            for (String ipAdress: ipAdresses) {
-                ANRequest request = AndroidNetworking.post("http://" + ipAdress + "/play")
-                        .addByteBody(command.getBytes())
-                        .build();
-
-                queue.addRequest(request);
-            }
-        }
-
-        /**
-         * Asynchronous sending of post commands
-         */
-        private class WorkerThread implements Runnable{
-            String command;
-            String ipAddress;
-
-            public WorkerThread(String command, String ipAddress) {
-                this.command = command;
-                this.ipAddress = ipAddress;
-            }
-
-            @Override
-            public void run() {
-                AndroidNetworking.post("http://" + ipAddress + "/play")
-                        .addByteBody(command.getBytes())
-                        .setPriority(Priority.HIGH)
-                        .build()
-                        .getAsString(new StringRequestListener() {
-                            @Override
-                            public void onResponse(String response) {
-                                Log.d("PostCommand", "Success to " + ipAddress + " with command : " + command);
-                            }
-
-                            @Override
-                            public void onError(ANError anError) {
-                                Log.d("PostCommand", "Fail to " + ipAddress + " with command : " + command);
-                            }
-                        });
             }
         }
 
@@ -487,28 +474,33 @@ public class LightingModeActivity extends MainActivity {
         /**
          * Create and return the preset names in a Macro.
          */
+        @NonNull
         private String getMacroItemSubString(Macro macro){
-            String subText = "";
+            StringBuffer stringBuffer = new StringBuffer();
             for(int i = 0; i < macro.getPresetList().size(); i++){
-                subText += (macro.getPresetList().get(i)).getPresetName();
+                stringBuffer.append((macro.getPresetList().get(i)).getPresetName());
                 if(i != macro.getPresetList().size() - 1){
-                    subText += ", ";
+                    stringBuffer.append(", ");
                 }
             }
 
-            if(subText.length() > 50){
-                subText = subText.substring(0, 50);
-                subText += ".....";
+            if(stringBuffer.length() > 50){
+                stringBuffer = new StringBuffer(stringBuffer.substring(0, 50));
+                stringBuffer.append(".....");
             }
 
-            return subText;
+            return stringBuffer.toString();
         }
 
-        private class DeviceAndCommand {
+
+        /**
+         * Class containing the ip and command of a device.
+         */
+        private class DeviceIPAndCommand {
             String deviceIp;
             String command;
 
-            public DeviceAndCommand(String deviceIp, String command) {
+            public DeviceIPAndCommand(String deviceIp, String command) {
                 this.deviceIp = deviceIp;
                 this.command = command;
             }

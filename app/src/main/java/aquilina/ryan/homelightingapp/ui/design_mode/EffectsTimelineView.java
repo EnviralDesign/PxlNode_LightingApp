@@ -27,7 +27,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 
 import aquilina.ryan.homelightingapp.R;
 
-public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener {
+class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener {
 
     /**
      * Instance used to draw the Start Circle.
@@ -171,11 +171,13 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     public void changeStartCircleColor(int color, boolean bypass){
         if(bypass){
             mStartCircleView.setCircleColor(color);
+            mStartCircleView.setColorChanged(true);
             mStartCircleView.invalidate();
         } else {
             if(mStartCircleView.isSelected()){
                 mStartCircleView.setInFocus(true);
                 mStartCircleView.setCircleColor(color);
+                mStartCircleView.setColorChanged(true);
                 mStartCircleView.invalidate();
             }
         }
@@ -205,6 +207,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         mStopCircleView.setInFocus(true);
 
         mStopCircleView.setColorChanged(false);
+        mStartCircleView.setColorChanged(false);
     }
 
     /**
@@ -223,6 +226,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
      */
     public void setStartCircleToDefault(){
         mStartCircleView.setInFocus(false);
+        mStartCircleView.setColorChanged(false);
         unSelectView(mStartCircleView);
         mStartCircleView.setCircleColor(getResources().getColor(R.color.colorPrimary));
     }
@@ -281,6 +285,14 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
         mStopCircleView.setOnClickListener(this);
         mStartCircleView.setOnClickListener(this);
 
+        mStartCircleView.setOnLongClickListener(new OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                setStartCircleToDefault();
+                return true;
+            }
+        });
+
         addView(mTimeLineView);
         addView(mStartCircleView);
         addView(mStopCircleView);
@@ -334,6 +346,7 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
     public class CircleView extends View{
         private final int DEFAULT_CIRCLE_COLOR = Color.GRAY;
 
+
         private int circleColor = DEFAULT_CIRCLE_COLOR;
         private Paint paint;
         private Paint borderPaint;
@@ -383,6 +396,10 @@ public class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickL
 
         public void setColorChanged(boolean colorChanged) {
             isColorChanged = colorChanged;
+        }
+
+        public boolean isColorChanged() {
+            return isColorChanged;
         }
 
         protected void onDraw(Canvas canvas)

@@ -12,7 +12,6 @@ import com.google.gson.Gson;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.SparseArray;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -218,9 +217,9 @@ public class Common {
     }
 
     /**
-     * Saves devices Hashmap
+     * Saves devices HashMap
      */
-    public void saveDeviceHashmap(HashMap<String, Device> deviceHashMap, Context context){
+    public void saveDeviceHashMap(HashMap<String, Device> deviceHashMap, Context context){
         mPrefs = context.getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 

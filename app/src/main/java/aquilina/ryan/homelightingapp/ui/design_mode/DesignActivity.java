@@ -19,6 +19,8 @@ import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Process;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -33,15 +35,13 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import com.androidnetworking.AndroidNetworking;
-import com.androidnetworking.common.Priority;
-import com.androidnetworking.error.ANError;
-import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.SaturationBar;
 import com.larswerkman.holocolorpicker.ValueBar;
 
-import org.json.JSONArray;
-
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -62,9 +62,12 @@ import fr.ganfra.materialspinner.MaterialSpinner;
 
 public class DesignActivity extends MainActivity {
 
+    private static final String DEFAULT_EFFECT = Constants.DESIGN_EFFECT_NONE;
+    private static final String DEFAULT_COMMAND = "hue rgb255,255,255 t1 f1";
+
     private ArrayList<Device> mSingleItemList;
     private ArrayList<DevicesGroup> mGroupedItemList;
-    private SharedPreferences mPrefs;
+    private ArrayList<String> mSelectedDevices;
 
     private MaterialSpinner mSpinner;
     private ColorPicker mColorPicker;
@@ -79,29 +82,30 @@ public class DesignActivity extends MainActivity {
     private Button mSavePresetButton;
     private Button mPreviewPresetButton;
     private EffectsTimelineView mEffectsTimeLineView;
-    private LinearLayout mEffectsControlLayout;
-    private RelativeLayout mHoloPickerControls;
+    private LinearLayout mEffectsControlLinearLayout;
+    private RelativeLayout mHoloPickerControlsRelativeLayout;
     private TextView mHintTextView;
     private SaturationBar mSaturationBar;
     private ValueBar mValueBar;
 
-    private ArrayList<String> selectedDevices;
     private ExecutorService executorService;
+    private SharedPreferences mPrefs;
+    private HoverThread hoverThread;
+    private Common common;
 
     private int repetition;
     private int duration;
     private int startColor;
     private int stopColor;
     private int currentSpinnerPosition = 0;
-    private String currentEffect = Constants.DESIGN_EFFECT_NONE;
-    private String currentCommand = "hue rgb255,255,255 t1 f1";
+    private String currentEffect = DEFAULT_EFFECT;
+    private String currentCommand = DEFAULT_COMMAND;
 
     private long lastTime = 0;
-    private Common common;
-    private Boolean areVariablesAvailable = false;
+    private Boolean isPreviousEffectAvailable = false;
     private Boolean isFirstChange = true;
-    private HoverThread hoverThread;
     private boolean isHovering = false;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -128,8 +132,8 @@ public class DesignActivity extends MainActivity {
         mEffectsTimeLineView = findViewById(R.id.effects_timeline);
         mSavePresetButton = findViewById(R.id.save_preset_button);
         mPreviewPresetButton = findViewById(R.id.preview_preset_button);
-        mEffectsControlLayout = findViewById(R.id.effects_controls_linear_layout);
-        mHoloPickerControls = findViewById(R.id.holo_picker_controls);
+        mEffectsControlLinearLayout = findViewById(R.id.effects_controls_linear_layout);
+        mHoloPickerControlsRelativeLayout = findViewById(R.id.holo_picker_controls);
         mHintTextView = findViewById(R.id.text_view_hint);
         mTitleTextView.setText(R.string.design_mode_title);
 
@@ -139,7 +143,7 @@ public class DesignActivity extends MainActivity {
         // Load data
         mSingleItemList = new ArrayList<>();
         mGroupedItemList = new ArrayList<>();
-        selectedDevices = new ArrayList<>();
+        mSelectedDevices = new ArrayList<>();
         AndroidNetworking.initialize(getApplicationContext());
         common = new Common();
         mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
@@ -159,13 +163,13 @@ public class DesignActivity extends MainActivity {
         mColorPicker.setOnColorChangedListener(new ColorPicker.OnColorChangedListener() {
             @Override
             public void onColorChanged(int color) {
-                updateDeviceColorIncrementally(color);
+                updateDeviceColorIncrementally();
             }
         });
         mColorPicker.setOnColorSelectedListener(new ColorPicker.OnColorSelectedListener() {
             @Override
             public void onColorSelected(int color) {
-                updateDeviceColorIncrementally(color);
+                updateDeviceColorIncrementally();
             }
         });
         mColorPicker.setOnColorReleasedListener(new ColorPicker.OnColorReleaseListener() {
@@ -184,7 +188,7 @@ public class DesignActivity extends MainActivity {
                     view.setSelected(false);
                     enableEffectsControl(false);
                     mEffectsTimeLineView.refreshView();
-                    currentEffect = Constants.DESIGN_EFFECT_NONE;
+                    currentEffect = DEFAULT_EFFECT;
                 }
                 else {
                     mBlinkButton.setSelected(false);
@@ -229,14 +233,12 @@ public class DesignActivity extends MainActivity {
             @Override
             public void onClick(View view) {
                 showSavePresetDialog();
-                mEffectsTimeLineView.setStartCircleToDefault();
             }
         });
         mPreviewPresetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 formulateCommand(startColor, stopColor, duration, repetition);
-                mEffectsTimeLineView.setStartCircleToDefault();
             }
         });
         mPreviewPresetButton.setEnabled(false);
@@ -246,23 +248,25 @@ public class DesignActivity extends MainActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 currentSpinnerPosition = i + 1;
-                selectedDevices.clear();
+                mSelectedDevices.clear();
                 if(i == -1){
                     hideAllLightingView();
                 } else if (i >= 0 && i < mGroupedItemList.size()){
-                    selectedDevices = mGroupedItemList.get(i).getDeviceIPArrayList();
-                    if(!areVariablesAvailable) {
+                    mSelectedDevices = mGroupedItemList.get(i).getDeviceIPArrayList();
+                    if(!isPreviousEffectAvailable) {
                         showAllLightingViews();
                         isFirstChange = false;
                     }
+                    executorService = Executors.newFixedThreadPool(mSelectedDevices.size());
                 } else if (i == (mGroupedItemList.size())){
                     hideAllLightingView();
                 } else {
-                    selectedDevices.add(mSingleItemList.get(i - (mGroupedItemList.size() + 1)).getIpAddress());
-                    if(!areVariablesAvailable){
+                    mSelectedDevices.add(mSingleItemList.get(i - (mGroupedItemList.size() + 1)).getIpAddress());
+                    if(!isPreviousEffectAvailable){
                         showAllLightingViews();
                         isFirstChange = false;
                     }
+                    executorService = Executors.newFixedThreadPool(mSelectedDevices.size());
                 }
             }
 
@@ -274,10 +278,10 @@ public class DesignActivity extends MainActivity {
 
         Bundle bundle = getIntent().getExtras();
         if(bundle != null){
-            areVariablesAvailable = true;
-            setVariables(bundle);
+            isPreviousEffectAvailable = true;
+            setPreviousEffectVariables(bundle);
         } else {
-            setVariables(savedInstanceState);
+            setPreviousEffectVariables(savedInstanceState);
         }
     }
 
@@ -289,8 +293,8 @@ public class DesignActivity extends MainActivity {
 
     @Override
     protected void onPause() {
-        if(areVariablesAvailable){
-            saveDesignConfigurationVariables();
+        if(isPreviousEffectAvailable){
+            saveEffectsVariables();
         }
         super.onPause();
     }
@@ -316,7 +320,7 @@ public class DesignActivity extends MainActivity {
         super.onSaveInstanceState(outState);
     }
 
-    private void setVariables(Bundle bundle){
+    private void setPreviousEffectVariables(Bundle bundle){
         setPickerProperties();
         if(bundle != null){
             currentSpinnerPosition = bundle.getInt(Constants.DESIGN_CURRENT_SPINNER_POSITION);
@@ -325,17 +329,21 @@ public class DesignActivity extends MainActivity {
             mColorPicker.setColor(bundle.getInt(Constants.DESIGN_CENTER_COLOR));
             currentCommand = bundle.getString(Constants.DESIGN_CURRENT_COMMAND);
             currentEffect = bundle.getString(Constants.DESIGN_CURRENT_EFFECT);
-            mHoloPickerControls.setVisibility(View.VISIBLE);
+            mHoloPickerControlsRelativeLayout.setVisibility(View.VISIBLE);
             mSaturationBar.setVisibility(View.VISIBLE);
             mValueBar.setVisibility(View.VISIBLE);
-            mSavePresetButton.setVisibility(View.VISIBLE);
             mSavePresetButton.setAlpha(1);
-            mHoloPickerControls.setVisibility(View.VISIBLE);
+            mHoloPickerControlsRelativeLayout.setVisibility(View.VISIBLE);
             mSaturationBar.setVisibility(View.VISIBLE);
             mValueBar.setVisibility(View.VISIBLE);
             mSavePresetButton.setVisibility(View.VISIBLE);
-            selectedDevices = bundle.getStringArrayList(Constants.DESIGN_SELECTED_DEVICES);
-            if(!currentEffect.equals(Constants.DESIGN_EFFECT_NONE)){
+
+            mSelectedDevices = bundle.getStringArrayList(Constants.DESIGN_SELECTED_DEVICES);
+            if(mSelectedDevices != null){
+                executorService = Executors.newFixedThreadPool(mSelectedDevices.size());
+            }
+
+            if(!currentEffect.equals(DEFAULT_EFFECT)){
                 switch (currentEffect){
                     case Constants.DESIGN_EFFECT_BLINK:
                         mBlinkButton.setSelected(true);
@@ -356,7 +364,8 @@ public class DesignActivity extends MainActivity {
                         mHueHslButton.setSelected(true);
                         break;
                 }
-                mEffectsControlLayout.setVisibility(View.VISIBLE);
+
+                mEffectsControlLinearLayout.setVisibility(View.VISIBLE);
                 mPreviewPresetButton.setEnabled(true);
                 mPreviewPresetButton.setVisibility(View.VISIBLE);
                 mPreviewPresetButton.setAlpha(1);
@@ -369,7 +378,7 @@ public class DesignActivity extends MainActivity {
                 mRepetitionPicker.setValue(repetition);
                 mEffectsTimeLineView.changeStartCircleColor(startColor, true);
                 mEffectsTimeLineView.changeStopCircleColor(stopColor);
-                areVariablesAvailable = true;
+                isPreviousEffectAvailable = true;
             }
         } else {
             duration = 1;
@@ -382,15 +391,23 @@ public class DesignActivity extends MainActivity {
     /**
      * Update command variables in a pre-determined rate
      */
-    private void updateDeviceColorIncrementally(int color){
+    private void updateDeviceColorIncrementally(){
         long thisTime = System.currentTimeMillis();
-        areVariablesAvailable = true;
+
+
+        if(!isPreviousEffectAvailable){
+            mSavePresetButton.setAlpha(1);
+            mSavePresetButton.setEnabled(true);
+            isPreviousEffectAvailable = true;
+        }
 
         // Send 10 commands every 1 second
         Long time = thisTime - lastTime;
         if((time) > 100){
             updateDeviceColorInstant(mColorPicker.getColor());
         }
+
+        // Send command if the user is hovering on the holo picker.
         if(hoverThread.getStatus() == AsyncTask.Status.RUNNING || hoverThread.getStatus() == AsyncTask.Status.PENDING){
             isHovering = false;
             hoverThread.cancel(true);
@@ -401,7 +418,6 @@ public class DesignActivity extends MainActivity {
 
     /**
      * Update command variables and send command instantly
-     *
      * @param color new color change
      */
     private void updateDeviceColorInstant(int color){
@@ -417,15 +433,14 @@ public class DesignActivity extends MainActivity {
             startColor = color;
         }
 
-        Log.d("Color", Integer.toString(color));
-        if(!selectedDevices.isEmpty()){
+        if(!mSelectedDevices.isEmpty()){
             formulateCommand(color);
         }
         lastTime = System.currentTimeMillis();
     }
 
     /**
-     * Formulate command
+     * Formulate command.
      */
     private void formulateCommand(int color){
         String command = "hue2 rgb" + Integer.toString(Color.red(color)) + "," + Integer.toString(Color.green(color))+ "," + Integer.toString(Color.blue(color)) + " t1 f2";
@@ -454,9 +469,9 @@ public class DesignActivity extends MainActivity {
             button = "huehsb";
         }
 
+        // Get the appropriate start and stop color commands
         String startColorString;
         String stopColorString;
-
         if(isHSL){
             float[] hsv = new float[3];
             Color.RGBToHSV(Color.red(startColor), Color.green(startColor), Color.blue(startColor), hsv);
@@ -472,17 +487,23 @@ public class DesignActivity extends MainActivity {
             stopColorString = "rgb" + Integer.toString(Color.red(endColor)) + "," + Integer.toString(Color.green(endColor))+ "," + Integer.toString(Color.blue(endColor));
         }
 
+        // Check if the start color has changed, else send a command without start color.
         String command;
+        if(mEffectsTimeLineView.getStartCircleView().isColorChanged()){
+            command = button + " " + startColorString + " " + stopColorString + " t" + repetition + " f" + getFrames(duration);
+        } else {
+            command = button + " " + stopColorString + " t" + repetition + " f" + getFrames(duration);
+        }
 
-        command = button + " " + startColorString + " " + stopColorString + " t" + repetition + " f" + getFrames(duration);
         currentCommand = command;
         getSelectedIpAddressesAndSendCommands(command);
     }
 
 
     /**
-     *  Get the Saturation or Hue percentage
+     *  Get the saturation or hue percentage.
      */
+    @NonNull
     private String getPercentageValue(String value){
         if(value.charAt(0) == '1'){
             return "100";
@@ -494,7 +515,7 @@ public class DesignActivity extends MainActivity {
     }
 
     /**
-     * Get the number of frames to be sent in the command
+     * Get the number of frames to be sent in the command.
      */
     private String getFrames(int duration){
         switch (duration){
@@ -515,46 +536,53 @@ public class DesignActivity extends MainActivity {
      *  Get selected Ip Addresses and send each one a command
      */
     private void getSelectedIpAddressesAndSendCommands(String command){
-        executorService = Executors.newFixedThreadPool(selectedDevices.size());
-        for(String ip: selectedDevices){
+        for(String ip: mSelectedDevices){
             Device selectedDevice = ((Application)getApplicationContext()).getDeviceByIP(ip);
             if(selectedDevice != null){
                 String ipAddress = selectedDevice.getIpAddress();
-                Runnable worker = new WorkerThread(command, ipAddress);
+                Runnable worker = new PostRequest(command, ipAddress);
                 executorService.execute(worker);
             }
         }
     }
 
     /**
-     * Asynchronous sending of post commands
+     * Send a post request with the command in the body.
      */
-    private class WorkerThread implements Runnable{
+    private static class PostRequest implements Runnable{
         String command;
         String ipAddress;
 
-        public WorkerThread(String command, String ipAddress) {
+        public PostRequest(String command, String ipAddresses) {
             this.command = command;
-            this.ipAddress = ipAddress;
+            this.ipAddress = ipAddresses;
         }
 
         @Override
         public void run() {
-            AndroidNetworking.post("http://" + ipAddress + "/play")
-                    .addByteBody(command.getBytes())
-                    .setPriority(Priority.IMMEDIATE)
-                    .build()
-                    .getAsJSONArray(new JSONArrayRequestListener() {
-                        @Override
-                        public void onResponse(JSONArray response) {
-                            // do anything with response
-                        }
-                        @Override
-                        public void onError(ANError error) {
-                            // handle error
-                        }
-                    });
-            Log.d("PostCommand", "to " + ipAddress + " with command : " + command);
+            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
+            HttpURLConnection urlConnection;
+            URL url;
+            OutputStream os;
+            try{
+                url = new URL("http://" + ipAddress + "/play");
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setRequestProperty("Content-Length", Integer.toString(command.getBytes().length));
+                urlConnection.setUseCaches(false);
+                urlConnection.setDoInput(false);
+                urlConnection.setDoInput(true);
+                urlConnection.setConnectTimeout(100);
+                urlConnection.setReadTimeout(100);
+                os = urlConnection.getOutputStream();
+                os.write(command.getBytes("UTF-8"));
+                os.close();
+                urlConnection.getInputStream();
+                urlConnection.disconnect();
+                Log.d("PostCommand", "Success to http://" + ipAddress + "/play");
+            } catch (Exception e){
+                Log.d("PostCommand", "Fail to http://" + ipAddress + "/play");
+            }
         }
     }
 
@@ -563,19 +591,20 @@ public class DesignActivity extends MainActivity {
      */
     private void showAllLightingViews(){
         mHintTextView.setVisibility(View.GONE);
-        mHoloPickerControls.setVisibility(View.VISIBLE);
-        mHoloPickerControls.setAlpha(0);
+        mHoloPickerControlsRelativeLayout.setVisibility(View.VISIBLE);
+        mHoloPickerControlsRelativeLayout.setAlpha(0);
         mSaturationBar.setVisibility(View.VISIBLE);
         mSaturationBar.setAlpha(0);
         mValueBar.setVisibility(View.VISIBLE);
         mValueBar.setAlpha(0);
         mSavePresetButton.setVisibility(View.VISIBLE);
-        mSavePresetButton.setAlpha(0);
+        mSavePresetButton.setEnabled(false);
 
-        mHoloPickerControls.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
+        // Animate the controls to be shown slowly
+        mHoloPickerControlsRelativeLayout.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                mHoloPickerControls.setVisibility(View.VISIBLE);
+                mHoloPickerControlsRelativeLayout.setVisibility(View.VISIBLE);
             }
         });
         mSaturationBar.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
@@ -590,7 +619,7 @@ public class DesignActivity extends MainActivity {
                 mValueBar.setVisibility(View.VISIBLE);
             }
         });
-        mSavePresetButton.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
+        mSavePresetButton.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mSavePresetButton.setVisibility(View.VISIBLE);
@@ -607,12 +636,12 @@ public class DesignActivity extends MainActivity {
      */
     private void hideAllLightingView(){
         mHintTextView.setVisibility(View.VISIBLE);
-        mHoloPickerControls.setVisibility(View.GONE);
-        mHoloPickerControls.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
+        mHoloPickerControlsRelativeLayout.setVisibility(View.GONE);
+        mHoloPickerControlsRelativeLayout.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                mHoloPickerControls.setVisibility(View.GONE);
+                mHoloPickerControlsRelativeLayout.setVisibility(View.GONE);
             }
         });
         mSaturationBar.setVisibility(View.GONE);
@@ -632,6 +661,8 @@ public class DesignActivity extends MainActivity {
             }
         });
         mSavePresetButton.setVisibility(View.GONE);
+        mSavePresetButton.setEnabled(false);
+        mSavePresetButton.setAlpha(0.3f);
         mSavePresetButton.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -699,6 +730,8 @@ public class DesignActivity extends MainActivity {
 
         }
 
+
+        // Get the appropriate chosen command and save it with the preset.
         String startRGB = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
         String endRGB = "rgb" + Integer.toString(Color.red(stopColor)) + "," + Integer.toString(Color.green(stopColor))+ "," + Integer.toString(Color.blue(stopColor));
 
@@ -732,11 +765,11 @@ public class DesignActivity extends MainActivity {
     /**
      * Stores the configuration variables for later use.
      */
-    private void saveDesignConfigurationVariables(){
+    private void saveEffectsVariables(){
         SharedPreferences Prefs = getSharedPreferences(Constants.DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = Prefs.edit();
 
-        DesignConfiguration designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, selectedDevices);
+        DesignConfiguration designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, mSelectedDevices);
 
         Gson gson = new Gson();
         String json = gson.toJson(designConfiguration);
@@ -811,11 +844,11 @@ public class DesignActivity extends MainActivity {
      */
     private void enableEffectsControl(boolean enable){
         if(!enable){
-            mSavePresetButton.animate().translationY(- (mEffectsControlLayout.getHeight() + mPreviewPresetButton.getHeight())).setListener(new AnimatorListenerAdapter() {
+            mSavePresetButton.animate().translationY(- (mEffectsControlLinearLayout.getHeight() + mPreviewPresetButton.getHeight())).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationStart(Animator animation) {
                     super.onAnimationStart(animation);
-                    mEffectsControlLayout.setVisibility(View.INVISIBLE);
+                    mEffectsControlLinearLayout.setVisibility(View.INVISIBLE);
                     mPreviewPresetButton.setVisibility(View.INVISIBLE);
                     mPreviewPresetButton.setAlpha(0.3f);
                     mPreviewPresetButton.setEnabled(false);
@@ -829,7 +862,7 @@ public class DesignActivity extends MainActivity {
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
-                    mEffectsControlLayout.setVisibility(View.VISIBLE);
+                    mEffectsControlLinearLayout.setVisibility(View.VISIBLE);
                     mPreviewPresetButton.setVisibility(View.VISIBLE);
                     mEffectsTimeLineView.setStopCircleViewFocus(true);
                 }
