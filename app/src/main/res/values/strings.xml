@@ -12,6 +12,7 @@
     <string name="nav_scan_mode_name">Scan For Devices</string>
     <string name="nav_design_mode_name">Look Design</string>
     <string name="nav_light_mode_name">Lighting Mode</string>
+    <string name="nav_configuration">Configuration</string>
     <string name="nav_group_management_name">GROUP MANAGEMENT</string>
     <string name="nav_group_management_node_groups">Groups</string>
     <string name="nav_group_management_presets">Presets</string>
@@ -20,6 +21,8 @@
     <!--Toolbar Strings-->
     <string name="action_refresh">Refresh</string>
     <string name="action_add_group">Add to Group</string>
+    <string name="action_add_macro">Add Macro</string>
+    <string name="action_delete">Delete</string>
 
     <!--Scan Mode Strings-->
     <string name="scan_mode_title">Scan Mode</string>
@@ -52,6 +55,8 @@
     <string name="pulse">Pulse</string>
     <string name="text_view_choose_a_device_or_group">Use the dropdown menu to choose a device or group.</string>
     <string name="text_view_no_device_online">no online devices</string>
+    <string name="toast_preset_saved">Preset saved</string>
+    <string name="toast_choose_group_or_device">Choose a group or a device</string>
 
     <!-- Lighting Mode Strings-->
     <string name="lighting_mode_title">Lighting Mode</string>
@@ -70,4 +75,5 @@
     <string name="text_view_create_group">no groups found</string>
     <string name="text_view_create_presets">no presets found</string>
     <string name="text_view_create_macros">no macros found</string>
+    <string name="toast_macro_saved">Macro saved</string>
 </resources>

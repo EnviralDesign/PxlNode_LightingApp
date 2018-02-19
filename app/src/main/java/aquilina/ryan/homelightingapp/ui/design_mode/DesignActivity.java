@@ -23,6 +23,7 @@ import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.ColorUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +46,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
@@ -104,8 +106,8 @@ public class DesignActivity extends MainActivity {
     private long lastTime = 0;
     private Boolean isPreviousEffectAvailable = false;
     private Boolean isFirstChange = true;
-    private boolean isHovering = false;
-
+    private Boolean isHovering = false;
+    private Boolean areEffectsEnabled = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -115,7 +117,6 @@ public class DesignActivity extends MainActivity {
 
         // Set up views
         super.setSelectedNavMenuItem(R.id.nav_design);
-        mNavigationView.setCheckedItem(R.id.nav_design);
         mColorPicker = findViewById(R.id.picker);
         mSaturationBar = findViewById(R.id.saturationBar);
         mValueBar = findViewById(R.id.valueBar);
@@ -187,6 +188,8 @@ public class DesignActivity extends MainActivity {
                 if(view.isSelected()){
                     view.setSelected(false);
                     enableEffectsControl(false);
+                    mSavePresetButton.setAlpha(0.3f);
+                    mSavePresetButton.setEnabled(false);
                     mEffectsTimeLineView.refreshView();
                     currentEffect = DEFAULT_EFFECT;
                 }
@@ -248,7 +251,7 @@ public class DesignActivity extends MainActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 currentSpinnerPosition = i + 1;
-                mSelectedDevices.clear();
+                mSelectedDevices = new ArrayList<>();
                 if(i == -1){
                     hideAllLightingView();
                 } else if (i >= 0 && i < mGroupedItemList.size()){
@@ -289,6 +292,8 @@ public class DesignActivity extends MainActivity {
     protected void onStart() {
         loadListsWithData();
         super.onStart();
+
+        mNavigationView.setCheckedItem(R.id.nav_design);
     }
 
     @Override
@@ -317,6 +322,7 @@ public class DesignActivity extends MainActivity {
         outState.putString(Constants.DESIGN_CURRENT_EFFECT, currentEffect);
         outState.putString(Constants.DESIGN_CURRENT_COMMAND, currentCommand);
         outState.putInt(Constants.DESIGN_CURRENT_SPINNER_POSITION, currentSpinnerPosition);
+        outState.putBoolean(Constants.DESIGN_START_CIRCLE_STATE, mEffectsTimeLineView.ismIsStartCircleInDefault());
         super.onSaveInstanceState(outState);
     }
 
@@ -369,15 +375,22 @@ public class DesignActivity extends MainActivity {
                 mPreviewPresetButton.setEnabled(true);
                 mPreviewPresetButton.setVisibility(View.VISIBLE);
                 mPreviewPresetButton.setAlpha(1);
-                mEffectsTimeLineView.setStopCircleViewFocus(true);
                 duration = bundle.getInt(Constants.DESIGN_DURATION);
                 repetition = bundle.getInt(Constants.DESIGN_REPETITION);
                 startColor = bundle.getInt(Constants.DESIGN_START_COLOR);
                 stopColor = bundle.getInt(Constants.DESIGN_STOP_COLOR);
                 mDurationPicker.setValue(duration);
                 mRepetitionPicker.setValue(repetition);
-                mEffectsTimeLineView.changeStartCircleColor(startColor, true);
-                mEffectsTimeLineView.changeStopCircleColor(stopColor);
+
+                mEffectsTimeLineView.changeStopCircleColor(stopColor, true);
+
+                // Check if the start circle was set to default.
+                if(bundle.getBoolean(Constants.DESIGN_START_CIRCLE_STATE)){
+                    mEffectsTimeLineView.setStartCircleToDefault();
+                } else {
+                    mEffectsTimeLineView.changeStartCircleColor(startColor, true);
+                }
+
                 isPreviousEffectAvailable = true;
             }
         } else {
@@ -394,10 +407,7 @@ public class DesignActivity extends MainActivity {
     private void updateDeviceColorIncrementally(){
         long thisTime = System.currentTimeMillis();
 
-
         if(!isPreviousEffectAvailable){
-            mSavePresetButton.setAlpha(1);
-            mSavePresetButton.setEnabled(true);
             isPreviousEffectAvailable = true;
         }
 
@@ -422,15 +432,21 @@ public class DesignActivity extends MainActivity {
      */
     private void updateDeviceColorInstant(int color){
         if(mEffectsTimeLineView.getStopCircleView().isSelected()){
-            mEffectsTimeLineView.changeStopCircleColor(color);
+            mEffectsTimeLineView.changeStopCircleColor(color,false);
             stopColor = color;
-            mPreviewPresetButton.setEnabled(true);
-            mPreviewPresetButton.setAlpha(1);
         }
 
         if(mEffectsTimeLineView.getStartCircleView().isSelected()) {
             mEffectsTimeLineView.changeStartCircleColor(color, false);
             startColor = color;
+        }
+
+        // Enable buttons if effects are enabled.
+        if(areEffectsEnabled){
+            mPreviewPresetButton.setEnabled(true);
+            mPreviewPresetButton.setAlpha(1);
+            mSavePresetButton.setEnabled(true);
+            mSavePresetButton.setAlpha(1);
         }
 
         if(!mSelectedDevices.isEmpty()){
@@ -473,21 +489,23 @@ public class DesignActivity extends MainActivity {
         String startColorString;
         String stopColorString;
         if(isHSL){
-            float[] hsv = new float[3];
-            Color.RGBToHSV(Color.red(startColor), Color.green(startColor), Color.blue(startColor), hsv);
-            startColorString = "hsl" + Integer.toString((int) hsv[0]) + "," + getPercentageValue(Float.toString(hsv[1])) + "," + getPercentageValue(Float.toString(hsv[2]));
-            stopColorString = "hsl" + Integer.toString((int) hsv[0])+ "," + getPercentageValue(Float.toString(hsv[1])) + "," + getPercentageValue(Float.toString(hsv[2]));
+            float[] hsl = new float[3];
+            ColorUtils.colorToHSL(startColor, hsl);
+            startColorString = "hsl" + Integer.toString((int) hsl[0]) + "," + getPercentageValue(Float.toString(hsl[1])) + "," + getPercentageValue(Float.toString(hsl[2]));
+            ColorUtils.colorToHSL(endColor, hsl);
+            stopColorString = "hsl" + Integer.toString((int) hsl[0])+ "," + getPercentageValue(Float.toString(hsl[1])) + "," + getPercentageValue(Float.toString(hsl[2]));
         } else if (isHSB){
             float[] hsv = new float[3];
             Color.RGBToHSV(Color.red(startColor), Color.green(startColor), Color.blue(startColor), hsv);
             startColorString = "hsb" + Integer.toString((int) hsv[0]) + "," + getPercentageValue(Float.toString(hsv[1])) + "," + getPercentageValue(Float.toString(hsv[2]));
+            Color.RGBToHSV(Color.red(endColor), Color.green(endColor), Color.blue(endColor), hsv);
             stopColorString = "hsb" + Integer.toString((int) hsv[0]) + "," + getPercentageValue(Float.toString(hsv[1])) + "," + getPercentageValue(Float.toString(hsv[2]));
         } else {
             startColorString = "rgb" + Integer.toString(Color.red(startColor)) + "," + Integer.toString(Color.green(startColor))+ "," + Integer.toString(Color.blue(startColor));
             stopColorString = "rgb" + Integer.toString(Color.red(endColor)) + "," + Integer.toString(Color.green(endColor))+ "," + Integer.toString(Color.blue(endColor));
         }
 
-        // Check if the start color has changed, else send a command without start color.
+        // Check if the start color is in default, else send a command without start color.
         String command;
         if(mEffectsTimeLineView.getStartCircleView().isColorChanged()){
             command = button + " " + startColorString + " " + stopColorString + " t" + repetition + " f" + getFrames(duration);
@@ -505,12 +523,17 @@ public class DesignActivity extends MainActivity {
      */
     @NonNull
     private String getPercentageValue(String value){
-        if(value.charAt(0) == '1'){
+        Double num = Double.valueOf(value);
+        if(num > 1.0){
+            return Double.toString(Math.ceil(num));
+        } else if(num == 1.0){
             return "100";
-        }
-        else
-        {
-            return value.substring(2, 4);
+        } else {
+            if(value.length() == 3){
+                return value.charAt(2) + "0";
+            } else{
+                return value.substring(2, 4);
+            }
         }
     }
 
@@ -536,13 +559,17 @@ public class DesignActivity extends MainActivity {
      *  Get selected Ip Addresses and send each one a command
      */
     private void getSelectedIpAddressesAndSendCommands(String command){
-        for(String ip: mSelectedDevices){
-            Device selectedDevice = ((Application)getApplicationContext()).getDeviceByIP(ip);
-            if(selectedDevice != null){
-                String ipAddress = selectedDevice.getIpAddress();
-                Runnable worker = new PostRequest(command, ipAddress);
-                executorService.execute(worker);
+        try{
+            for(String ip: mSelectedDevices){
+                Device selectedDevice = ((Application)getApplicationContext()).getDeviceByIP(ip);
+                if(selectedDevice != null){
+                    String ipAddress = selectedDevice.getIpAddress();
+                    Runnable worker = new PostRequest(command, ipAddress);
+                    executorService.execute(worker);
+                }
             }
+        } catch (RejectedExecutionException e){
+            e.printStackTrace();
         }
     }
 
@@ -560,7 +587,7 @@ public class DesignActivity extends MainActivity {
 
         @Override
         public void run() {
-            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
+            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
             HttpURLConnection urlConnection;
             URL url;
             OutputStream os;
@@ -598,7 +625,6 @@ public class DesignActivity extends MainActivity {
         mValueBar.setVisibility(View.VISIBLE);
         mValueBar.setAlpha(0);
         mSavePresetButton.setVisibility(View.VISIBLE);
-        mSavePresetButton.setEnabled(false);
 
         // Animate the controls to be shown slowly
         mHoloPickerControlsRelativeLayout.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
@@ -710,7 +736,7 @@ public class DesignActivity extends MainActivity {
 
         int i = mSpinner.getSelectedItemPosition();
         if(i == 0){
-            common.showToast(this, "Choose a group or a device");
+            common.showToast(this, getString(R.string.toast_choose_group_or_device));
             return;
         } else if (i > 0 && i <= mGroupedItemList.size()){
             DevicesGroup devicesGroup = (DevicesGroup) mSpinner.getSelectedItem();
@@ -719,7 +745,7 @@ public class DesignActivity extends MainActivity {
             }
             preset.setDevicesGroup(devicesGroup);
         } else if (i == (mGroupedItemList.size() + 1)){
-            common.showToast(this, "Choose a group or a device");
+            common.showToast(this, getString(R.string.toast_choose_group_or_device));
             return;
         } else {
             Device device = mSingleItemList.get(i - (mGroupedItemList.size() + 2));
@@ -752,14 +778,20 @@ public class DesignActivity extends MainActivity {
             button = "huehsl";
         }
 
-        command = button + " " + startRGB + " " + endRGB + " t" + repetition + " f" + getFrames(duration);
+        // Set the command to a single command if start circle is in default.
+        if(mEffectsTimeLineView.getStartCircleView().isColorChanged()){
+            command = button + " " + endRGB + " t" + repetition + " f" + getFrames(duration);
+        }
+        else{
+            command = button + " " + startRGB + " " + endRGB + " t" + repetition + " f" + getFrames(duration);
+        }
 
         preset.setCommand(command);
         allPresets.addPreset(preset);
         json = gson.toJson(allPresets);
         prefsEditor.putString(Constants.GROUP_OF_PRESETS, json);
         prefsEditor.apply();
-        common.showToast(this, "Preset saved");
+        common.showToast(this, getString(R.string.toast_preset_saved));
     }
 
     /**
@@ -769,7 +801,7 @@ public class DesignActivity extends MainActivity {
         SharedPreferences Prefs = getSharedPreferences(Constants.DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = Prefs.edit();
 
-        DesignConfiguration designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, mSelectedDevices);
+        DesignConfiguration designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, mSelectedDevices, mEffectsTimeLineView.ismIsStartCircleInDefault());
 
         Gson gson = new Gson();
         String json = gson.toJson(designConfiguration);
@@ -844,6 +876,7 @@ public class DesignActivity extends MainActivity {
      */
     private void enableEffectsControl(boolean enable){
         if(!enable){
+            areEffectsEnabled = false;
             mSavePresetButton.animate().translationY(- (mEffectsControlLinearLayout.getHeight() + mPreviewPresetButton.getHeight())).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationStart(Animator animation) {
@@ -858,6 +891,7 @@ public class DesignActivity extends MainActivity {
             });
 
         } else{
+            areEffectsEnabled = true;
             mSavePresetButton.animate().translationY(0).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {

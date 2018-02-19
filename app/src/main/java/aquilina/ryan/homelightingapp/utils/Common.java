@@ -254,7 +254,7 @@ public class Common {
                 while (presetsIterator.hasNext()){
                     Preset preset = presetsIterator.next();
                     if(preset.getId() == id){
-                        macro.removePreset(preset);
+                        presetsIterator.remove();
                         if(macro.getPresetList().isEmpty()){
                             macroIterator.remove();
                         }

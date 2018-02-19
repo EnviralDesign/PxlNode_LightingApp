@@ -46,4 +46,5 @@ public final class Constants {
     public static final String DESIGN_CURRENT_COMMAND = "current_command";
     public static final String DESIGN_CURRENT_SPINNER_POSITION = "current_spinner_position";
     public static final String DESIGN_SELECTED_DEVICES = "selected_devices";
+    public static final String DESIGN_START_CIRCLE_STATE = "start_circle_state";
 }

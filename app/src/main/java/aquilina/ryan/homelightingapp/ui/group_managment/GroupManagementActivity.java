@@ -38,6 +38,7 @@ public class GroupManagementActivity extends MainActivity {
     private HashMap<String, Device> mDevicesSparseArray;
     private Menu mMenu;
     private LinearLayout mHintTextView;
+    private RecyclerView mGroupsRecyclerView;
     private GroupsAdapter mAdapter;
     private Common common;
 
@@ -48,8 +49,7 @@ public class GroupManagementActivity extends MainActivity {
         common = new Common();
 
         // Set views
-        mNavigationView.setCheckedItem(R.id.nav_group_node_groups);
-        RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
+        mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
         mTitleTextView.setText(R.string.group_title);
 
@@ -80,6 +80,8 @@ public class GroupManagementActivity extends MainActivity {
             mHintTextView.setVisibility(View.VISIBLE);
         }
         mAdapter.notifyDataSetChanged();
+
+        mNavigationView.setCheckedItem(R.id.nav_group_node_groups);
     }
 
     @Override
@@ -187,6 +189,8 @@ public class GroupManagementActivity extends MainActivity {
             }
             else{
                 enableDeleteMenuItem(false);
+                mAdapter = new GroupsAdapter();
+                mGroupsRecyclerView.setAdapter(mAdapter);
             }
         }
 

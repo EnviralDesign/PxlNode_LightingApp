@@ -79,13 +79,18 @@ public class AddMacroDialog extends DialogFragment {
      * Checks if text is valid
      */
     private boolean isValidText(String text){
-        return !text.equals("");
+        text = text.trim();
+        if(text == null || text.equals("")){
+            return false;
+        }
+
+        return true;
     }
 
     /**
      * Saves the preset locally
      */
     private void saveMacro(){
-        ((PresetManagementActivity) getActivity()).saveMacro(mMacroName);
+        ((LightingModeActivity) getActivity()).saveMacro(mMacroName);
     }
 }

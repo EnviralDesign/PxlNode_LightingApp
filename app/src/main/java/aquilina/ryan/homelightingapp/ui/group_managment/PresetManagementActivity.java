@@ -36,7 +36,7 @@ import aquilina.ryan.homelightingapp.model.AllPresets;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
-import aquilina.ryan.homelightingapp.ui.lighting_mode.AddMacroDialog;
+import aquilina.ryan.homelightingapp.ui.group_managment.AddMacroDialog;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
@@ -45,6 +45,7 @@ public class PresetManagementActivity extends MainActivity {
 
     private Menu mMenu;
     private LinearLayout mHintTextView;
+    private RecyclerView mGroupsRecyclerView;
     private ArrayList<Preset> mPresets;
     private ArrayList<Integer> mSelectedPresets;
     private HashMap<String, Device> mDevicesSparseArray;
@@ -59,8 +60,7 @@ public class PresetManagementActivity extends MainActivity {
         setContentView(R.layout.activity_presets);
 
         // Set views
-        mNavigationView.setCheckedItem(R.id.nav_group_presets);
-        RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
+        mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
         mSaveButton = findViewById(R.id.save_macro_button);
         mTitleTextView.setText(R.string.presets_title);
@@ -89,6 +89,8 @@ public class PresetManagementActivity extends MainActivity {
         mPresets = loadPresets();
         mDevicesSparseArray = common.loadDevices(this);
         mAdapter.notifyDataSetChanged();
+
+        mNavigationView.setCheckedItem(R.id.nav_group_presets);
     }
 
     @Override
@@ -224,6 +226,7 @@ public class PresetManagementActivity extends MainActivity {
         prefsEditor.apply();
         mAdapter.setDeleteMode(false);
         mAdapter.notifyDataSetChanged();
+        common.showToast(this, getString(R.string.toast_macro_saved));
     }
 
     private static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
@@ -277,6 +280,9 @@ public class PresetManagementActivity extends MainActivity {
             }
             else{
                 enableDeleteMenuItem(false);
+                mSelectedPresets.clear();
+                mAdapter = new GroupsAdapter();
+                mGroupsRecyclerView.setAdapter(mAdapter);
                 mSaveButton.setVisibility(View.GONE);
             }
         }

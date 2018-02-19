@@ -37,6 +37,7 @@ public class MacroManagementActivity extends MainActivity{
 
     private Menu mMenu;
     private LinearLayout mHintTextView;
+    private RecyclerView mGroupsRecyclerView;
     private ArrayList<Macro> mMacros;
     private ArrayList<Integer> mSelectedMacros;
     private GroupsAdapter mAdapter;
@@ -48,8 +49,7 @@ public class MacroManagementActivity extends MainActivity{
         setContentView(R.layout.activity_macros);
 
         // Set views
-        mNavigationView.setCheckedItem(R.id.nav_group_macros);
-        RecyclerView mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
+        mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
         mTitleTextView.setText(R.string.macros_title);
 
@@ -72,6 +72,8 @@ public class MacroManagementActivity extends MainActivity{
             mHintTextView.setVisibility(View.GONE);
         }
         mAdapter.notifyDataSetChanged();
+
+        mNavigationView.setCheckedItem(R.id.nav_group_macros);
     }
 
     @Override
@@ -237,6 +239,8 @@ public class MacroManagementActivity extends MainActivity{
             }
             else{
                 enableDeleteMenuItem(false);
+                mAdapter = new GroupsAdapter();
+                mGroupsRecyclerView.setAdapter(mAdapter);
             }
         }
 

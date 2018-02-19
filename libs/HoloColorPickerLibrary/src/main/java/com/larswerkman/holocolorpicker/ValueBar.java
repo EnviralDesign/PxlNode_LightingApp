@@ -28,6 +28,7 @@ import android.graphics.Shader;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -363,6 +364,11 @@ public class ValueBar extends View {
 				calculateColor(Math.round(dimen));
 				mBarPointerPaint.setColor(mColor);
 				invalidate();
+				if (mPicker != null) {
+					mPicker.setNewCenterColor(mColor);
+//					mPicker.changeSaturationBarColor(mColor);
+					mPicker.changeOpacityBarColor(mColor);
+				}
 			}
 			break;
 		case MotionEvent.ACTION_MOVE:
@@ -375,24 +381,27 @@ public class ValueBar extends View {
 					mBarPointerPaint.setColor(mColor);
 					if (mPicker != null) {
 						mPicker.setNewCenterColor(mColor);
+//						mPicker.changeSaturationBarColor(mColor);
 						mPicker.changeOpacityBarColor(mColor);
 					}
 					invalidate();
 				} else if (dimen < mBarPointerHaloRadius) {
 					mBarPointerPosition = mBarPointerHaloRadius;
-					mColor = Color.HSVToColor(mHSVColor);
+					calculateColor(Math.round(dimen));
 					mBarPointerPaint.setColor(mColor);
 					if (mPicker != null) {
 						mPicker.setNewCenterColor(mColor);
+//						mPicker.changeSaturationBarColor(mColor);
 						mPicker.changeOpacityBarColor(mColor);
 					}
 					invalidate();
 				} else if (dimen > (mBarPointerHaloRadius + mBarLength)) {
 					mBarPointerPosition = mBarPointerHaloRadius + mBarLength;
-					mColor = Color.BLACK;
+					calculateColor(Math.round(dimen));
 					mBarPointerPaint.setColor(mColor);
 					if (mPicker != null) {
 						mPicker.setNewCenterColor(mColor);
+//						mPicker.changeSaturationBarColor(mColor);
 						mPicker.changeOpacityBarColor(mColor);
 					}
 					invalidate();
@@ -473,6 +482,7 @@ public class ValueBar extends View {
 		mBarPointerPaint.setColor(mColor);
 		if (mPicker != null) {
 			mPicker.setNewCenterColor(mColor);
+			mPicker.changeSaturationBarColor(mColor);
 			mPicker.changeOpacityBarColor(mColor);
 		}
 		invalidate();
@@ -492,7 +502,7 @@ public class ValueBar extends View {
 	    }
 	    mColor = Color.HSVToColor(new float[] { mHSVColor[0],
 		    				    mHSVColor[1],
-		    				    (float) (1 - (mPosToSatFactor * coord)) });
+								(1 - (mPosToSatFactor * coord)) });
     }
 
 	/**

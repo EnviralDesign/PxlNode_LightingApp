@@ -1,12 +1,12 @@
 /*
- * Created by Ryan Aquilina on 10/18/17 4:21 PM
+ * Created by Ryan Aquilina on 2/8/18 11:51 AM
  * Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
- * Copyright (c) 2017.  All rights reserved
+ * Copyright (c) 2018.  All rights reserved
  *
- * Last modified 9/28/17 3:26 PM
+ * Last modified 2/8/18 11:51 AM
  */
 
-package aquilina.ryan.homelightingapp.ui.design_mode;
+package aquilina.ryan.homelightingapp.ui.group_managment;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -20,17 +20,18 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import aquilina.ryan.homelightingapp.R;
+import aquilina.ryan.homelightingapp.ui.lighting_mode.LightingModeActivity;
 
-public class AddPresetDialog extends DialogFragment{
+public class AddMacroDialog extends DialogFragment {
 
-    private String mPresetName;
+    private String mMacroName;
 
     /**
      * Public static constructor that creates fragment and
      * passes a bundle with data into it when adapter is created
      */
-    public static AddPresetDialog newInstance(){
-        return new AddPresetDialog();
+    public static aquilina.ryan.homelightingapp.ui.lighting_mode.AddMacroDialog newInstance(){
+        return new aquilina.ryan.homelightingapp.ui.lighting_mode.AddMacroDialog();
     }
 
     @Override
@@ -45,17 +46,17 @@ public class AddPresetDialog extends DialogFragment{
         final ViewGroup nullParent = null;
         View rootView = inflater.inflate(R.layout.dialog_save, nullParent, false);
         TextView title = rootView.findViewById(R.id.alertTitle);
-        title.setText(getString(R.string.dialog_save_preset_title));
+        title.setText(getString(R.string.dialog_save_macro_title));
         final EditText editText = rootView.findViewById(R.id.dialog_edit_text);
-        editText.setHint(getString(R.string.dialog_preset_edit_text_hint));
+        editText.setHint(getString(R.string.dialog_save_macro_hint));
         Button saveButton = rootView.findViewById(R.id.button2);
         saveButton.setText(getString(R.string.dialog_save_button));
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(isValidText(editText.getText().toString())){
-                    mPresetName = editText.getText().toString();
-                    savePreset();
+                    mMacroName = editText.getText().toString();
+                    saveMacro();
                     dismiss();
                 }
             }
@@ -89,7 +90,7 @@ public class AddPresetDialog extends DialogFragment{
     /**
      * Saves the preset locally
      */
-    private void savePreset(){
-        ((DesignActivity) getActivity()).savePresetLocally(mPresetName);
+    private void saveMacro(){
+        ((PresetManagementActivity) getActivity()).saveMacro(mMacroName);
     }
 }

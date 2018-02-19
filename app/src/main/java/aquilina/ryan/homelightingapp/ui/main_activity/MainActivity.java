@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     protected Toolbar mToolbar;
     protected DrawerLayout mDrawer;
 
+    private String state;
 
     @Override
     public void setContentView(@LayoutRes int layoutResID) {
@@ -203,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
             bundle.putString(Constants.DESIGN_CURRENT_COMMAND, designConfiguration.getCommand());
             bundle.putInt(Constants.DESIGN_CURRENT_SPINNER_POSITION, designConfiguration.getSpinnerPosition());
             bundle.putStringArrayList(Constants.DESIGN_SELECTED_DEVICES, designConfiguration.getSelectedDevicesIP());
+            bundle.putBoolean(Constants.DESIGN_START_CIRCLE_STATE, designConfiguration.isStartCircleState());
 
             return bundle;
         }

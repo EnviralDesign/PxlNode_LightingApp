@@ -76,7 +76,7 @@ public class ScanActivity extends MainActivity {
         // Set up views
         invalidateOptionsMenu();
         super.setSelectedNavMenuItem(R.id.nav_scan);
-        mDevicesListView = findViewById(R.id.devices_list_view);
+        mDevicesListView = findViewById(R.id.devices_recycler_view);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mDevicesListView.setLayoutManager(mLayoutManager);
         mAddToGroupButton =  findViewById(R.id.add_to_group_fab);
@@ -131,6 +131,8 @@ public class ScanActivity extends MainActivity {
         } else {
             getWifiStateAndConnect();
         }
+
+        mNavigationView.setCheckedItem(R.id.nav_scan);
     }
 
     @Override
@@ -145,7 +147,7 @@ public class ScanActivity extends MainActivity {
         int id = item.getItemId();
 
         switch (id){
-            case R.id.switch_off_devices_button:
+            case R.id.refresh:
                 getWifiStateAndConnect();
                 break;
         }
@@ -266,7 +268,7 @@ public class ScanActivity extends MainActivity {
 
     @Nullable
     private Device getDeviceConnectedToWifi(String subIP, int i){
-        int TIMEOUT_VALUE = 1500;
+        int TIMEOUT_VALUE = 2000;
 
         HttpURLConnection urlConnection;
         URL url;
@@ -467,6 +469,7 @@ public class ScanActivity extends MainActivity {
 
         @Override
         public void run() {
+            android.os.Process.setThreadPriority(-19);
             final Device device = getDeviceConnectedToWifi(subIp, i);
             if(device != null){
                 runOnUiThread(new Runnable() {

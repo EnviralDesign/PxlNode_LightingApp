@@ -3,7 +3,7 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-            android:id="@+id/switch_off_devices_button"
+            android:id="@+id/refresh"
             android:title="@string/action_refresh"
             android:icon="@drawable/ic_refresh_white_24dp"
             app:showAsAction="ifRoom"/>

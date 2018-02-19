@@ -361,6 +361,11 @@ public class SaturationBar extends View {
 				mBarPointerPosition = Math.round(dimen);
 				calculateColor(Math.round(dimen));
 				mBarPointerPaint.setColor(mColor);
+				if (mPicker != null) {
+					mPicker.setNewCenterColor(mColor);
+					mPicker.changeValueBarColor(mColor);
+					mPicker.changeOpacityBarColor(mColor);
+				}
 				invalidate();
 			}
 			break;
@@ -380,7 +385,7 @@ public class SaturationBar extends View {
 					invalidate();
 				} else if (dimen < mBarPointerHaloRadius) {
 					mBarPointerPosition = mBarPointerHaloRadius;
-					mColor = Color.WHITE;
+					calculateColor(Math.round(dimen));
 					mBarPointerPaint.setColor(mColor);
 					if (mPicker != null) {
 						mPicker.setNewCenterColor(mColor);
@@ -390,7 +395,7 @@ public class SaturationBar extends View {
 					invalidate();
 				} else if (dimen > (mBarPointerHaloRadius + mBarLength)) {
 					mBarPointerPosition = mBarPointerHaloRadius + mBarLength;
-					mColor = Color.HSVToColor(mHSVColor);
+					calculateColor(Math.round(dimen));
 					mBarPointerPaint.setColor(mColor);
 					if (mPicker != null) {
 						mPicker.setNewCenterColor(mColor);
@@ -455,7 +460,7 @@ public class SaturationBar extends View {
 			}
 			if(mPicker.isSaturationBarUsed && mPicker.hasValueBar())
 				mPicker.changeValueBarColor(mColor);
-			else if(mPicker.hasOpacityBar())
+			if(mPicker.hasOpacityBar())
 				mPicker.changeOpacityBarColor(mColor);
 		}
 		invalidate();
@@ -492,7 +497,7 @@ public class SaturationBar extends View {
 	    	coord = mBarLength;
 	    }
 	    mColor = Color.HSVToColor(
-                new float[] { mHSVColor[0],(mPosToSatFactor * coord),1f });
+                new float[] { mHSVColor[0],(mPosToSatFactor * coord), mHSVColor[2]});
     }
 
 	/**

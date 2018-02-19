@@ -18,18 +18,20 @@
 
     <item android:title="@string/nav_group_management_name">
         <menu>
-            <item
-                    android:id="@+id/nav_group_node_groups"
-                    android:icon="@drawable/ic_group_work_white_24dp"
-                    android:title="@string/nav_group_management_node_groups" />
-            <item
-                    android:id="@+id/nav_group_presets"
-                    android:icon="@drawable/ic_lightbulb_outline_white_36dp"
-                    android:title="@string/nav_group_management_presets" />
-            <item
-                    android:id="@+id/nav_group_macros"
-                    android:icon="@drawable/ic_collections_bookmark_black_24dp"
-                    android:title="@string/nav_group_management_macros" />
+            <group android:checkableBehavior="single">
+                <item
+                        android:id="@+id/nav_group_node_groups"
+                        android:icon="@drawable/ic_group_work_white_24dp"
+                        android:title="@string/nav_group_management_node_groups" />
+                <item
+                        android:id="@+id/nav_group_presets"
+                        android:icon="@drawable/ic_lightbulb_outline_white_36dp"
+                        android:title="@string/nav_group_management_presets" />
+                <item
+                        android:id="@+id/nav_group_macros"
+                        android:icon="@drawable/ic_collections_bookmark_black_24dp"
+                        android:title="@string/nav_group_management_macros" />
+            </group>
         </menu>
     </item>
 </menu>

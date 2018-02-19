@@ -8,6 +8,10 @@
 
 package aquilina.ryan.homelightingapp.ui.lighting_mode;
 
+import com.google.gson.Gson;
+
+import android.app.DialogFragment;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Process;
 import android.support.annotation.NonNull;
@@ -35,6 +39,7 @@ import java.util.concurrent.Executors;
 
 import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.R;
+import aquilina.ryan.homelightingapp.model.AllMacros;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
@@ -46,8 +51,15 @@ import aquilina.ryan.homelightingapp.utils.Constants;
 public class LightingModeActivity extends MainActivity {
 
     private TextView mHintTextView;
+    private RecyclerView mRecyclerView;
+    private Menu mMenu;
+
     private ArrayList<Preset> mPresets;
+    private ArrayList<Integer> mSelectedPresets;
     private ArrayList<Macro> mMacros;
+    private ArrayList<Integer> mSelectedMacros;
+    private boolean isAddMacroAvailable;
+
     private PresetAdapter mAdapter;
     private Common common;
 
@@ -58,18 +70,20 @@ public class LightingModeActivity extends MainActivity {
         common = new Common();
 
         // Set views.
-        mNavigationView.setCheckedItem(R.id.nav_lighting_mode);
-        RecyclerView mPresetsRecyclerView = findViewById(R.id.presets_recycler_list);
+        mRecyclerView = findViewById(R.id.presets_recycler_list);
         mHintTextView = findViewById(R.id.text_view_hint);
         mTitleTextView.setText(R.string.lighting_mode_title);
 
         // Set view's data/design
         mPresets = new ArrayList<>();
+        mSelectedPresets = new ArrayList<>();
         mMacros = new ArrayList<>();
+        mSelectedMacros = new ArrayList<>();
         mAdapter = new PresetAdapter();
+        isAddMacroAvailable = false;
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        mPresetsRecyclerView.setLayoutManager(layoutManager);
-        mPresetsRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     @Override
@@ -83,22 +97,47 @@ public class LightingModeActivity extends MainActivity {
             mHintTextView.setVisibility(View.GONE);
         }
         mAdapter.notifyDataSetChanged();
+
+        mNavigationView.setCheckedItem(R.id.nav_lighting_mode);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_refresh_lights, menu);
+        mMenu = menu;
+        enableSelectionMenuItem(false);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case R.id.switch_off_devices_button:
+            case android.R.id.home:
+                mAdapter.setSelectionMode(false);
+                return true;
+            case R.id.add_macro_button:
+                if(isAddMacroAvailable){
+                    createNewMacro();
+                }
+                return true;
+            case R.id.delete_button:
+                deleteCheckedItems();
+                return true;
+            case R.id.refresh:
                 switchOffLights();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(mAdapter.isSelectionMode()){
+            mAdapter.setSelectionMode(false);
+        }
+        else{
+            super.onBackPressed();
+        }
     }
 
     /**
@@ -144,7 +183,7 @@ public class LightingModeActivity extends MainActivity {
 
         @Override
         public void run() {
-            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
+            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
             HttpURLConnection urlConnection;
             URL url;
             OutputStream os;
@@ -170,6 +209,134 @@ public class LightingModeActivity extends MainActivity {
         }
     }
 
+    /**
+     * Deletes all items in mSelected Items.
+     */
+    private void deleteCheckedItems(){
+
+        // Delete macros from memory
+        if(!mSelectedMacros.isEmpty()){
+            ArrayList<Macro> macros;
+            macros = common.loadMacros(this);
+
+            if(macros != null){
+                for(Integer i: mSelectedMacros){
+                    for(Macro macro: macros){
+                        if(macro.getId() == i){
+                            macros.remove(macro);
+                            break;
+                        }
+                    }
+                }
+            }
+            mMacros = macros;
+            common.saveMacros(macros, this);
+            mSelectedMacros.clear();
+        }
+
+        //Delete Presets from memory
+        if(!mSelectedPresets.isEmpty()){
+            ArrayList<Preset> presets;
+            presets = common.loadPresets(this);
+
+            if(presets != null){
+                for(Integer i: mSelectedPresets){
+                    for(Preset preset: presets){
+                        if(preset.getId() == i){
+                            presets.remove(preset);
+                            presets = common.arrangePresetsIds(presets, i);
+                            mSelectedPresets = common.arrangeArrayOfIdsIntegers(mSelectedPresets, i);
+                            break;
+                        }
+                    }
+                }
+            }
+            mMacros = common.removePresetsFromMacros(mSelectedPresets,this);
+            mPresets = presets;
+            common.savePresetList(presets,this);
+            mSelectedPresets.clear();
+        }
+
+
+
+        mAdapter.setSelectionMode(false);
+        mAdapter.notifyDataSetChanged();
+        if(mMacros.isEmpty() && mPresets.isEmpty()){
+            mHintTextView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
+     * Enable or disable selection menu in app bar.
+     */
+    private void enableSelectionMenuItem(boolean enable){
+        if(enable){
+            mMenu.findItem(R.id.delete_button).setVisible(true);
+            mMenu.findItem(R.id.add_macro_button).setVisible(true);
+        }
+        else{
+            mMenu.findItem(R.id.delete_button).setVisible(false);
+            mMenu.findItem(R.id.add_macro_button).setVisible(false);
+        }
+    }
+
+    /**
+     * Refresh the recycler view to un-check all checked items.
+     */
+    private void removeCheckedItems(){
+        mSelectedPresets.clear();
+        mSelectedMacros.clear();
+        mAdapter = new PresetAdapter();
+        mRecyclerView.setAdapter(mAdapter);
+    }
+
+    /**
+     * Create a new Macro
+     */
+    private void createNewMacro(){
+        DialogFragment dialogFragment = AddMacroDialog.newInstance();
+        dialogFragment.show(getFragmentManager(), "AddMacroDialog");
+    }
+
+    /**
+     * Save presets as macro.
+     */
+    public void saveMacro(String macroName){
+        SharedPreferences mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor prefsEditor = mPrefs.edit();
+
+        AllMacros allMacros;
+        Gson gson = new Gson();
+        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
+
+        if(json == null){
+            allMacros = new AllMacros();
+        } else {
+            allMacros = gson.fromJson(json, AllMacros.class);
+        }
+
+        ArrayList<Preset> presets = new ArrayList<>();
+        for(int id: mSelectedPresets){
+            for(Preset preset: mPresets){
+                if(preset.getId() == id){
+                    presets.add(preset);
+                    break;
+                }
+            }
+        }
+
+        Macro macro = new Macro(allMacros.getMacros().size() + 1, macroName, presets);
+        allMacros.addMacro(macro);
+
+        json = gson.toJson(allMacros);
+        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
+        prefsEditor.apply();
+
+        mMacros.add(macro);
+        mAdapter.setSelectionMode(false);
+        mAdapter.notifyDataSetChanged();
+    }
+
     private static class TitleViewHolder extends RecyclerView.ViewHolder{
         TextView titleTextView;
 
@@ -179,7 +346,7 @@ public class LightingModeActivity extends MainActivity {
         }
     }
 
-    private static class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnTouchListener{
+    private static class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnTouchListener, View.OnLongClickListener{
         TextView nameTextView;
         TextView groupTextView;
         ImageView aSwitch;
@@ -195,8 +362,8 @@ public class LightingModeActivity extends MainActivity {
             this.cardView = itemView.findViewById(R.id.item_card_view);
             this.checkBox = itemView.findViewById(R.id.item_checkbox);
             this.mListener = mListener;
-            aSwitch.setOnClickListener(this);
             cardView.setOnClickListener(this);
+            cardView.setOnLongClickListener(this);
             aSwitch.setOnTouchListener(this);
         }
 
@@ -206,12 +373,18 @@ public class LightingModeActivity extends MainActivity {
         }
 
         @Override
+        public boolean onLongClick(View view) {
+            return mListener.onCardViewLongClick(view);
+        }
+
+        @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
             return mListener.onCardGestureListener(view, motionEvent);
         }
 
         private interface ViewHolderClickListener{
             void onCardViewClick(View view);
+            boolean onCardViewLongClick(View view);
             boolean onCardGestureListener(View view, MotionEvent motionEvent);
         }
     }
@@ -223,16 +396,36 @@ public class LightingModeActivity extends MainActivity {
         private static final int MACRO_ITEM = 2;
         private static final int PRESET_ITEM = 3;
 
+        private boolean isSelectionMode = false;
+
         private ItemViewHolder.ViewHolderClickListener mListener = new ItemViewHolder.ViewHolderClickListener(){
 
             @Override
             public void onCardViewClick(View view) {
-                // Do nothing.
+                itemOnClick(view);
             }
 
             @Override
             public boolean onCardGestureListener(View view, MotionEvent motionEvent) {
                 return itemOnGestureListener(view, motionEvent);
+            }
+
+            @Override
+            public boolean onCardViewLongClick(View view) {
+                if(!isSelectionMode){
+                    setSelectionMode(true);
+                    ((CheckBox)view.findViewById(R.id.item_checkbox)).setChecked(true);
+                    String groupType = (String) (view.findViewById(R.id.preset_switch)).getTag(R.id.groupType);
+                    if(groupType.equals(Constants.MACRO)){
+                        mSelectedMacros.add((Integer)(view.findViewById(R.id.preset_switch)).getTag(R.id.ID));
+                    } else{
+                        mSelectedPresets.add((Integer)(view.findViewById(R.id.preset_switch)).getTag(R.id.ID));
+                    }
+
+                    // Check if creating a macro is available
+                    checkNewMacroAvailability();
+                }
+                return true;
             }
         };
 
@@ -264,13 +457,21 @@ public class LightingModeActivity extends MainActivity {
                     Macro macro = mMacros.get(position - 1);
 
                     // Set the tags to identify the macro.
+                    macroItemViewHolder.cardView.setTag(R.id.ID, macro.getId());
+                    macroItemViewHolder.cardView.setTag(R.id.groupType, Constants.MACRO);
                     macroItemViewHolder.aSwitch.setTag(R.id.ID, macro.getId());
                     macroItemViewHolder.aSwitch.setTag(R.id.groupType, Constants.MACRO);
                     macroItemViewHolder.nameTextView.setText(macro.getName());
                     macroItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     macroItemViewHolder.groupTextView.setText(getMacroItemSubString(macro));
                     macroItemViewHolder.groupTextView.setTypeface(mSubTextTypeFace);
-                    macroItemViewHolder.checkBox.setVisibility(View.GONE);
+                    if(isSelectionMode){
+                        macroItemViewHolder.checkBox.setVisibility(View.VISIBLE);
+                        macroItemViewHolder.aSwitch.setVisibility(View.INVISIBLE);
+                    } else{
+                        macroItemViewHolder.checkBox.setVisibility(View.GONE);
+                        macroItemViewHolder.aSwitch.setVisibility(View.VISIBLE);
+                    }
                     macroItemViewHolder.aSwitch.setVisibility(View.VISIBLE);
                     break;
                 }
@@ -290,6 +491,8 @@ public class LightingModeActivity extends MainActivity {
                     }
 
                     // Set the tags to identify the preset.
+                    presetItemViewHolder.cardView.setTag(R.id.ID, preset.getId());
+                    presetItemViewHolder.cardView.setTag(R.id.groupType, Constants.PRESET);
                     presetItemViewHolder.aSwitch.setTag(R.id.ID, preset.getId());
                     presetItemViewHolder.aSwitch.setTag(R.id.groupType, Constants.PRESET);
                     presetItemViewHolder.nameTextView.setText(preset.getPresetName());
@@ -307,7 +510,13 @@ public class LightingModeActivity extends MainActivity {
                     }
                     presetItemViewHolder.groupTextView.setText(name);
                     presetItemViewHolder.groupTextView.setTypeface(mSubTextTypeFace);
-                    presetItemViewHolder.checkBox.setVisibility(View.GONE);
+                    if(isSelectionMode){
+                        presetItemViewHolder.checkBox.setVisibility(View.VISIBLE);
+                        presetItemViewHolder.aSwitch.setVisibility(View.INVISIBLE);
+                    } else{
+                        presetItemViewHolder.checkBox.setVisibility(View.GONE);
+                        presetItemViewHolder.aSwitch.setVisibility(View.VISIBLE);
+                    }
                     presetItemViewHolder.aSwitch.setVisibility(View.VISIBLE);
                     break;
                 }
@@ -367,6 +576,22 @@ public class LightingModeActivity extends MainActivity {
             }
         }
 
+        private boolean isSelectionMode() {
+            return isSelectionMode;
+        }
+
+        private void setSelectionMode(boolean selectionMode) {
+            isSelectionMode = selectionMode;
+            mAdapter.notifyDataSetChanged();
+            if(selectionMode){
+                enableSelectionMenuItem(true);
+            }
+            else{
+                enableSelectionMenuItem(false);
+                removeCheckedItems();
+            }
+        }
+
         /**
          * Switch on a preset or a macro
          * @param id is the id number of the Macro/Preset
@@ -402,22 +627,49 @@ public class LightingModeActivity extends MainActivity {
          * @param macro macro chosen to be switched on.
          */
         private void sendMacroCommands(Macro macro){
+
+            // Local class containing the ip and command of a device.
+            class DeviceIPAndCommand {
+                String deviceIp;
+                String command;
+
+                public DeviceIPAndCommand(String deviceIp, String command) {
+                    this.deviceIp = deviceIp;
+                    this.command = command;
+                }
+
+                public String getDeviceIp() {
+                    return deviceIp;
+                }
+
+                public String getCommand() {
+                    return command;
+                }
+
+            }
+
+            // Send macro commands
             ArrayList<DeviceIPAndCommand> commandsList = new ArrayList<>();
             OnlineDevices onlineDevices = ((Application) getApplication()).getScannedDevices();
 
             if(!macro.getPresetList().isEmpty()){
                 for (Preset preset : macro.getPresetList()) {
                     for (String deviceIP : preset.getDevicesGroup().getDeviceIPArrayList()) {
-                        commandsList.add(new DeviceIPAndCommand(onlineDevices.getDeviceByIP(deviceIP).getIpAddress(), preset.getCommand()));
+                        Device device = onlineDevices.getDeviceByIP(deviceIP);
+                        if(device != null){
+                            commandsList.add(new DeviceIPAndCommand(device.getIpAddress(), preset.getCommand()));
+                        }
                     }
                 }
 
-                ExecutorService executorService = Executors.newFixedThreadPool(commandsList.size());
-                for(DeviceIPAndCommand deviceAndCommand :commandsList){
-                    Runnable worker = new PostRequest(deviceAndCommand.getCommand(), deviceAndCommand.getDeviceIp());
-                    executorService.execute(worker);
+                if(commandsList.size() > 0){
+                    ExecutorService executorService = Executors.newFixedThreadPool(commandsList.size());
+                    for(DeviceIPAndCommand deviceAndCommand :commandsList){
+                        Runnable worker = new PostRequest(deviceAndCommand.getCommand(), deviceAndCommand.getDeviceIp());
+                        executorService.execute(worker);
+                    }
+                    executorService.shutdown();
                 }
-                executorService.shutdown();
             }
         }
 
@@ -454,21 +706,82 @@ public class LightingModeActivity extends MainActivity {
             }
         }
 
+        /**
+         * Turn on preset.
+         * @param view the turn on preset switch
+         * @param motionEvent type of motion event
+         * @return event captured or not
+         */
         private boolean itemOnGestureListener(View view, MotionEvent motionEvent){
             ImageView imageView = view.findViewById(R.id.preset_switch);
             switch (motionEvent.getAction()){
                 case MotionEvent.ACTION_DOWN:
                     imageView.setImageDrawable(getDrawable(R.drawable.ic_play_circle_filled_black_36dp));
                     switchOnDevices((int) view.getTag(R.id.ID), (String) view.getTag(R.id.groupType));
-                    return false;
+                    return true;
                 case MotionEvent.ACTION_UP:
                     imageView.setImageDrawable(getDrawable(R.drawable.ic_play_circle_filled_white_36dp));
-                    return false;
+                    return true;
                 case MotionEvent.ACTION_MOVE:
                     imageView.setImageDrawable(getDrawable(R.drawable.ic_play_circle_filled_white_36dp));
-                    return false;
+                    return true;
             }
             return false;
+        }
+
+        /**
+         * Add/remove a preset or macro from the list of selected items.
+         * @param view the child view inside the recyclerview.
+         */
+        private void itemOnClick(View view){
+            if(isSelectionMode){
+                CheckBox cb = view.findViewById(R.id.item_checkbox);
+                if(cb.isChecked()){
+                    cb.setChecked(false);
+                    if((view.getTag(R.id.groupType)).equals(Constants.PRESET)){
+                        for(int i = 0; i < mSelectedPresets.size(); i++){
+                            if(mSelectedPresets.get(i) == ((int) view.getTag(R.id.ID))){
+                                mSelectedPresets.remove(i);
+                            }
+                        }
+                    } else {
+                        for(int i = 0; i < mSelectedMacros.size(); i++){
+                            if(mSelectedMacros.get(i) == ((int) view.getTag(R.id.ID))){
+                                mSelectedMacros.remove(i);
+                            }
+                        }
+                    }
+                }
+                else{
+                    cb.setChecked(true);
+                    String type = (String)view.getTag(R.id.groupType);
+                    if(type.equals(Constants.MACRO)){
+                        mSelectedMacros.add((int) view.getTag(R.id.ID));
+                    }
+                    else{
+                        mSelectedPresets.add((int) view.getTag(R.id.ID));
+                    }
+                }
+            }
+            checkNewMacroAvailability();
+        }
+
+        private void checkNewMacroAvailability(){
+            if(mSelectedMacros.isEmpty() && !mSelectedPresets.isEmpty()){
+                enableAddMacroMenuButton(true);
+            } else {
+                enableAddMacroMenuButton(false);
+            }
+        }
+
+        private void enableAddMacroMenuButton(boolean enable){
+            if(enable){
+                mMenu.findItem(R.id.add_macro_button).setIcon(R.drawable.ic_add_circle_outline_white_24dp);
+                isAddMacroAvailable = true;
+            } else{
+                mMenu.findItem(R.id.add_macro_button).setIcon(R.drawable.ic_add_circle_outline_black_24dp);
+                isAddMacroAvailable = false;
+            }
         }
 
         /**
@@ -490,29 +803,6 @@ public class LightingModeActivity extends MainActivity {
             }
 
             return stringBuffer.toString();
-        }
-
-
-        /**
-         * Class containing the ip and command of a device.
-         */
-        private class DeviceIPAndCommand {
-            String deviceIp;
-            String command;
-
-            public DeviceIPAndCommand(String deviceIp, String command) {
-                this.deviceIp = deviceIp;
-                this.command = command;
-            }
-
-            public String getDeviceIp() {
-                return deviceIp;
-            }
-
-            public String getCommand() {
-                return command;
-            }
-
         }
     }
 }

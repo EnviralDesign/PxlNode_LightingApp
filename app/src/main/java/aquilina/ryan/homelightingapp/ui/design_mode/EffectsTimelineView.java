@@ -54,6 +54,11 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
      */
     private Typeface mTypeface;
 
+    /**
+     * Flag used to check if the start circle is in default.
+     */
+    private boolean mIsStartCircleInDefault;
+
 
     public EffectsTimelineView(Context context) {
         super(context);
@@ -169,9 +174,11 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
      * @param bypass {A flag to bypass the stop circle's selected state}
      */
     public void changeStartCircleColor(int color, boolean bypass){
+        mIsStartCircleInDefault = false;
         if(bypass){
             mStartCircleView.setCircleColor(color);
             mStartCircleView.setColorChanged(true);
+            mStartCircleView.setInFocus(true);
             mStartCircleView.invalidate();
         } else {
             if(mStartCircleView.isSelected()){
@@ -187,8 +194,14 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
      * Change the stop circle's color
      * @param color {new color}
      */
-    public void changeStopCircleColor(int color){
-        if(mStopCircleView.isSelected()){
+    public void changeStopCircleColor(int color, boolean bypass){
+        if(bypass){
+            mStopCircleView.setCircleColor(color);
+            mStopCircleView.setColorChanged(true);
+            mStopCircleView.setInFocus(true);
+            mStopCircleView.invalidate();
+        }
+        else if(mStopCircleView.isSelected()){
             mStopCircleView.setCircleColor(color);
             mStopCircleView.setColorChanged(true);
             mStartCircleView.setInFocus(true);
@@ -225,6 +238,7 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
      * Set the start circle to default.
      */
     public void setStartCircleToDefault(){
+        mIsStartCircleInDefault = true;
         mStartCircleView.setInFocus(false);
         mStartCircleView.setColorChanged(false);
         unSelectView(mStartCircleView);
@@ -265,14 +279,24 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
         this.mStopCircleView = mStopCircleView;
     }
 
+    public boolean ismIsStartCircleInDefault() {
+        return mIsStartCircleInDefault;
+    }
+
+    public void setmIsStartCircleInDefault(boolean mIsStartCircleInDefault) {
+        this.mIsStartCircleInDefault = mIsStartCircleInDefault;
+    }
+
     public void setTypeface(Typeface mTypeface) {
         this.mTypeface = mTypeface;
     }
 
     private void init(){
         Timeline mTimeLineView = new Timeline(getContext());
+
         mStartCircleView= new CircleView(getContext());
         mStopCircleView = new CircleView(getContext());
+
         CaptionView mStartCaptionView = new CaptionView(getContext());
         CaptionView mEndCaptionView = new CaptionView(getContext());
 
@@ -284,6 +308,8 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
 
         mStopCircleView.setOnClickListener(this);
         mStartCircleView.setOnClickListener(this);
+
+        mIsStartCircleInDefault = false;
 
         mStartCircleView.setOnLongClickListener(new OnLongClickListener() {
             @Override
