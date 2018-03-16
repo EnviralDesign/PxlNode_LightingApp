@@ -34,6 +34,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import aquilina.ryan.homelightingapp.R;
+import aquilina.ryan.homelightingapp.ui.configuration_mode.ConfigurationActivity;
 import aquilina.ryan.homelightingapp.ui.design_mode.DesignActivity;
 import aquilina.ryan.homelightingapp.ui.design_mode.DesignConfiguration;
 import aquilina.ryan.homelightingapp.ui.group_managment.GroupManagementActivity;
@@ -109,6 +110,11 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_lighting_mode) {
                     if(!mNavigationView.getMenu().findItem(R.id.nav_lighting_mode).isChecked()){
                         intent = new Intent(getApplicationContext(), LightingModeActivity.class);
+                        startActivity(intent);
+                    }
+                } else if(id == R.id.nav_configuration){
+                    if (!mNavigationView.getMenu().findItem(R.id.nav_configuration).isChecked()) {
+                        intent = new Intent(getApplicationContext(), ConfigurationActivity.class);
                         startActivity(intent);
                     }
                 } else if (id == R.id.nav_scan) {

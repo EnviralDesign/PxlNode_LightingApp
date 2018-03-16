@@ -353,7 +353,7 @@ public class ScanActivity extends MainActivity {
         private ViewHolder(View v, ViewHolderClick listener) {
             super(v);
             mListener = listener;
-            deviceNameTextView =  v.findViewById(R.id.device_name_text_view);
+            deviceNameTextView =  v.findViewById(R.id.device_name_edit_text);
             deviceIPAddressTextView =  v.findViewById(R.id.device_ip_address_text_view);
             checkBox = v.findViewById(R.id.item_checkbox);
             cardView = v.findViewById(R.id.item_card_view);
@@ -475,8 +475,12 @@ public class ScanActivity extends MainActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mDevicesMap.put(device.getIpAddress(), device);
-                        mScannedDevicesList.add(device);
+                        if(mDevicesMap.get(device.getIpAddress()) != null){
+                            mScannedDevicesList.add(mDevicesMap.get(device.getIpAddress()));
+                        } else {
+                            mDevicesMap.put(device.getIpAddress(), device);
+                            mScannedDevicesList.add(device);
+                        }
                         mDeviceAdapter.notifyDataSetChanged();
                     }
                 });

@@ -919,9 +919,9 @@ public class MaterialSpinner extends AppCompatSpinner implements ValueAnimator.A
 
         @Override
         public Object getItem(int position) {
-//            position = hint != null ? position - 1 : position;
-//            return (position == -1) ? hint : mSpinnerAdapter.getItem(position);
-            return mSpinnerAdapter.getItem(position);
+            position = hint != null ? position - 1 : position;
+            return (position == -1) ? hint : mSpinnerAdapter.getItem(position);
+//            return mSpinnerAdapter.getItem(position);
         }
 
         @Override

@@ -31,7 +31,7 @@
                     android:background="@drawable/border_white"
                     android:overlapAnchor="false"
                     android:textAlignment="center"
-                    app:ms_hint="@string/spinner_hint"
+                    app:ms_hint="@string/design_mode_spinner_hint"
                     app:ms_hintColor="@color/colorPrimaryText"
                     app:ms_arrowColor="@color/colorPrimaryText"
                     app:ms_baseColor="@android:color/transparent"

@@ -12,7 +12,7 @@
     <string name="nav_scan_mode_name">Scan For Devices</string>
     <string name="nav_design_mode_name">Look Design</string>
     <string name="nav_light_mode_name">Lighting Mode</string>
-    <string name="nav_configuration">Configuration</string>
+    <string name="nav_configuration_name">Configuration</string>
     <string name="nav_group_management_name">GROUP MANAGEMENT</string>
     <string name="nav_group_management_node_groups">Groups</string>
     <string name="nav_group_management_presets">Presets</string>
@@ -38,7 +38,7 @@
 
     <!--Design Mode Strings-->
     <string name="design_mode_title">Design Mode</string>
-    <string name="spinner_hint">Select Group or Item</string>
+    <string name="design_mode_spinner_hint">Select Group or Item</string>
     <string name="spinner_group_section_header">GROUPS</string>
     <string name="spinner_fixture_section_header">FIXTURE</string>
     <string name="picker_caption_repetitions">Repetitions</string>
@@ -76,4 +76,26 @@
     <string name="text_view_create_presets">no presets found</string>
     <string name="text_view_create_macros">no macros found</string>
     <string name="toast_macro_saved">Macro saved</string>
+
+    <!-- Configuration Mode Strings -->
+    <string name="configuration_mode_title">Configuration</string>
+    <string name="configuration_mode_spinner_hint">Select device</string>
+    <string name="configuration_error_special_or_spaces_characters">Spaces or special characters are not valid</string>
+    <string name="configuration_error_special_characters">Special characters are not valid</string>
+    <string name="configuration_error_more_than_64_characters">Cannot contain more than 64 characters</string>
+    <string name="configuration_error_pixel_per_strip">Cannot be less than 0 or greater than 1500</string>
+    <string name="configuration_error_chunk_size">Cannot be less than 0 or greater than 200</string>
+    <string name="configuration_error_udp_streaming">Cannot be less than 0 or greater than 655336</string>
+    <string name="configuration_error_ma_per_strip">Cannot be less than 0 or greater than 999999</string>
+    <string name="configuration_error_warm_up_color">Cannot be less than 0 or greater than 255</string>
+    <string name="configuration_error_invalid_input">Invalid input</string>
+    <string name="configuration_error_empty">Cannot be empty</string>
+    <string name="configuration_label_device_name">Device Name</string>
+    <string name="configuration_label_pixels_per_strip">Pixels per Strip</string>
+    <string name="configuration_label_chunk_size">Chunk size</string>
+    <string name="configuration_label_ma_per_pixel">MA per Pixel</string>
+    <string name="configuration_label_udp_port">UDP Port</string>
+    <string name="configuration_label_amps_limit">Amps Limit</string>
+    <string name="configuration_label_warm_up_color">Warm Up Color</string>
+    <string name="configuration_button_update_device">Update Device</string>
 </resources>

@@ -28,7 +28,7 @@ public final class Constants {
     public static final String MACRO = "macro";
     public static final String GROUP_OF_MACROS = "group_of_macros";
 
-    /* Configuration Constants */
+    /* Design Constants */
     public static final String DESIGN_CONFIGURATION = "design_configuration";
     public static final String DESIGN_EFFECT_PULSE = "pulse";
     public static final String DESIGN_EFFECT_BLINK = "blink";
@@ -47,4 +47,14 @@ public final class Constants {
     public static final String DESIGN_CURRENT_SPINNER_POSITION = "current_spinner_position";
     public static final String DESIGN_SELECTED_DEVICES = "selected_devices";
     public static final String DESIGN_START_CIRCLE_STATE = "start_circle_state";
+
+
+    /* Configuration Constants */
+    public static final String CONFIGURATION_DEVICE_NAME = "device_name";
+    public static final String CONFIGURATION_UDP_STREAMING_PORT = "udp_streaming_port";
+    public static final String CONFIGURATION_CHUNK_SIZE = "chunk_size";
+    public static final String CONFIGURATION_PIXELS_PER_STRIP = "pixels_per_strip";
+    public static final String CONFIGURATION_MA_PER_PIXEL = "ma_per_pixel";
+    public static final String CONFIGURATION_AMPS_LIMIT = "amps_limit";
+    public static final String CONFIGURATION_WARMUP_COLOR = "warmup_color";
 }

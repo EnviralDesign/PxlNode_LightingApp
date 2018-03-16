@@ -36,7 +36,6 @@ import aquilina.ryan.homelightingapp.model.AllPresets;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
-import aquilina.ryan.homelightingapp.ui.group_managment.AddMacroDialog;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;

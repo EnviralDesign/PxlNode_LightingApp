@@ -32,6 +32,9 @@ import static android.content.Context.MODE_PRIVATE;
 public class Common {
     SharedPreferences mPrefs;
 
+    public void showToast(Context context, int stringId){
+        showToast(context, context.getString(stringId));
+    }
     public void showToast(Context context, String message){
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
@@ -204,16 +207,11 @@ public class Common {
         }
 
         // Check if there is a device with the same ID
-        if(allDevices.getDeviceHashMap().get(device.getIpAddress()) == null){
-            allDevices.getDeviceHashMap().put(device.getIpAddress(), device);
-            json = gson.toJson(allDevices);
-            prefsEditor.putString(Constants.ALL_DEVICES, json);
-            prefsEditor.apply();
-            return true;
-        }
-        else{
-            return false;
-        }
+        allDevices.getDeviceHashMap().put(device.getIpAddress(), device);
+        json = gson.toJson(allDevices);
+        prefsEditor.putString(Constants.ALL_DEVICES, json);
+        prefsEditor.apply();
+        return true;
     }
 
     /**

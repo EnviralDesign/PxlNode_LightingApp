@@ -1009,7 +1009,7 @@ public class DesignActivity extends MainActivity {
             TextView textView = view.findViewById(R.id.spinner_hint);
             textView.setTypeface(mTextTypeFace);
             if(i == 0 || i == (mGroupedItemList.size() + 1)){
-                textView.setText(getString(R.string.spinner_hint));
+                textView.setText(getString(R.string.design_mode_spinner_hint));
                 return view;
             } else if (i > 0 && i <= mGroupedItemList.size()){
                 textView.setText(mGroupedItemList.get(i - 1).getName());
@@ -1032,7 +1032,7 @@ public class DesignActivity extends MainActivity {
 
         @Override
         public boolean isEmpty() {
-            return false;
+            return mGroupedItemList.isEmpty() && mSingleItemList.isEmpty();
         }
 
     }

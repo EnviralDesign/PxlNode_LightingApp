@@ -34,4 +34,12 @@ public class OnlineDevices implements Serializable{
         }
         return null;
     }
+
+    public void setDeviceByIP(String ip, Device newDevice) {
+        for(Device device: devicesList){
+            if(device.getIpAddress().equals(ip)){
+                device = newDevice;
+            }
+        }
+    }
 }
