@@ -40,7 +40,7 @@
     </RelativeLayout>
 
     <LinearLayout
-            android:id="@+id/text_view_hint"
+            android:id="@+id/linear_layout_hint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

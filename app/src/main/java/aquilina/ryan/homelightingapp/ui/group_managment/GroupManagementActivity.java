@@ -31,7 +31,7 @@ import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
 
-public class GroupManagementActivity extends MainActivity {
+public class GroupManagementActivity extends MainActivity{
 
     private ArrayList<DevicesGroup> mGroups;
     private ArrayList<Integer> mToDeleteGroups;
@@ -50,7 +50,7 @@ public class GroupManagementActivity extends MainActivity {
 
         // Set views
         mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
-        mHintTextView = findViewById(R.id.text_view_hint);
+        mHintTextView = findViewById(R.id.linear_layout_hint);
         mTitleTextView.setText(R.string.group_title);
 
         // Set view's data

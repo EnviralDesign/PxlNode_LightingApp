@@ -10,14 +10,28 @@ package aquilina.ryan.homelightingapp.utils;
 
 import com.google.gson.Gson;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
+import android.support.annotation.Nullable;
+import android.text.format.Formatter;
+import android.util.Log;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import aquilina.ryan.homelightingapp.Application;
 import aquilina.ryan.homelightingapp.model.AllDevices;
 import aquilina.ryan.homelightingapp.model.AllGroups;
 import aquilina.ryan.homelightingapp.model.AllMacros;
@@ -25,9 +39,12 @@ import aquilina.ryan.homelightingapp.model.AllPresets;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.model.Macro;
+import aquilina.ryan.homelightingapp.model.OnlineDevices;
 import aquilina.ryan.homelightingapp.model.Preset;
+import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.content.Context.WIFI_SERVICE;
 
 public class Common {
     SharedPreferences mPrefs;
@@ -109,6 +126,136 @@ public class Common {
         }
         return new HashMap<>();
     }
+
+    /**
+     * Load online devices.
+     */
+    public ArrayList<Device> loadOnlineDevicesToApplication(Application application){
+        HashMap<String, Device> devicesHashMap = this.loadDevices(application);
+        ArrayList<Device> onlineDevices = new ArrayList<>();
+
+        String subIP = "";
+        WifiManager wm = (WifiManager) application.getSystemService(WIFI_SERVICE);
+
+        if(wm != null){
+            String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+
+            int noOfDots = 0;
+            for(int i = 0; noOfDots < 3; i++){
+                subIP += ip.substring(i, i + 1);
+                if(ip.charAt(i) == '.'){
+                    noOfDots += 1;
+                }
+            }
+
+            // Execute a queue of tasks for each possible device
+            ExecutorService executorService = Executors.newFixedThreadPool(255);
+            for( int i = 0; i <= 255; i++ ){
+                Runnable worker = new WorkerThread(subIP, i, devicesHashMap, onlineDevices);
+                executorService.execute(worker);
+            }
+            executorService.shutdown();
+
+            this.saveDeviceHashMap(devicesHashMap, application);
+
+            while(!executorService.isTerminated()){
+                // Do nothing
+            }
+        }
+        application.setScannedDevices(new OnlineDevices(onlineDevices));
+        return onlineDevices;
+    }
+
+    private class WorkerThread implements Runnable{
+        private String subIp;
+        private int i;
+        private HashMap<String, Device> devicesMap;
+        private ArrayList<Device> onlineDevices;
+
+        private WorkerThread(String subIp, int i, HashMap<String, Device> devicesMap, ArrayList<Device> onlineDevices) {
+            this.subIp = subIp;
+            this.i = i;
+            this.devicesMap = devicesMap;
+            this.onlineDevices =onlineDevices;
+        }
+
+        @Override
+        public void run() {
+            android.os.Process.setThreadPriority(-19);
+            final Device device = getDeviceConnectedToWifi(subIp, i);
+            if(device != null){
+                if(devicesMap.get(device.getIpAddress()) != null){
+                   onlineDevices.add((devicesMap.get(device.getIpAddress())));
+                } else {
+                    devicesMap.put(device.getIpAddress(), device);
+                    onlineDevices.add(device);
+                }
+            }
+        }
+    }
+
+    @Nullable
+    private Device getDeviceConnectedToWifi(String subIP, int i){
+        int TIMEOUT_VALUE = 2500;
+
+        HttpURLConnection urlConnection;
+        URL url;
+        String strLine;
+        try{
+            url = new URL("http://" + subIP + Integer.toString(i) + "/mcu_info");
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setConnectTimeout(TIMEOUT_VALUE);
+            urlConnection.setReadTimeout(TIMEOUT_VALUE);
+            urlConnection.setUseCaches(false);
+            urlConnection.connect();
+            InputStream inputStream = urlConnection.getInputStream();
+            strLine = convertStreamToString(inputStream);
+            if(!strLine.isEmpty()){
+                if(strLine.substring(0,5).equals("name:")){
+                    int nameLength = 0;
+                    for(int j = 0;j <= strLine.length(); j++){
+                        if(strLine.charAt(j) != ','){
+                            nameLength += 1;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    return new Device((strLine.substring(5, nameLength)), subIP + Integer.toString(i));
+                }
+            }
+            Log.w("Good Device Ip", subIP + Integer.toString(i));
+        } catch (Exception e){
+            Log.w("Bad Device Ip", subIP + Integer.toString(i));
+        }
+        return null;
+    }
+
+    /**
+     * Convert the InputStream to a String.
+     */
+    private static String convertStreamToString(InputStream is) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+
+        String line;
+        try {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb.toString();
+    }
+
+
 
     /*
     * **********************************************************************************

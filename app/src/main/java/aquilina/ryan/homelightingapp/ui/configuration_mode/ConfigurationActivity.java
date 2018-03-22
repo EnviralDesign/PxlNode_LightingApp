@@ -9,6 +9,8 @@
 package aquilina.ryan.homelightingapp.ui.configuration_mode;
 
 import android.database.DataSetObserver;
+import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.Editable;
@@ -30,11 +32,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -46,29 +51,20 @@ import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.OnlineDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
-import aquilina.ryan.homelightingapp.utils.Constants;
 import fr.ganfra.materialspinner.MaterialSpinner;
 
 public class ConfigurationActivity extends MainActivity {
 
     public ArrayList<Device> mOnlineDevicesList = new ArrayList<>();
     private OnlineDevices mOnlineDevices;
-
-    private MaterialSpinner mSpinner;
-    private MaterialEditText mDeviceName;
-    private MaterialEditText mPixelsPerStrip;
-    private MaterialEditText mChunkSize;
-    private MaterialEditText mMAPerPixel;
-    private MaterialEditText mUDPPort;
-    private MaterialEditText mAMPSLimit;
-    private MaterialEditText mWarmUpColorRed;
-    private MaterialEditText mWarmUpColorGreen;
-    private MaterialEditText mWarmUpColorBlue;
-    private ScrollView mMainLayout;
-    private LinearLayout mHintTextView;
-
     private Common common = new Common();
 
+    private MaterialSpinner mSpinner;
+    private MaterialEditText mDeviceName, mPixelsPerStrip, mChunkSize, mMAPerPixel, mUDPPort,
+            mAMPSLimit,mWarmUpColorRed, mWarmUpColorGreen, mWarmUpColorBlue;
+
+    private ScrollView mMainLayout;
+    private LinearLayout mHintLinearLayout;
 
     private TextWatcher mDeviceNameWatcher = new TextWatcher() {
         Pattern pattern = Pattern.compile("[a-zA-Z0-9_\\-]*");
@@ -346,6 +342,7 @@ public class ConfigurationActivity extends MainActivity {
         getWindow().setBackgroundDrawable(null);
         super.setSelectedNavMenuItem(R.id.nav_configuration);
 
+        // Set up views.
         mTitleTextView.setText(R.string.configuration_mode_title);
         mSpinner = findViewById(R.id.item_spinner);
         mDeviceName = findViewById(R.id.device_name_edit_text);
@@ -358,9 +355,10 @@ public class ConfigurationActivity extends MainActivity {
         mWarmUpColorGreen = findViewById(R.id.warm_up_green_edit_text);
         mWarmUpColorBlue = findViewById(R.id.warm_up_blue_edit_text);
         mMainLayout = findViewById(R.id.main_layout);
-        mHintTextView = findViewById(R.id.text_view_hint);
+        mHintLinearLayout = findViewById(R.id.linear_layout_hint);
         Button mUpdateDeviceButton = findViewById(R.id.update_device_button);
 
+        // Set views functionality.
         mDeviceName.addTextChangedListener(mDeviceNameWatcher);
         mPixelsPerStrip.addTextChangedListener(mPixelPerStripWatcher);
         mChunkSize.addTextChangedListener(mChunkSizeWatcher);
@@ -374,15 +372,11 @@ public class ConfigurationActivity extends MainActivity {
         mUpdateDeviceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try{
-                    validateUserInput();
-                } catch (JSONException e){
-                    common.showToast(getApplicationContext(), "Invalid input");
-                }
-
+                validateUserInput();
             }
         });
 
+        // Load data.
         mOnlineDevices = ((Application)getApplicationContext()).getScannedDevices();
         if(mOnlineDevices != null) {
             mOnlineDevicesList = mOnlineDevices.getDevicesList();
@@ -393,50 +387,7 @@ public class ConfigurationActivity extends MainActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 Device selectedDevice = (Device) adapterView.getAdapter().getItem(i);
-
-                clearAllTexts();
-
-                mDeviceName.setText(selectedDevice.getName());
-                if(selectedDevice.getPixelsPerStrip() != -1){
-                    mPixelsPerStrip.setText(String.format(Locale.ENGLISH,"%d",selectedDevice.getPixelsPerStrip()));
-                }
-                if(selectedDevice.getChunkSize() != -1){
-                    mChunkSize.setText(String.format(Locale.ENGLISH,"%d",selectedDevice.getChunkSize()));
-                }
-                if(selectedDevice.getMaPerPixel() != -1){
-                    mMAPerPixel.setText(String.format(Locale.ENGLISH,"%d",selectedDevice.getMaPerPixel()));
-                }
-                if(selectedDevice.getUdpStreamingPort() != -1){
-                    mUDPPort.setText(String.format(Locale.ENGLISH,"%d",selectedDevice.getUdpStreamingPort()));
-                }
-                if(selectedDevice.getAmpsLimit() != -1f){
-                    mAMPSLimit.setText(String.format(Locale.ENGLISH,"%f",selectedDevice.getAmpsLimit()));
-                }
-                if(!selectedDevice.getWarmUpColor().equals("-1")){
-                    String warmUpColor = selectedDevice.getWarmUpColor();
-                    String warmUpRed = null;
-                    String warmUpGreen = null;
-                    String warmUpBlue = null;
-                    int lastPos = 0;
-                    for (int j = 0; j < warmUpColor.length(); j++){
-                        if(warmUpColor.charAt(j) == ' '){
-                            if(warmUpRed == null){
-                                warmUpRed = warmUpColor.substring(lastPos, j);
-                            } else if(warmUpGreen == null){
-                                warmUpGreen = warmUpColor.substring(lastPos, j);
-                            }
-                            lastPos = j + 1;
-                        }
-                        if(warmUpBlue == null && j == warmUpColor.length() - 1){
-                            warmUpBlue = warmUpColor.substring(lastPos, j + 1);
-                        }
-                    }
-
-                    mWarmUpColorRed.setText(warmUpRed);
-                    mWarmUpColorGreen.setText(warmUpGreen);
-                    mWarmUpColorBlue.setText(warmUpBlue);
-                }
-
+                new GetDeviceInfoTask().execute(selectedDevice.getIpAddress());
             }
 
             @Override
@@ -450,10 +401,11 @@ public class ConfigurationActivity extends MainActivity {
     protected void onStart() {
         super.onStart();
         checkIfOnlineDevicesIsNotEmpty();
+        checkWifiConnection();
     }
 
     /**
-     * Clears the texts inside the edit texts
+     * Clears the texts inside the edit texts.
      */
     private void clearAllTexts(){
         mDeviceName.setText("");
@@ -468,14 +420,29 @@ public class ConfigurationActivity extends MainActivity {
     }
 
     /**
-     * Validate user input and send json
+     * Validate user input and send json.
      */
-    private void validateUserInput() throws JSONException{
+    private void validateUserInput() {
         Boolean areInputsValid = true;
 
         // Check if any of the edit texts are empty.
         if(mDeviceName.getText().toString().isEmpty()){
             mDeviceName.setError(getString(R.string.configuration_error_empty));
+        }
+        if(mPixelsPerStrip.getText().toString().isEmpty()){
+            mPixelsPerStrip.setError(getString(R.string.configuration_error_empty));
+        }
+        if(mChunkSize.getText().toString().isEmpty()){
+            mChunkSize.setError(getString(R.string.configuration_error_empty));
+        }
+        if(mUDPPort.getText().toString().isEmpty()){
+            mUDPPort.setError(getString(R.string.configuration_error_empty));
+        }
+        if(mMAPerPixel.getText().toString().isEmpty()){
+            mMAPerPixel.setError(getString(R.string.configuration_error_empty));
+        }
+        if(mAMPSLimit.getText().toString().isEmpty()){
+            mAMPSLimit.setError(getString(R.string.configuration_error_empty));
         }
 
         // Check if there are any errors reported.
@@ -499,23 +466,38 @@ public class ConfigurationActivity extends MainActivity {
         }
 
         if(areInputsValid){
-            JSONObject jsonMessage = new JSONObject();
-            jsonMessage.put(Constants.CONFIGURATION_DEVICE_NAME, mDeviceName.getText().toString());
-            jsonMessage.put(Constants.CONFIGURATION_PIXELS_PER_STRIP, mPixelsPerStrip.getText().toString());
-            jsonMessage.put(Constants.CONFIGURATION_CHUNK_SIZE, mChunkSize.getText().toString());
-            jsonMessage.put(Constants.CONFIGURATION_UDP_STREAMING_PORT, mUDPPort.getText().toString());
-            jsonMessage.put(Constants.CONFIGURATION_MA_PER_PIXEL, mMAPerPixel.getText().toString());
-            jsonMessage.put(Constants.CONFIGURATION_AMPS_LIMIT, mAMPSLimit.getText().toString());
-            jsonMessage.put(Constants.CONFIGURATION_WARMUP_COLOR, new JSONArray(
-                    new String[]{
+            updateDeviceVariables();
+            try{
+                sendUpdateDeviceCommand(createJSONMessage());
+            } catch (JSONException e){
+                e.printStackTrace();
+                common.showToast(getApplicationContext(), "Error producing JSON Object");
+            }
+        } else {
+            common.showToast(getApplicationContext(), "Invalid input");
+        }
+    }
+
+    /**
+     * Creates JSON Object with device configuration.
+     * @return JSON Message with device configuration.
+     */
+    private JSONObject createJSONMessage() throws JSONException{
+        JSONObject jsonMessage = new JSONObject();
+        jsonMessage.put(CONFIGURATION_DEVICE_NAME, mDeviceName.getText().toString());
+        jsonMessage.put(CONFIGURATION_PIXELS_PER_STRIP, mPixelsPerStrip.getText().toString());
+        jsonMessage.put(CONFIGURATION_CHUNK_SIZE, mChunkSize.getText().toString());
+        jsonMessage.put(CONFIGURATION_UDP_STREAMING_PORT, mUDPPort.getText().toString());
+        jsonMessage.put(CONFIGURATION_MA_PER_PIXEL, mMAPerPixel.getText().toString());
+        jsonMessage.put(CONFIGURATION_AMPS_LIMIT, mAMPSLimit.getText().toString());
+        jsonMessage.put(CONFIGURATION_WARMUP_COLOR, new JSONArray(
+                new String[]{
                         mWarmUpColorRed.getText().toString(),
                         mWarmUpColorGreen.getText().toString(),
                         mWarmUpColorBlue.getText().toString()
-                    }
-            ));
-            updateDeviceVariables();
-            sendUpdateDeviceCommand(jsonMessage);
-        }
+                }
+        ));
+        return jsonMessage;
     }
 
     /**
@@ -525,15 +507,30 @@ public class ConfigurationActivity extends MainActivity {
     private void checkIfOnlineDevicesIsNotEmpty(){
         if(mOnlineDevicesList.isEmpty()){
             mMainLayout.setVisibility(View.GONE);
-            mHintTextView.setVisibility(View.VISIBLE);
+            mHintLinearLayout.setVisibility(View.VISIBLE);
         } else {
-            mHintTextView.setVisibility(View.GONE);
+            mHintLinearLayout.setVisibility(View.GONE);
             mMainLayout.setVisibility(View.VISIBLE);
         }
     }
 
     /**
-     * Update the variables of the device
+     * Check wifi connection if not
+     * update UI.
+     */
+    private void checkWifiConnection(){
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        if(!wm.isWifiEnabled()){
+            TextView hintTextView = findViewById(R.id.text_view_hint);
+            mMainLayout.setVisibility(View.GONE);
+            hintTextView.setText(R.string.configuration_no_network_hint);
+            mHintLinearLayout.setVisibility(View.VISIBLE);
+        }
+    }
+
+
+    /**
+     * Update the variables of the device.
      */
     private void updateDeviceVariables(){
         Device device = (Device) mSpinner.getAdapter().getItem(mSpinner.getSelectedItemPosition() - 1);
@@ -571,7 +568,7 @@ public class ConfigurationActivity extends MainActivity {
      * Refreshes the spinner adapter.
      */
     private void refreshSpinnerAdapter(){
-        // Let Java garbage collect the last adapter.
+        // Let Java garbage collector collect the last adapter.
         mSpinner.setAdapter(new CustomSpinnerAdapter());
         checkIfOnlineDevicesIsNotEmpty();
     }
@@ -699,6 +696,99 @@ public class ConfigurationActivity extends MainActivity {
         @Override
         public boolean isEmpty() {
             return mOnlineDevicesList.isEmpty();
+        }
+    }
+
+    private class GetDeviceInfoTask extends AsyncTask<String, Void, JSONObject> {
+
+        @Override
+        protected JSONObject doInBackground(String... strings) {
+            HttpURLConnection urlConnection;
+            URL url;
+            String strLine;
+            try{
+                url = new URL("http://" + strings[0] + "/mcu_json");
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setUseCaches(false);
+                urlConnection.connect();
+                InputStream inputStream = urlConnection.getInputStream();
+                strLine = convertStreamToString(inputStream);
+                Log.w("GetDeviceInfoTask", "Get device info success for device :" + strings[0]);
+                return new JSONObject(strLine);
+            } catch (Exception e){
+                Log.w("GetDeviceInfoTask", "Get device info failure for device :" + strings[0]);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject jsonObject) {
+            super.onPostExecute(jsonObject);
+            try{
+                loadDevicesIntoViews(jsonObject);
+            } catch (JSONException e){
+                e.printStackTrace();
+            }
+        }
+
+        private void loadDevicesIntoViews(JSONObject jsonObject) throws JSONException{
+            clearAllTexts();
+
+            if (jsonObject != null){
+                mDeviceName.setText(jsonObject.getString(CONFIGURATION_DEVICE_NAME));
+                mPixelsPerStrip.setText(jsonObject.getString(CONFIGURATION_PIXELS_PER_STRIP));
+                mChunkSize.setText(jsonObject.getString(CONFIGURATION_CHUNK_SIZE));
+                mMAPerPixel.setText(jsonObject.getString(CONFIGURATION_MA_PER_PIXEL));
+                mUDPPort.setText(jsonObject.getString(CONFIGURATION_UDP_STREAMING_PORT));
+                mAMPSLimit.setText(jsonObject.getString(CONFIGURATION_AMPS_LIMIT));
+
+                String warmUpColor = jsonObject.getString(CONFIGURATION_WARMUP_COLOR);
+                String warmUpRed = null;
+                String warmUpGreen = null;
+                String warmUpBlue = null;
+                int lastPos = 0;
+                for (int j = 0; j < warmUpColor.length(); j++){
+                    if(warmUpColor.charAt(j) == ','){
+                        if(warmUpRed == null){
+                            warmUpRed = warmUpColor.substring(lastPos + 1, j);
+                        } else if(warmUpGreen == null){
+                            warmUpGreen = warmUpColor.substring(lastPos, j);
+                        }
+                        lastPos = j + 1;
+                    }
+                    if(warmUpBlue == null && j == warmUpColor.length() - 1){
+                        warmUpBlue = warmUpColor.substring(lastPos, j);
+                    }
+                }
+
+                mWarmUpColorRed.setText(warmUpRed);
+                mWarmUpColorGreen.setText(warmUpGreen);
+                mWarmUpColorBlue.setText(warmUpBlue);
+            }
+        }
+
+        /**
+         * Convert the InputStream to a String.
+         */
+        private String convertStreamToString(InputStream is) throws IOException{
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+
+            String line;
+            try {
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append("\n");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return sb.toString();
         }
     }
 }

@@ -14,7 +14,6 @@ import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.CardView;
@@ -49,7 +48,6 @@ import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.DevicesGroup;
 import aquilina.ryan.homelightingapp.utils.Common;
-import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class ScanActivity extends MainActivity {
 
@@ -90,7 +88,7 @@ public class ScanActivity extends MainActivity {
         mCheckedDevicesList = new ArrayList<>();
         mDeviceAdapter = new DeviceAdapter();
         mScannedDevicesList = new ArrayList<>();
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        mPrefs = getSharedPreferences(DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         common = new Common();
 
         // set up view functionality
@@ -117,20 +115,22 @@ public class ScanActivity extends MainActivity {
 
         mDevicesMap = common.loadDevices(this);
 
-        Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_SINGLE_DEVICES, null);
-        OnlineDevices singleGroup = gson.fromJson(json, OnlineDevices.class);
+        getWifiStateAndConnect();
 
-        if(singleGroup != null){
-            if(singleGroup.getDevicesList().isEmpty()) {
-                getWifiStateAndConnect();
-            } else {
-                mScannedDevicesList = singleGroup.getDevicesList();
-                ((Application)getApplicationContext()).setScannedDevices(singleGroup);
-            }
-        } else {
-            getWifiStateAndConnect();
-        }
+//        Gson gson = new Gson();
+//        String json = mPrefs.getString(GROUP_OF_SINGLE_DEVICES, null);
+//        OnlineDevices onlineDevices = gson.fromJson(json, OnlineDevices.class);
+//
+//        if(onlineDevices != null){
+//            if(onlineDevices.getDevicesList().isEmpty()) {
+//                getWifiStateAndConnect();
+//            } else {
+//                mScannedDevicesList = onlineDevices.getDevicesList();
+//                ((Application)getApplicationContext()).setScannedDevices(onlineDevices);
+//            }
+//        } else {
+//            getWifiStateAndConnect();
+//        }
 
         mNavigationView.setCheckedItem(R.id.nav_scan);
     }
@@ -166,7 +166,6 @@ public class ScanActivity extends MainActivity {
             mSwipeRefreshLayout.setRefreshing(false);
             mScannedDevicesList.clear();
             mDeviceAdapter.notifyDataSetChanged();
-            common.showToast(getApplicationContext(), "No connections are available");
             mNoDevicesTextView.setText(getString(R.string.text_view_no_connection));
             mNoDevicesTextView.setVisibility(View.VISIBLE);
         }
@@ -187,27 +186,31 @@ public class ScanActivity extends MainActivity {
         // Get wifi IP
         String subIP = "";
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
 
-        int noOfDots = 0;
-        for(int i = 0; noOfDots < 3; i++){
-            subIP += ip.substring(i, i + 1);
-            if(ip.charAt(i) == '.'){
-                noOfDots += 1;
+        if(wm != null){
+            String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+
+            int noOfDots = 0;
+            for(int i = 0; noOfDots < 3; i++){
+                subIP += ip.substring(i, i + 1);
+                if(ip.charAt(i) == '.'){
+                    noOfDots += 1;
+                }
+            }
+
+            // Execute a queue of tasks for each possible device
+            ExecutorService executorService = Executors.newFixedThreadPool(255);
+            for( int i = 0; i <= 255; i++){
+                Runnable worker = new WorkerThread(subIP, i);
+                executorService.execute(worker);
+            }
+            executorService.shutdown();
+
+            while(!executorService.isTerminated()){
+                // Do nothing
             }
         }
 
-        // Execute a queue of tasks for each possible device
-        ExecutorService executorService = Executors.newFixedThreadPool(255);
-        for( int i = 0; i <= 255; i++){
-            Runnable worker = new WorkerThread(subIP, i);
-            executorService.execute(worker);
-        }
-        executorService.shutdown();
-
-        while(!executorService.isTerminated()){
-            // Do nothing
-        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -225,7 +228,7 @@ public class ScanActivity extends MainActivity {
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 
         Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_DEVICES_GROUPS, null);
+        String json = mPrefs.getString(GROUP_OF_DEVICES_GROUPS, null);
         if(json == null){
             allGroups = new AllGroups();
         } else {
@@ -235,15 +238,15 @@ public class ScanActivity extends MainActivity {
         DevicesGroup group = new DevicesGroup(allGroups.getGroups().size() + 1, groupName, mCheckedDevicesList);
         allGroups.addGroup(group);
         json = gson.toJson(allGroups);
-        prefsEditor.putString(Constants.GROUP_OF_DEVICES_GROUPS, json);
+        prefsEditor.putString(GROUP_OF_DEVICES_GROUPS, json);
         removeCheckedItems();
         common.showToast(getApplicationContext(), getString(R.string.toast_group_saved));
-        prefsEditor.commit();
+        prefsEditor.apply();
     }
 
     /**
      * Removes items in listview that are checked
-     * and removes items from ArrayList
+     * and removes items from checked ArrayList.
      */
     private void removeCheckedItems(){
         mCheckedDevicesList.clear();
@@ -255,7 +258,7 @@ public class ScanActivity extends MainActivity {
     /**
      * Changes the visibility of the add
      * group floating action button according to
-     * list size
+     * list size.
      */
     private void changeVisibilityOfAddGroupButton(){
         if(mCheckedDevicesList.isEmpty()){
@@ -266,9 +269,8 @@ public class ScanActivity extends MainActivity {
         }
     }
 
-    @Nullable
     private Device getDeviceConnectedToWifi(String subIP, int i){
-        int TIMEOUT_VALUE = 2000;
+        int TIMEOUT_VALUE = 2500;
 
         HttpURLConnection urlConnection;
         URL url;
@@ -330,17 +332,17 @@ public class ScanActivity extends MainActivity {
     /**
      * Saves the scanned devices locally
      */
-    private boolean saveSingleFixturesLocally(){
+    private void saveSingleFixturesLocally(){
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
         OnlineDevices singleGroup = new OnlineDevices(mScannedDevicesList);
 
         Gson gson = new Gson();
         String json = gson.toJson(singleGroup);
-        prefsEditor.putString(Constants.GROUP_OF_SINGLE_DEVICES, json);
+        prefsEditor.putString(GROUP_OF_SINGLE_DEVICES, json);
 
         // Save the list in memory
         ((Application)getApplicationContext()).setScannedDevices(singleGroup);
-        return prefsEditor.commit();
+        prefsEditor.apply();
     }
 
     private static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{

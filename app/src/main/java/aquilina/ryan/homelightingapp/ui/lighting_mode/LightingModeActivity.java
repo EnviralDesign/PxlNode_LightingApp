@@ -46,7 +46,6 @@ import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.model.OnlineDevices;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
-import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class LightingModeActivity extends MainActivity {
 
@@ -55,9 +54,8 @@ public class LightingModeActivity extends MainActivity {
     private Menu mMenu;
 
     private ArrayList<Preset> mPresets;
-    private ArrayList<Integer> mSelectedPresets;
     private ArrayList<Macro> mMacros;
-    private ArrayList<Integer> mSelectedMacros;
+    private ArrayList<Integer> mSelectedPresets, mSelectedMacros;
     private boolean isAddMacroAvailable;
 
     private PresetAdapter mAdapter;
@@ -71,7 +69,7 @@ public class LightingModeActivity extends MainActivity {
 
         // Set views.
         mRecyclerView = findViewById(R.id.presets_recycler_list);
-        mHintTextView = findViewById(R.id.text_view_hint);
+        mHintTextView = findViewById(R.id.linear_layout_hint);
         mTitleTextView.setText(R.string.lighting_mode_title);
 
         // Set view's data/design
@@ -302,12 +300,12 @@ public class LightingModeActivity extends MainActivity {
      * Save presets as macro.
      */
     public void saveMacro(String macroName){
-        SharedPreferences mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences mPrefs = getSharedPreferences(DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 
         AllMacros allMacros;
         Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
+        String json = mPrefs.getString(GROUP_OF_MACROS, null);
 
         if(json == null){
             allMacros = new AllMacros();
@@ -329,7 +327,7 @@ public class LightingModeActivity extends MainActivity {
         allMacros.addMacro(macro);
 
         json = gson.toJson(allMacros);
-        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
+        prefsEditor.putString(GROUP_OF_MACROS, json);
         prefsEditor.apply();
 
         mMacros.add(macro);
@@ -416,7 +414,7 @@ public class LightingModeActivity extends MainActivity {
                     setSelectionMode(true);
                     ((CheckBox)view.findViewById(R.id.item_checkbox)).setChecked(true);
                     String groupType = (String) (view.findViewById(R.id.preset_switch)).getTag(R.id.groupType);
-                    if(groupType.equals(Constants.MACRO)){
+                    if(groupType.equals(MACRO)){
                         mSelectedMacros.add((Integer)(view.findViewById(R.id.preset_switch)).getTag(R.id.ID));
                     } else{
                         mSelectedPresets.add((Integer)(view.findViewById(R.id.preset_switch)).getTag(R.id.ID));
@@ -458,9 +456,9 @@ public class LightingModeActivity extends MainActivity {
 
                     // Set the tags to identify the macro.
                     macroItemViewHolder.cardView.setTag(R.id.ID, macro.getId());
-                    macroItemViewHolder.cardView.setTag(R.id.groupType, Constants.MACRO);
+                    macroItemViewHolder.cardView.setTag(R.id.groupType, MACRO);
                     macroItemViewHolder.aSwitch.setTag(R.id.ID, macro.getId());
-                    macroItemViewHolder.aSwitch.setTag(R.id.groupType, Constants.MACRO);
+                    macroItemViewHolder.aSwitch.setTag(R.id.groupType, MACRO);
                     macroItemViewHolder.nameTextView.setText(macro.getName());
                     macroItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     macroItemViewHolder.groupTextView.setText(getMacroItemSubString(macro));
@@ -492,9 +490,9 @@ public class LightingModeActivity extends MainActivity {
 
                     // Set the tags to identify the preset.
                     presetItemViewHolder.cardView.setTag(R.id.ID, preset.getId());
-                    presetItemViewHolder.cardView.setTag(R.id.groupType, Constants.PRESET);
+                    presetItemViewHolder.cardView.setTag(R.id.groupType, PRESET);
                     presetItemViewHolder.aSwitch.setTag(R.id.ID, preset.getId());
-                    presetItemViewHolder.aSwitch.setTag(R.id.groupType, Constants.PRESET);
+                    presetItemViewHolder.aSwitch.setTag(R.id.groupType, PRESET);
                     presetItemViewHolder.nameTextView.setText(preset.getPresetName());
                     presetItemViewHolder.nameTextView.setTypeface(mTextTypeFace);
                     String name = preset.getDevicesGroup().getName();
@@ -598,7 +596,7 @@ public class LightingModeActivity extends MainActivity {
          * @param groupType is the type of group either Macro or Preset
          */
         private void switchOnDevices(int id, String groupType){
-            if(groupType.equals(Constants.PRESET)){
+            if(groupType.equals(PRESET)){
                 Preset presetClicked = null;
                 for(Preset preset : mPresets){
                     if (preset.getId() == id){
@@ -738,7 +736,7 @@ public class LightingModeActivity extends MainActivity {
                 CheckBox cb = view.findViewById(R.id.item_checkbox);
                 if(cb.isChecked()){
                     cb.setChecked(false);
-                    if((view.getTag(R.id.groupType)).equals(Constants.PRESET)){
+                    if((view.getTag(R.id.groupType)).equals(PRESET)){
                         for(int i = 0; i < mSelectedPresets.size(); i++){
                             if(mSelectedPresets.get(i) == ((int) view.getTag(R.id.ID))){
                                 mSelectedPresets.remove(i);
@@ -755,7 +753,7 @@ public class LightingModeActivity extends MainActivity {
                 else{
                     cb.setChecked(true);
                     String type = (String)view.getTag(R.id.groupType);
-                    if(type.equals(Constants.MACRO)){
+                    if(type.equals(MACRO)){
                         mSelectedMacros.add((int) view.getTag(R.id.ID));
                     }
                     else{

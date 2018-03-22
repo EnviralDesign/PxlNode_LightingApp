@@ -44,7 +44,7 @@ import aquilina.ryan.homelightingapp.ui.lighting_mode.LightingModeActivity;
 import aquilina.ryan.homelightingapp.ui.scan_mode.ScanActivity;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Constants {
 
     protected DrawerLayout fullLayout;
     protected FrameLayout actContent;
@@ -58,8 +58,6 @@ public class MainActivity extends AppCompatActivity {
     protected ActionBarDrawerToggle mToggle;
     protected Toolbar mToolbar;
     protected DrawerLayout mDrawer;
-
-    private String state;
 
     @Override
     public void setContentView(@LayoutRes int layoutResID) {
@@ -193,24 +191,24 @@ public class MainActivity extends AppCompatActivity {
      * Loads the configuration variables if found.
      */
     private Bundle loadDesignConfigurationVariables(){
-        SharedPreferences Prefs = getSharedPreferences(Constants.DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
-        String json = Prefs.getString(Constants.DESIGN_CONFIGURATION, null);
+        SharedPreferences Prefs = getSharedPreferences(DESIGN_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        String json = Prefs.getString(DESIGN_CONFIGURATION, null);
 
         Gson gson = new Gson();
         DesignConfiguration designConfiguration = gson.fromJson(json, DesignConfiguration.class);
 
         if(designConfiguration != null){
             Bundle bundle = new Bundle();
-            bundle.putInt(Constants.DESIGN_START_COLOR, designConfiguration.getStartColor());
-            bundle.putInt(Constants.DESIGN_STOP_COLOR, designConfiguration.getEndColor());
-            bundle.putInt(Constants.DESIGN_CENTER_COLOR, designConfiguration.getCentreCircleColor());
-            bundle.putInt(Constants.DESIGN_REPETITION, designConfiguration.getRepetitions());
-            bundle.putInt(Constants.DESIGN_DURATION, designConfiguration.getDuration());
-            bundle.putString(Constants.DESIGN_CURRENT_EFFECT, designConfiguration.getEffect());
-            bundle.putString(Constants.DESIGN_CURRENT_COMMAND, designConfiguration.getCommand());
-            bundle.putInt(Constants.DESIGN_CURRENT_SPINNER_POSITION, designConfiguration.getSpinnerPosition());
-            bundle.putStringArrayList(Constants.DESIGN_SELECTED_DEVICES, designConfiguration.getSelectedDevicesIP());
-            bundle.putBoolean(Constants.DESIGN_START_CIRCLE_STATE, designConfiguration.isStartCircleState());
+            bundle.putInt(DESIGN_START_COLOR, designConfiguration.getStartColor());
+            bundle.putInt(DESIGN_STOP_COLOR, designConfiguration.getEndColor());
+            bundle.putInt(DESIGN_CENTER_COLOR, designConfiguration.getCentreCircleColor());
+            bundle.putInt(DESIGN_REPETITION, designConfiguration.getRepetitions());
+            bundle.putInt(DESIGN_DURATION, designConfiguration.getDuration());
+            bundle.putString(DESIGN_CURRENT_EFFECT, designConfiguration.getEffect());
+            bundle.putString(DESIGN_CURRENT_COMMAND, designConfiguration.getCommand());
+            bundle.putInt(DESIGN_CURRENT_SPINNER_POSITION, designConfiguration.getSpinnerPosition());
+            bundle.putStringArrayList(DESIGN_SELECTED_DEVICES, designConfiguration.getSelectedDevicesIP());
+            bundle.putBoolean(DESIGN_START_CIRCLE_STATE, designConfiguration.isStartCircleState());
 
             return bundle;
         }

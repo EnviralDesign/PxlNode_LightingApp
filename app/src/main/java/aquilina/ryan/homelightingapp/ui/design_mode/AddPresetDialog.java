@@ -79,7 +79,7 @@ public class AddPresetDialog extends DialogFragment{
      */
     private boolean isValidText(String text){
         text = text.trim();
-        if(text == null || text.equals("")){
+        if(text.equals("")){
             return false;
         }
 

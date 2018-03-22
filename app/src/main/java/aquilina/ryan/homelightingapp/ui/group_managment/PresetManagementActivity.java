@@ -38,7 +38,6 @@ import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.model.Preset;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
 import aquilina.ryan.homelightingapp.utils.Common;
-import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class PresetManagementActivity extends MainActivity {
 
@@ -60,7 +59,7 @@ public class PresetManagementActivity extends MainActivity {
 
         // Set views
         mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
-        mHintTextView = findViewById(R.id.text_view_hint);
+        mHintTextView = findViewById(R.id.linear_layout_hint);
         mSaveButton = findViewById(R.id.save_macro_button);
         mTitleTextView.setText(R.string.presets_title);
 
@@ -177,8 +176,8 @@ public class PresetManagementActivity extends MainActivity {
      */
     private ArrayList<Preset> loadPresets(){
         Gson gson = new Gson();
-        mPrefs = getSharedPreferences(Constants.PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
-        String json = mPrefs.getString(Constants.GROUP_OF_PRESETS, null);
+        mPrefs = getSharedPreferences(PRESETS_SHARED_PREFERENCES, MODE_PRIVATE);
+        String json = mPrefs.getString(GROUP_OF_PRESETS, null);
         AllPresets allPresets = gson.fromJson(json, AllPresets.class);
 
         if(allPresets != null){
@@ -194,12 +193,12 @@ public class PresetManagementActivity extends MainActivity {
      * Save presets as macro.
      */
     public void saveMacro(String macroName){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        mPrefs = getSharedPreferences(DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 
         AllMacros allMacros;
         Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
+        String json = mPrefs.getString(GROUP_OF_MACROS, null);
 
         if(json == null){
             allMacros = new AllMacros();
@@ -221,7 +220,7 @@ public class PresetManagementActivity extends MainActivity {
         allMacros.addMacro(macro);
 
         json = gson.toJson(allMacros);
-        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
+        prefsEditor.putString(GROUP_OF_MACROS, json);
         prefsEditor.apply();
         mAdapter.setDeleteMode(false);
         mAdapter.notifyDataSetChanged();

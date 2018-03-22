@@ -98,4 +98,19 @@
     <string name="configuration_label_amps_limit">Amps Limit</string>
     <string name="configuration_label_warm_up_color">Warm Up Color</string>
     <string name="configuration_button_update_device">Update Device</string>
+    <string name="configuration_no_network_hint">Wifi connection unavailable</string>
+
+    <!--Duration labels and values array -->
+    <!--The format is [label] = [value], you can add,
+        remove and change any of these values-->
+    <string-array name="duration_values">
+        <item>1/30 = 2</item>
+        <item>1/15 = 4</item>
+        <item>1/10 = 6</item>
+        <item>1/6 = 10</item>
+        <item>1/5 = 12</item>
+        <item>1/4 = 15</item>
+        <item>1/3 = 20</item>
+        <item>1/2 = 30</item>
+    </string-array>
 </resources>

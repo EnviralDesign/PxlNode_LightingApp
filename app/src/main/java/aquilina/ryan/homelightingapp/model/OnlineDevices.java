@@ -9,6 +9,7 @@
 package aquilina.ryan.homelightingapp.model;
 
 import java.io.Serializable;
+import java.security.BasicPermission;
 import java.util.ArrayList;
 
 public class OnlineDevices implements Serializable{
@@ -24,6 +25,20 @@ public class OnlineDevices implements Serializable{
 
     public void setDevicesList(ArrayList<Device> devicesList) {
         this.devicesList = devicesList;
+    }
+
+    public void addDevice(Device newDevice){
+        Boolean isFound = false;
+        for(Device device: devicesList){
+            if(device.getIpAddress().equals(newDevice.getIpAddress())){
+                device = newDevice;
+                isFound = true;
+                break;
+            }
+        }
+        if(!isFound){
+            devicesList.add(newDevice);
+        }
     }
 
     public Device getDeviceByIP(String ip){

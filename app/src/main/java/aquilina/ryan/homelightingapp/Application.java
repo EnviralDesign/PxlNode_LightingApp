@@ -14,6 +14,7 @@ import android.content.res.Configuration;
 
 import aquilina.ryan.homelightingapp.model.Device;
 import aquilina.ryan.homelightingapp.model.OnlineDevices;
+import aquilina.ryan.homelightingapp.utils.Common;
 import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class Application extends android.app.Application {
@@ -41,6 +42,7 @@ public class Application extends android.app.Application {
             Prefs.getAll().clear();
             Prefs.edit().putBoolean("firstrun", false).apply();
         }
+
     }
 
     public void setScannedDevices(OnlineDevices mOnlineDevices) {

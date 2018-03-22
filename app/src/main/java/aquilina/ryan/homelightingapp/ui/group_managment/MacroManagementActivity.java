@@ -31,7 +31,6 @@ import aquilina.ryan.homelightingapp.R;
 import aquilina.ryan.homelightingapp.model.AllMacros;
 import aquilina.ryan.homelightingapp.model.Macro;
 import aquilina.ryan.homelightingapp.ui.main_activity.MainActivity;
-import aquilina.ryan.homelightingapp.utils.Constants;
 
 public class MacroManagementActivity extends MainActivity{
 
@@ -50,7 +49,7 @@ public class MacroManagementActivity extends MainActivity{
 
         // Set views
         mGroupsRecyclerView = findViewById(R.id.groups_recycler_list);
-        mHintTextView = findViewById(R.id.text_view_hint);
+        mHintTextView = findViewById(R.id.linear_layout_hint);
         mTitleTextView.setText(R.string.macros_title);
 
         // Set view's data
@@ -144,7 +143,7 @@ public class MacroManagementActivity extends MainActivity{
      * Once the checked macros are deleted, save the changes.
      */
     private void saveMacros(ArrayList<Macro> macros){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        mPrefs = getSharedPreferences(DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor prefsEditor = mPrefs.edit();
 
         AllMacros allMacros = new AllMacros();
@@ -153,7 +152,7 @@ public class MacroManagementActivity extends MainActivity{
         allMacros.setMacros(macros);
 
         String json = gson.toJson(allMacros);
-        prefsEditor.putString(Constants.GROUP_OF_MACROS, json);
+        prefsEditor.putString(GROUP_OF_MACROS, json);
         prefsEditor.apply();
         mMacros = macros;
         mAdapter.notifyDataSetChanged();
@@ -176,10 +175,10 @@ public class MacroManagementActivity extends MainActivity{
      * Load macros from SharedPreferences.
      */
     private ArrayList<Macro> loadMacros(){
-        mPrefs = getSharedPreferences(Constants.DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
+        mPrefs = getSharedPreferences(DEVICES_SHARED_PREFERENCES, MODE_PRIVATE);
 
         Gson gson = new Gson();
-        String json = mPrefs.getString(Constants.GROUP_OF_MACROS, null);
+        String json = mPrefs.getString(GROUP_OF_MACROS, null);
 
         if(json == null){
             return new ArrayList<>();
