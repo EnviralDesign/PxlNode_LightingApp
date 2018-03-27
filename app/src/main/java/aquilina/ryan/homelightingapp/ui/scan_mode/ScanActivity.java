@@ -27,6 +27,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -61,7 +62,7 @@ public class ScanActivity extends MainActivity {
     private DeviceAdapter mDeviceAdapter;
 
     private FloatingActionButton mAddToGroupButton;
-    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private ProgressBar mProgressBar;
     private TextView mNoDevicesTextView;
 
     private SharedPreferences mPrefs;
@@ -79,7 +80,8 @@ public class ScanActivity extends MainActivity {
         mDevicesListView.setLayoutManager(mLayoutManager);
         mAddToGroupButton =  findViewById(R.id.add_to_group_fab);
         mAddToGroupButton.setVisibility(View.INVISIBLE);
-        mSwipeRefreshLayout = findViewById(R.id.swiperefresh);
+//        mSwipeRefreshLayout = findViewById(R.id.swiperefresh);
+        mProgressBar = findViewById(R.id.progressBar);
         mNoDevicesTextView = findViewById(R.id.no_devices_found);
         mTitleTextView.setText(R.string.scan_mode_title);
 
@@ -93,12 +95,12 @@ public class ScanActivity extends MainActivity {
 
         // set up view functionality
         mDevicesListView.setAdapter(mDeviceAdapter);
-        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                getWifiStateAndConnect();
-            }
-        });
+//        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+//            @Override
+//            public void onRefresh() {
+//                getWifiStateAndConnect();
+//            }
+//        });
         mAddToGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -115,22 +117,20 @@ public class ScanActivity extends MainActivity {
 
         mDevicesMap = common.loadDevices(this);
 
-        getWifiStateAndConnect();
+        Gson gson = new Gson();
+        String json = mPrefs.getString(GROUP_OF_SINGLE_DEVICES, null);
+        OnlineDevices onlineDevices = gson.fromJson(json, OnlineDevices.class);
 
-//        Gson gson = new Gson();
-//        String json = mPrefs.getString(GROUP_OF_SINGLE_DEVICES, null);
-//        OnlineDevices onlineDevices = gson.fromJson(json, OnlineDevices.class);
-//
-//        if(onlineDevices != null){
-//            if(onlineDevices.getDevicesList().isEmpty()) {
-//                getWifiStateAndConnect();
-//            } else {
-//                mScannedDevicesList = onlineDevices.getDevicesList();
-//                ((Application)getApplicationContext()).setScannedDevices(onlineDevices);
-//            }
-//        } else {
-//            getWifiStateAndConnect();
-//        }
+        if(onlineDevices != null){
+            if(onlineDevices.getDevicesList().isEmpty()) {
+                getWifiStateAndConnect();
+            } else {
+                mScannedDevicesList = onlineDevices.getDevicesList();
+                ((Application)getApplicationContext()).setScannedDevices(onlineDevices);
+            }
+        } else {
+            getWifiStateAndConnect();
+        }
 
         mNavigationView.setCheckedItem(R.id.nav_scan);
     }
@@ -163,7 +163,8 @@ public class ScanActivity extends MainActivity {
         if(wm.isWifiEnabled()){
             new ScanForDevices().execute();
         } else {
-            mSwipeRefreshLayout.setRefreshing(false);
+            mProgressBar.setVisibility(View.INVISIBLE);
+//            mSwipeRefreshLayout.setRefreshing(false);
             mScannedDevicesList.clear();
             mDeviceAdapter.notifyDataSetChanged();
             mNoDevicesTextView.setText(getString(R.string.text_view_no_connection));
@@ -214,7 +215,8 @@ public class ScanActivity extends MainActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mSwipeRefreshLayout.setRefreshing(false);
+//                mSwipeRefreshLayout.setRefreshing(false);
+                mProgressBar.setVisibility(View.INVISIBLE);
                 saveSingleFixturesLocally();
             }
         });
@@ -440,7 +442,7 @@ public class ScanActivity extends MainActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            mSwipeRefreshLayout.setRefreshing(true);
+            mProgressBar.setVisibility(View.VISIBLE);
             mScannedDevicesList.clear();
             mDevicesMap = common.loadDevices(getApplicationContext());
         }

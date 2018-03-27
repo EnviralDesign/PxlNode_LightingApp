@@ -14,12 +14,23 @@
         android:layout_height="match_parent"
         android:background="@color/colorSecondaryDark">
 
+    <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:indeterminateOnly="false"
+            android:layout_marginTop="-8dp"
+            android:indeterminateTint="@color/colorAccent"
+            android:indeterminateTintMode="src_in"
+            android:visibility="invisible"
+            style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"/>
+
     <ScrollView
             android:id="@+id/main_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone">
-
+            android:layout_height="match_parent">
+            <!--android:visibility="gone">-->
 
         <RelativeLayout
                 android:layout_width="match_parent"
@@ -176,76 +187,17 @@
                         app:met_minBottomTextLines="1"
                         android:layout_weight="1"/>
 
-                <LinearLayout
+                <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
+                        android:layout_height="match_parent"
                         android:layout_margin="@dimen/activity_horizontal_margin"
                         android:layout_weight="1">
 
-                    <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/configuration_label_warm_up_color"
-                            android:textColor="@color/colorPrimaryText"
-                            android:textSize="12sp"
-                            android:layout_weight="1"/>
-
-                    <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="horizontal"
-                            android:weightSum="3">
-
-                        <com.rengwuxian.materialedittext.MaterialEditText
-                                android:id="@+id/warm_up_red_edit_text"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:paddingTop="-5dp"
-                                android:inputType="number"
-                                android:layout_marginEnd="4dp"
-                                android:hint="0"
-                                app:met_baseColor="@color/colorPrimaryText"
-                                app:met_primaryColor="@color/colorAccent"
-                                app:met_errorColor="@color/colorError"
-                                app:met_minBottomTextLines="1"
-                                app:met_floatingLabel="none"
-                                android:layout_weight="1"/>
-
-                        <com.rengwuxian.materialedittext.MaterialEditText
-                                android:id="@+id/warm_up_green_edit_text"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:paddingTop="-5dp"
-                                android:inputType="number"
-                                android:layout_marginStart="4dp"
-                                android:layout_marginEnd="4dp"
-                                android:hint="0"
-                                app:met_baseColor="@color/colorPrimaryText"
-                                app:met_primaryColor="@color/colorAccent"
-                                app:met_errorColor="@color/colorError"
-                                app:met_minBottomTextLines="1"
-                                app:met_floatingLabel="none"
-                                android:layout_weight="1"/>
-
-                        <com.rengwuxian.materialedittext.MaterialEditText
-                                android:id="@+id/warm_up_blue_edit_text"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:paddingTop="-5dp"
-                                android:inputType="number"
-                                android:layout_marginStart="4dp"
-                                android:layout_marginEnd="4dp"
-                                android:hint="0"
-                                app:met_baseColor="@color/colorPrimaryText"
-                                app:met_primaryColor="@color/colorAccent"
-                                app:met_errorColor="@color/colorError"
-                                app:met_minBottomTextLines="1"
-                                app:met_floatingLabel="none"
-                                android:layout_weight="1"/>
-                    </LinearLayout>
-                </LinearLayout>
+                    <aquilina.ryan.homelightingapp.ui.configuration_mode.ColorBox
+                            android:id="@+id/colorBox"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"/>
+                </RelativeLayout>
             </LinearLayout>
 
             <android.support.v7.widget.AppCompatButton

@@ -8,6 +8,7 @@
 
 package aquilina.ryan.homelightingapp.ui.lighting_mode;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -91,6 +92,12 @@ public class AddMacroDialog extends DialogFragment {
      * Saves the preset locally
      */
     private void saveMacro(){
-        ((LightingModeActivity) getActivity()).saveMacro(mMacroName);
+        Activity activity = getActivity();
+        if( activity instanceof LightingModeActivity){
+            ((LightingModeActivity) activity).saveMacro(mMacroName);
+        } else if(activity instanceof PresetManagementActivity){
+            ((PresetManagementActivity)activity).saveMacro(mMacroName);
+        }
+
     }
 }

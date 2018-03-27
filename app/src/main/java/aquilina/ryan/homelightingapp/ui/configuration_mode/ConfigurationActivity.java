@@ -9,6 +9,7 @@
 package aquilina.ryan.homelightingapp.ui.configuration_mode;
 
 import android.database.DataSetObserver;
+import android.graphics.Color;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,10 +23,13 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
+import com.pes.androidmaterialcolorpickerdialog.ColorPicker;
+import com.pes.androidmaterialcolorpickerdialog.ColorPickerCallback;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
 import org.json.JSONArray;
@@ -58,13 +62,17 @@ public class ConfigurationActivity extends MainActivity {
     public ArrayList<Device> mOnlineDevicesList = new ArrayList<>();
     private OnlineDevices mOnlineDevices;
     private Common common = new Common();
+    private String mWarmUpColorRed,mWarmUpColorGreen,mWarmUpColorBlue;
 
     private MaterialSpinner mSpinner;
     private MaterialEditText mDeviceName, mPixelsPerStrip, mChunkSize, mMAPerPixel, mUDPPort,
-            mAMPSLimit,mWarmUpColorRed, mWarmUpColorGreen, mWarmUpColorBlue;
+            mAMPSLimit;
 
     private ScrollView mMainLayout;
     private LinearLayout mHintLinearLayout;
+    private ProgressBar mProgressBar;
+    private ColorBox mColorBox;
+    private ColorPicker mColorPicker;
 
     private TextWatcher mDeviceNameWatcher = new TextWatcher() {
         Pattern pattern = Pattern.compile("[a-zA-Z0-9_\\-]*");
@@ -244,96 +252,6 @@ public class ConfigurationActivity extends MainActivity {
         }
     };
 
-    private TextWatcher mWarmUpColorBlueWatcher = new TextWatcher() {
-        Pattern pattern = Pattern.compile("[0-9]*");
-        Matcher patternMatcher;
-
-        @Override
-        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable editable) {
-            mWarmUpColorBlue.setError(null);
-            patternMatcher = pattern.matcher(editable.toString());
-
-            if (!editable.toString().equals("")) {
-                Integer warmUpColor = Integer.valueOf(editable.toString());
-                if (!patternMatcher.matches()) {
-                    mWarmUpColorBlue.setError(getString(R.string.configuration_error_special_characters));
-                } else if (warmUpColor > 255 || warmUpColor < 0) {
-                    mWarmUpColorBlue.setError("");
-                }
-            }
-        }
-    };
-
-    private TextWatcher mWarmUpColorGreenWatcher = new TextWatcher() {
-        Pattern pattern = Pattern.compile("[0-9]*");
-        Matcher patternMatcher;
-
-        @Override
-        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable editable) {
-            mWarmUpColorGreen.setError(null);
-            patternMatcher = pattern.matcher(editable.toString());
-
-            if (!editable.toString().equals("")) {
-                Integer warmUpColor = Integer.valueOf(editable.toString());
-                if (!patternMatcher.matches()) {
-                    mWarmUpColorGreen.setError(getString(R.string.configuration_error_special_characters));
-                } else if (warmUpColor > 255 || warmUpColor < 0) {
-                    mWarmUpColorGreen.setError("");
-                }
-            }
-        }
-    };
-
-    private TextWatcher mWarmUpColorRedWatcher = new TextWatcher() {
-        Pattern pattern = Pattern.compile("[0-9]*");
-        Matcher patternMatcher;
-
-        @Override
-        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable editable) {
-            mWarmUpColorRed.setError(null);
-            patternMatcher = pattern.matcher(editable.toString());
-
-            if (!editable.toString().equals("")) {
-                Integer warmUpColor = Integer.valueOf(editable.toString());
-                if (!patternMatcher.matches()) {
-                    mWarmUpColorRed.setError(getString(R.string.configuration_error_special_characters));
-                } else if (warmUpColor > 255 || warmUpColor < 0) {
-                    mWarmUpColorRed.setError("");
-                }
-            }
-        }
-    };
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -351,11 +269,10 @@ public class ConfigurationActivity extends MainActivity {
         mMAPerPixel = findViewById(R.id.ma_per_strip);
         mUDPPort = findViewById(R.id.udp_port_edit_text);
         mAMPSLimit = findViewById(R.id.amps_limit_edit_text);
-        mWarmUpColorRed = findViewById(R.id.warm_up_red_edit_text);
-        mWarmUpColorGreen = findViewById(R.id.warm_up_green_edit_text);
-        mWarmUpColorBlue = findViewById(R.id.warm_up_blue_edit_text);
         mMainLayout = findViewById(R.id.main_layout);
         mHintLinearLayout = findViewById(R.id.linear_layout_hint);
+        mProgressBar = findViewById(R.id.progressBar);
+        mColorBox = findViewById(R.id.colorBox);
         Button mUpdateDeviceButton = findViewById(R.id.update_device_button);
 
         // Set views functionality.
@@ -365,10 +282,24 @@ public class ConfigurationActivity extends MainActivity {
         mMAPerPixel.addTextChangedListener(mMAPerPixelWatcher);
         mUDPPort.addTextChangedListener(mUDPPortWatcher);
         mAMPSLimit.addTextChangedListener(mAmpsLimitWatcher);
-        mWarmUpColorBlue.addTextChangedListener(mWarmUpColorBlueWatcher);
-        mWarmUpColorGreen.addTextChangedListener(mWarmUpColorGreenWatcher);
-        mWarmUpColorRed.addTextChangedListener(mWarmUpColorRedWatcher);
 
+        mColorBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mColorPicker.show();
+
+                mColorPicker.setCallback(new ColorPickerCallback() {
+                    @Override
+                    public void onColorChosen(int color) {
+                        mWarmUpColorRed = String.valueOf(Color.red(color));
+                        mWarmUpColorGreen = String.valueOf(Color.green(color));
+                        mWarmUpColorBlue = String.valueOf(Color.blue(color));
+                        mColorBox.setBoxColor(color);
+                        mColorPicker.dismiss();
+                    }
+                });
+            }
+        });
         mUpdateDeviceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -377,6 +308,7 @@ public class ConfigurationActivity extends MainActivity {
         });
 
         // Load data.
+        mColorPicker = new ColorPicker(this,0, 0, 0);
         mOnlineDevices = ((Application)getApplicationContext()).getScannedDevices();
         if(mOnlineDevices != null) {
             mOnlineDevicesList = mOnlineDevices.getDevicesList();
@@ -414,9 +346,6 @@ public class ConfigurationActivity extends MainActivity {
         mMAPerPixel.setText("");
         mUDPPort.setText("");
         mAMPSLimit.setText("");
-        mWarmUpColorRed.setText("");
-        mWarmUpColorGreen.setText("");
-        mWarmUpColorBlue.setText("");
     }
 
     /**
@@ -472,6 +401,7 @@ public class ConfigurationActivity extends MainActivity {
             } catch (JSONException e){
                 e.printStackTrace();
                 common.showToast(getApplicationContext(), "Error producing JSON Object");
+                turnOffUI();
             }
         } else {
             common.showToast(getApplicationContext(), "Invalid input");
@@ -492,9 +422,9 @@ public class ConfigurationActivity extends MainActivity {
         jsonMessage.put(CONFIGURATION_AMPS_LIMIT, mAMPSLimit.getText().toString());
         jsonMessage.put(CONFIGURATION_WARMUP_COLOR, new JSONArray(
                 new String[]{
-                        mWarmUpColorRed.getText().toString(),
-                        mWarmUpColorGreen.getText().toString(),
-                        mWarmUpColorBlue.getText().toString()
+                        mWarmUpColorRed,
+                        mWarmUpColorGreen,
+                        mWarmUpColorBlue
                 }
         ));
         return jsonMessage;
@@ -506,14 +436,21 @@ public class ConfigurationActivity extends MainActivity {
      */
     private void checkIfOnlineDevicesIsNotEmpty(){
         if(mOnlineDevicesList.isEmpty()){
-            mMainLayout.setVisibility(View.GONE);
-            mHintLinearLayout.setVisibility(View.VISIBLE);
+           turnOffUI();
         } else {
-            mHintLinearLayout.setVisibility(View.GONE);
-            mMainLayout.setVisibility(View.VISIBLE);
+            turnOnUI();
         }
     }
 
+    private void turnOffUI(){
+        mMainLayout.setVisibility(View.GONE);
+        mHintLinearLayout.setVisibility(View.VISIBLE);
+    }
+
+    private void turnOnUI(){
+        mHintLinearLayout.setVisibility(View.GONE);
+        mMainLayout.setVisibility(View.VISIBLE);
+    }
     /**
      * Check wifi connection if not
      * update UI.
@@ -540,23 +477,11 @@ public class ConfigurationActivity extends MainActivity {
         device.setUdpStreamingPort(mUDPPort.getText().toString().equals("") ? -1 : Integer.valueOf(mUDPPort.getText().toString()));
         device.setMaPerPixel(mMAPerPixel.getText().toString().equals("") ? -1 : Short.decode(mMAPerPixel.getText().toString()));
         device.setAmpsLimit(mAMPSLimit.getText().toString().equals("") ? -1f :Float.parseFloat(mAMPSLimit.getText().toString()));
-
-        Boolean isValidColor = true;
-
-        if(mWarmUpColorRed.getText().toString().equals("")){
-            isValidColor = false;
-        } else if(mWarmUpColorGreen.getText().toString().equals("")){
-            isValidColor = false;
-        }else if(mWarmUpColorBlue.getText().toString().equals("")){
-            isValidColor = false;
-        }
-        if(isValidColor){
-            device.setWarmUpColor(mWarmUpColorRed.getText().toString()
-                            + " "
-                            + mWarmUpColorGreen.getText().toString()
-                            + " "
-                            + mWarmUpColorBlue.getText().toString());
-        }
+        device.setWarmUpColor(mWarmUpColorRed
+                + " "
+                + mWarmUpColorGreen
+                + " "
+                + mWarmUpColorBlue);
 
         mOnlineDevices.setDeviceByIP(device.getIpAddress(), device);
         ((Application)getApplication()).setScannedDevices(mOnlineDevices);
@@ -571,6 +496,11 @@ public class ConfigurationActivity extends MainActivity {
         // Let Java garbage collector collect the last adapter.
         mSpinner.setAdapter(new CustomSpinnerAdapter());
         checkIfOnlineDevicesIsNotEmpty();
+    }
+
+    private void refreshColorPicker(int red, int green, int blue){
+        mColorPicker = new ColorPicker(this, red, green, blue);
+        mColorBox.setBoxColor(Color.rgb(red, green, blue));
     }
 
     /**
@@ -702,6 +632,14 @@ public class ConfigurationActivity extends MainActivity {
     private class GetDeviceInfoTask extends AsyncTask<String, Void, JSONObject> {
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mProgressBar.setVisibility(View.VISIBLE);
+            mMainLayout.setAlpha(0.5f);
+            disableEnableControls(false, mMainLayout);
+        }
+
+        @Override
         protected JSONObject doInBackground(String... strings) {
             HttpURLConnection urlConnection;
             URL url;
@@ -726,8 +664,25 @@ public class ConfigurationActivity extends MainActivity {
             super.onPostExecute(jsonObject);
             try{
                 loadDevicesIntoViews(jsonObject);
+                mProgressBar.setVisibility(View.INVISIBLE);
+                mMainLayout.setAlpha(1f);
+                disableEnableControls(true, mMainLayout);
             } catch (JSONException e){
                 e.printStackTrace();
+                common.showToast(getApplicationContext(), "Error connecting to device, rescan for online devices");
+                mProgressBar.setVisibility(View.INVISIBLE);
+                turnOffUI();
+
+            }
+        }
+
+        private void disableEnableControls(boolean enable, ViewGroup vg){
+            for (int i = 0; i < vg.getChildCount(); i++){
+                View child = vg.getChildAt(i);
+                child.setEnabled(enable);
+                if (child instanceof ViewGroup){
+                    disableEnableControls(enable, (ViewGroup)child);
+                }
             }
         }
 
@@ -741,7 +696,6 @@ public class ConfigurationActivity extends MainActivity {
                 mMAPerPixel.setText(jsonObject.getString(CONFIGURATION_MA_PER_PIXEL));
                 mUDPPort.setText(jsonObject.getString(CONFIGURATION_UDP_STREAMING_PORT));
                 mAMPSLimit.setText(jsonObject.getString(CONFIGURATION_AMPS_LIMIT));
-
                 String warmUpColor = jsonObject.getString(CONFIGURATION_WARMUP_COLOR);
                 String warmUpRed = null;
                 String warmUpGreen = null;
@@ -760,10 +714,12 @@ public class ConfigurationActivity extends MainActivity {
                         warmUpBlue = warmUpColor.substring(lastPos, j);
                     }
                 }
-
-                mWarmUpColorRed.setText(warmUpRed);
-                mWarmUpColorGreen.setText(warmUpGreen);
-                mWarmUpColorBlue.setText(warmUpBlue);
+                refreshColorPicker(Integer.parseInt(warmUpRed), Integer.parseInt(warmUpGreen), Integer.parseInt(warmUpBlue));
+                mWarmUpColorRed = warmUpRed;
+                mWarmUpColorGreen = warmUpGreen;
+                mWarmUpColorBlue = warmUpBlue;
+            } else {
+                throw new JSONException("null");
             }
         }
 

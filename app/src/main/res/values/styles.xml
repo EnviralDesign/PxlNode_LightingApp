@@ -39,10 +39,14 @@
         <item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
     </style>
 
+    <!--Navigation Drawer Style-->
     <style name="NavigationDrawerTheme">
         <item name="android:textColorSecondary">@color/colorSecondaryText</item>
         <item name="android:listDivider">@color/colorSecondaryText</item>
         <item name="android:fontFamily">@font/titilliumweb_regular</item>
     </style>
 
+    <style name="ProgressBar.Horizontal" parent="@android:style/Widget.Holo.ProgressBar.Horizontal">
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
 </resources>
