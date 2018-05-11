@@ -4,19 +4,40 @@
     <group android:checkableBehavior="single">
         <item
                 android:id="@+id/nav_scan"
-                android:icon="@drawable/ic_wifi_tethering_white_36dp"
+                android:icon="@drawable/scan_icon"
                 android:title="@string/nav_scan_mode_name"/>
         <item
                 android:id="@+id/nav_design"
-                android:icon="@drawable/ic_color_lens_white_36dp"
+                android:icon="@drawable/design_look_icon"
                 android:title="@string/nav_design_mode_name"/>
         <item
-                android:id="@+id/nav_group_management"
-                android:icon="@drawable/ic_group_work_white_24dp"
-                android:title="@string/nav_group_management_name"/>
+            android:id="@+id/nav_lighting_mode"
+            android:icon="@drawable/lighting_icon"
+            android:title="@string/nav_light_mode_name"/>
+
         <item
-                android:id="@+id/nav_lighting_mode"
-                android:icon="@drawable/ic_lightbulb_outline_white_36dp"
-                android:title="@string/nav_light_mode_name"/>
+                android:id="@+id/nav_configuration"
+                android:icon="@drawable/configuration_icon"
+                android:title="@string/nav_configuration_name"/>
     </group>
+
+    <group  android:id="@+id/group_managment"
+            android:checkableBehavior="single">
+        <item
+                android:id="@+id/nav_group_node_groups"
+                android:icon="@drawable/group_icon"
+                android:title="@string/nav_group_management_node_groups" />
+        <item
+                android:id="@+id/nav_group_presets"
+                android:icon="@drawable/preset_icon"
+                android:title="@string/nav_group_management_presets" />
+        <item
+                android:id="@+id/nav_group_macros"
+                android:icon="@drawable/macro_icon"
+                android:title="@string/nav_group_management_macros" />
+    </group>
+
+    <item
+            android:id="@+id/nav_about"
+            android:title="@string/nav_bottom_about" />
 </menu>

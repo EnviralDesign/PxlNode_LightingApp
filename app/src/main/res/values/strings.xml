@@ -6,41 +6,118 @@
     <string name="ttf_header" translatable="false">Raleway-Bold.tff</string>
     <string name="ttf_sub_text" translatable="false">Raleway-ThinItalic.tff</string>
 
+    <!--Common Strings-->
+    <string name="progress_dialogue_message">Loading &#8230;</string>
+
     <!--Drawer Strings-->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_scan_mode_name">Scan For Devices</string>
     <string name="nav_design_mode_name">Look Design</string>
     <string name="nav_light_mode_name">Lighting Mode</string>
-    <string name="nav_group_management_name">Group Management</string>
+    <string name="nav_configuration_name">Configuration</string>
+    <string name="nav_group_management_name">GROUP MANAGEMENT</string>
+    <string name="nav_group_management_node_groups">Groups</string>
+    <string name="nav_group_management_presets">Presets</string>
+    <string name="nav_group_management_macros">Macros</string>
+    <string name="nav_bottom_about">About</string>
 
     <!--Toolbar Strings-->
     <string name="action_refresh">Refresh</string>
     <string name="action_add_group">Add to Group</string>
+    <string name="action_add_macro">Add Macro</string>
+    <string name="action_delete">Delete</string>
 
     <!--Scan Mode Strings-->
+    <string name="scan_mode_title">Scan Mode</string>
     <string name="dialog_save_group">Save Group</string>
     <string name="dialog_edit_text_hint">Enter group name</string>
-    <string name="dialog_save_button">SAVE</string>
-    <string name="dialog_cancel_button">CANCEL</string>
-    <string name="device_name">device name</string>
+    <string name="dialog_save_button">Save</string>
+    <string name="dialog_cancel_button">Cancel</string>
+    <string name="device_name">deviceHashMap name</string>
     <string name="device_ip_address">ip address</string>
     <string name="toast_group_saved">Group created</string>
+    <string name="text_view_no_devices_found">no devices where found</string>
+    <string name="text_view_no_connection">no connections are available</string>
 
     <!--Design Mode Strings-->
-    <string name="spinner_hint">Select Group or Item</string>
+    <string name="design_mode_title">Design Mode</string>
+    <string name="design_mode_spinner_hint">Select Group or Item</string>
     <string name="spinner_group_section_header">GROUPS</string>
     <string name="spinner_fixture_section_header">FIXTURE</string>
     <string name="picker_caption_repetitions">Repetitions</string>
     <string name="picker_caption_duration">Duration(Sec)</string>
     <string name="save_preset_button">Save Preset</string>
+    <string name="preview_preset_button">Preview</string>
     <string name="dialog_save_preset_title">Save Preset</string>
     <string name="dialog_preset_edit_text_hint">Enter preset name</string>
+    <string name="blink">Blink</string>
+    <string name="huehsb">HUEHSB</string>
+    <string name="huehsl">HUEHSL</string>
+    <string name="hue">Hue</string>
+    <string name="hue_two">Hue2</string>
+    <string name="pulse">Pulse</string>
+    <string name="text_view_choose_a_device_or_group">Use the dropdown menu to choose a device or group.</string>
+    <string name="text_view_no_device_online">no online devices</string>
+    <string name="toast_preset_saved">Preset saved</string>
+    <string name="toast_choose_group_or_device">Choose a group or a device</string>
 
     <!-- Lighting Mode Strings-->
+    <string name="lighting_mode_title">Lighting Mode</string>
     <string name="button_save_macro">SAVE MACRO</string>
     <string name="dialog_save_macro_title">Save Macro</string>
     <string name="dialog_save_macro_hint">Enter macro name</string>
-    <string name="recyclerview_macros_title">MACROS</string>
-    <string name="recyclerview_presets_title">PRESETS</string>
+    <string name="recycler_view_macros_title">MACROS</string>
+    <string name="recycler_view_presets_title">PRESETS</string>
+    <string name="text_view_create_preset_or_macro">no presets or macros created yet</string>
+    <string name="device_not_online">device is not online</string>
+
+    <!-- Group Management Strings -->
+    <string name="group_title">Groups</string>
+    <string name="presets_title">Presets</string>
+    <string name="macros_title">Macros</string>
+    <string name="text_view_create_group">no groups found</string>
+    <string name="text_view_create_presets">no presets found</string>
+    <string name="text_view_create_macros">no macros found</string>
+    <string name="toast_macro_saved">Macro saved</string>
+
+    <!-- Configuration Mode Strings -->
+    <string name="configuration_mode_title">Configuration</string>
+    <string name="configuration_mode_spinner_hint">Select device</string>
+    <string name="configuration_error_special_or_spaces_characters">Spaces or special characters are not valid</string>
+    <string name="configuration_error_special_characters">Special characters are not valid</string>
+    <string name="configuration_error_more_than_64_characters">Cannot contain more than 64 characters</string>
+    <string name="configuration_error_pixel_per_strip">Cannot be less than 0 or greater than 1500</string>
+    <string name="configuration_error_chunk_size">Cannot be less than 0 or greater than 200</string>
+    <string name="configuration_error_udp_streaming">Cannot be less than 0 or greater than 655336</string>
+    <string name="configuration_error_ma_per_strip">Cannot be less than 0 or greater than 999999</string>
+    <string name="configuration_error_warm_up_color">Cannot be less than 0 or greater than 255</string>
+    <string name="configuration_error_invalid_input">Invalid input</string>
+    <string name="configuration_error_empty">Cannot be empty</string>
+    <string name="configuration_label_device_name">Device Name</string>
+    <string name="configuration_label_pixels_per_strip">Pixels per Strip</string>
+    <string name="configuration_label_chunk_size">Chunk size</string>
+    <string name="configuration_label_ma_per_pixel">MA per Pixel</string>
+    <string name="configuration_label_udp_port">UDP Port</string>
+    <string name="configuration_label_amps_limit">Amps Limit</string>
+    <string name="configuration_label_warm_up_color">Warm Up Color</string>
+    <string name="configuration_button_update_device">Update Device</string>
+    <string name="configuration_no_network_hint">Wifi connection unavailable</string>
+
+    <!--About Mode-->
+    <string name="about_text">Bacon ipsum dolor amet shankle turkey shank meatball beef ribs. Filet mignon meatball turducken sausage, frankfurter fatback brisket landjaeger. Beef ribs t-bone beef salami pig rump jerky swine landjaeger tri-tip frankfurter. Ribeye beef kielbasa t-bone brisket. Ham shoulder swine short loin prosciutto cow hamburger porchetta ground round pork belly. Landjaeger strip steak leberkas, pig short ribs ribeye sausage kielbasa pastrami kevin frankfurter turkey t-bone chicken tenderloin. Beef ribs tenderloin leberkas ham rump andouille.</string>
+
+    <!--Duration labels and values array -->
+    <!--The format is [label] = [value], you can add,
+        remove and change any of these values-->
+    <string-array name="duration_values">
+        <item>1/30 = 2</item>
+        <item>1/15 = 4</item>
+        <item>1/10 = 6</item>
+        <item>1/6 = 10</item>
+        <item>1/5 = 12</item>
+        <item>1/4 = 15</item>
+        <item>1/3 = 20</item>
+        <item>1/2 = 30</item>
+    </string-array>
 </resources>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context=".MainActivity"
+             android:background="@drawable/background_gradient">
+
+    <android.support.v7.widget.RecyclerView
+            android:id="@+id/groups_recycler_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:paddingBottom="@dimen/activity_horizontal_margin"
+            android:paddingTop="@dimen/activity_horizontal_margin"
+            android:clipToPadding="false"/>
+
+    <LinearLayout
+            android:id="@+id/linear_layout_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+
+        <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_info"
+                android:contentDescription="@string/text_view_create_group"/>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/text_view_create_presets"
+                android:textSize="16sp"
+                android:textColor="@color/colorPrimaryText"
+                android:fontFamily="@font/montserrat_light"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:textAlignment="center"/>
+    </LinearLayout>
+</FrameLayout>

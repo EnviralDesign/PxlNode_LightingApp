@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Ryan Aquilina on 11/3/17 3:04 PM
+  ~ Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+  ~ Copyright (c) 2017.  All rights reserved
+  ~
+  ~ Last modified 11/3/17 3:04 PM
+  -->
+
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:background="@drawable/base"
+        android:paddingTop="8dp">
+
+    <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="25dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/logo"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="16dp"
+            android:text="@string/app_name"
+            android:textSize="16sp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:layout_below="@+id/imageView"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/textView"
+            android:textColor="@color/colorPrimaryText"
+            android:fontFamily="@font/montserrat_medium"/>
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/colorPrimaryText"
+            android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>
