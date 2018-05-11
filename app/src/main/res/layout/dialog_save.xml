@@ -40,8 +40,8 @@
                     android:textColor="@color/colorPrimaryText"
                     android:textAlignment="viewStart"
                     android:foregroundGravity="center_vertical"
-                    android:textStyle="bold"
-                    android:text="Save Preset"/>
+                    android:text="Save Preset"
+                    android:fontFamily="@font/montserrat_regular"/>
         </LinearLayout>
         <!-- If the client uses a customTitle, it will be added here. -->
     </LinearLayout>
@@ -65,7 +65,8 @@
                 android:textAlignment="viewStart"
                 android:textColor="@color/colorPrimaryText"
                 android:hint="@string/dialog_edit_text_hint"
-                style="@style/MyEditTextTheme"/>
+                style="@style/MyEditTextTheme"
+                android:fontFamily="@font/montserrat_light"/>
     </LinearLayout>
 
     <LinearLayout android:id="@+id/buttonPanel"

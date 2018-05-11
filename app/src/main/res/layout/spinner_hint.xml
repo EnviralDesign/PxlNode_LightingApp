@@ -10,5 +10,6 @@
               android:textSize="16sp"
               android:textColor="@color/colorPrimaryText"
               android:textAlignment="center"
-              android:text="Default"/>
+              android:text="Default"
+              android:fontFamily="@font/montserrat_regular"/>
 </LinearLayout>

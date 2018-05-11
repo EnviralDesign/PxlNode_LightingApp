@@ -27,6 +27,14 @@
         <item name="colorControlHighlight">@color/colorAccent</item>
     </style>
 
+    <!--Progress Dialogue Style-->
+    <style name="MyProgressDialogue" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:textColor">@color/colorPrimaryText</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
+    </style>
+
+
     <!--Dialogue Style-->
     <style name="MyDialogTheme">
         <item name="android:windowFrame">@null</item>
@@ -41,9 +49,10 @@
 
     <!--Navigation Drawer Style-->
     <style name="NavigationDrawerTheme">
-        <item name="android:textColorSecondary">@color/colorSecondaryText</item>
-        <item name="android:listDivider">@color/colorSecondaryText</item>
-        <item name="android:fontFamily">@font/titilliumweb_regular</item>
+        <item name="android:textColorHint">@color/colorAccent</item>
+        <item name="android:textColorSecondary">@color/colorPrimaryText</item>
+        <item name="android:listDivider">@color/colorPrimaryText</item>
+        <item name="android:fontFamily">@font/montserrat_medium</item>
     </style>
 
     <style name="ProgressBar.Horizontal" parent="@android:style/Widget.Holo.ProgressBar.Horizontal">

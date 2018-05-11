@@ -23,7 +23,7 @@
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    android:background="@color/colorSecondaryDark"
+                    android:background="@color/colorPrimary"
                     app:popupTheme="@style/AppTheme.PopupOverlay"
                     android:gravity="center_vertical|start">
 
@@ -34,16 +34,17 @@
                         android:text="@string/app_name"
                         android:textSize="20sp"
                         android:textStyle="bold"
-                        android:textColor="@color/colorPrimaryText"/>
+                        android:textColor="@color/colorPrimaryText"
+                        android:fontFamily="@font/montserrat_regular"/>
 
             </android.support.v7.widget.Toolbar>
         </android.support.design.widget.AppBarLayout>
 
         <FrameLayout
-                android:id="@+id/activity_content"
+                android:id="@+id/fragment_content"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
-        
+
     </LinearLayout>
 
     <android.support.design.widget.NavigationView
@@ -58,7 +59,7 @@
             android:fitsSystemWindows="true"
             app:menu="@menu/activity_main_drawer"
             app:elevation="4dp"
-            app:itemTextColor="@color/colorPrimaryText"
-            app:itemIconTint="@color/colorPrimaryText"/>
+            app:itemTextColor="@color/state_nav_text_color"
+            app:itemIconTint="@color/state_nav_text_color"/>
 
 </android.support.v4.widget.DrawerLayout>

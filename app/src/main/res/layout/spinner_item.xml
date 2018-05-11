@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:background="@drawable/border_black"
@@ -11,9 +10,23 @@
             android:id="@+id/spinner_item_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="@dimen/activity_horizontal_margin"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginBottom="4dp"
             android:textSize="16sp"
             android:textColor="@color/colorPrimaryText"
+            android:fontFamily="@font/montserrat_regular"
             android:text="Default"/>
 
-</LinearLayout>
+    <TextView
+            android:id="@+id/spinner_item_subtext_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/colorSecondaryText"
+            android:fontFamily="@font/montserrat_light"
+            android:text="192.168.101.10"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginBottom="@dimen/activity_horizontal_margin"
+            android:layout_below="@+id/spinner_item_text_view"/>
+</RelativeLayout>

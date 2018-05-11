@@ -1,53 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:background="@color/colorPrimary"
-                                     android:layout_marginBottom="1dp"
-                                    android:id="@+id/item_card_view">
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/item_card_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/activity_horizontal_margin"
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:clipToPadding="false"
+        android:elevation="6dp">
 
-    <RelativeLayout android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/colorPrimary">
+    <android.support.v7.widget.CardView
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="@dimen/card_view_item_radius"
+            app:cardElevation="6dp">
 
-        <LinearLayout
-                android:id="@+id/linearLayout"
+        <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp"
-                android:layout_marginLeft="72dp"
-                android:layout_marginRight="16dp">
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:background="@drawable/background_item_gradient">
+
+            <CheckBox
+                    android:id="@+id/item_checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:buttonTint="@color/colorPrimaryText"
+                    android:backgroundTint="@color/colorAccent"
+                    android:layout_centerVertical="true"
+                    android:clickable="false"/>
 
             <TextView
                     android:id="@+id/device_name_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="16sp"
-                    android:text="Kitchen Light"
+                    android:text="Default"
                     android:textColor="@color/colorPrimaryText"
-                    android:layout_marginBottom="8dp"/>
+                    android:fontFamily="@font/montserrat_regular"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="4dp"
+                    android:layout_toEndOf="@id/item_checkbox"/>
 
             <TextView
                     android:id="@+id/device_ip_address_text_view"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
-                    android:text="198.168.1.23"
-                    android:textColor="@color/colorSecondaryText"/>
-        </LinearLayout>
+                    android:text="Kitchen Lights"
+                    android:textColor="@color/colorSecondaryText"
+                    android:fontFamily="@font/montserrat_light"
+                    android:layout_marginStart="16dp"
+                    android:layout_toEndOf="@id/item_checkbox"
+                    android:layout_below="@id/device_name_edit_text"
+                    android:layout_marginBottom="20dp"/>
 
-        <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:foregroundGravity="center_vertical"
-                android:layout_centerVertical="true"
-                android:layout_alignParentStart="true"
-                android:layout_marginStart="16dp"
-                android:id="@+id/item_checkbox"
-                android:buttonTint="@color/colorPrimaryText"
-                android:clickable="false"/>
-    </RelativeLayout>
-
-</android.support.v7.widget.CardView>
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+</LinearLayout>

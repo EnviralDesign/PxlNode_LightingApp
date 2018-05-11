@@ -6,6 +6,9 @@
     <string name="ttf_header" translatable="false">Raleway-Bold.tff</string>
     <string name="ttf_sub_text" translatable="false">Raleway-ThinItalic.tff</string>
 
+    <!--Common Strings-->
+    <string name="progress_dialogue_message">Loading &#8230;</string>
+
     <!--Drawer Strings-->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -17,6 +20,7 @@
     <string name="nav_group_management_node_groups">Groups</string>
     <string name="nav_group_management_presets">Presets</string>
     <string name="nav_group_management_macros">Macros</string>
+    <string name="nav_bottom_about">About</string>
 
     <!--Toolbar Strings-->
     <string name="action_refresh">Refresh</string>
@@ -99,6 +103,9 @@
     <string name="configuration_label_warm_up_color">Warm Up Color</string>
     <string name="configuration_button_update_device">Update Device</string>
     <string name="configuration_no_network_hint">Wifi connection unavailable</string>
+
+    <!--About Mode-->
+    <string name="about_text">Bacon ipsum dolor amet shankle turkey shank meatball beef ribs. Filet mignon meatball turducken sausage, frankfurter fatback brisket landjaeger. Beef ribs t-bone beef salami pig rump jerky swine landjaeger tri-tip frankfurter. Ribeye beef kielbasa t-bone brisket. Ham shoulder swine short loin prosciutto cow hamburger porchetta ground round pork belly. Landjaeger strip steak leberkas, pig short ribs ribeye sausage kielbasa pastrami kevin frankfurter turkey t-bone chicken tenderloin. Beef ribs tenderloin leberkas ham rump andouille.</string>
 
     <!--Duration labels and values array -->
     <!--The format is [label] = [value], you can add,

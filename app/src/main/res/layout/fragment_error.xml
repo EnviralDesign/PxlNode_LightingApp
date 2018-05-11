@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Ryan Aquilina on 10/26/17 1:34 PM
+  ~ Contact details in https://www.upwork.com/freelancers/~01ed20295946e923f0
+  ~ Copyright (c) 2017.  All rights reserved
+  ~
+  ~ Last modified 10/26/17 1:34 PM
+  -->
+
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/background_gradient"
+        android:gravity="center">
+
+    <TextView
+            android:id="@+id/error_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/text_view_no_device_online"
+            android:textSize="16sp"
+            android:textColor="@color/colorPrimaryText"
+            android:fontFamily="@font/raleway_bold"/>
+
+</RelativeLayout>
