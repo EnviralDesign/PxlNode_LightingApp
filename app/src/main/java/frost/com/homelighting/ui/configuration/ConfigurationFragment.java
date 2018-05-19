@@ -40,7 +40,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,7 +53,6 @@ import frost.com.homelighting.R;
 import frost.com.homelighting.db.entity.DeviceEntity;
 import frost.com.homelighting.util.Constants;
 import frost.com.homelighting.viewmodel.ConfigurationViewModel;
-import frost.com.homelighting.viewmodel.LightingViewModel;
 
 import static android.content.Context.WIFI_SERVICE;
 
@@ -536,10 +534,9 @@ public class ConfigurationFragment extends Fragment implements Constants{
      */
     public void sendUpdateDeviceCommand(JSONObject json){
         DeviceEntity deviceEntity = (DeviceEntity) mSpinner.getAdapter().getItem(mSpinner.getSelectedItemPosition() - 1);
-        Runnable updateDeviceRequest = new UpdateDeviceRequest(json, deviceEntity.getIpAddress());
 
-        UpdateDeviceTask updateDeviceTask = new UpdateDeviceTask(deviceEntity);
-        updateDeviceTask.execute(updateDeviceRequest);
+        UpdateDeviceTask updateDeviceTask = new UpdateDeviceTask(deviceEntity, json);
+        updateDeviceTask.execute();
     }
 
     private static class UpdateDeviceRequest implements Runnable{
@@ -631,11 +628,13 @@ public class ConfigurationFragment extends Fragment implements Constants{
             }
 
             TextView textView = view.findViewById(R.id.spinner_hint);
+            TextView subTextView = view.findViewById(R.id.spinner_hint_subtext);
             if(i < 0){
                 textView.setText(getString(R.string.configuration_mode_spinner_hint));
                 return view;
             } else {
                 textView.setText(mOnlineDevicesList.get(i).getName());
+                subTextView.setText(mOnlineDevicesList.get(i).getIpAddress());
                 return view;
             }
         }
@@ -774,11 +773,15 @@ public class ConfigurationFragment extends Fragment implements Constants{
         }
     }
 
-    private class UpdateDeviceTask extends AsyncTask<Runnable, Void, Void>{
+    private class UpdateDeviceTask extends AsyncTask<Void, Void, Void>{
         private DeviceEntity deviceEntity;
+        private JSONObject configurationJSONObject;
+        private String ipAddress;
 
-        public UpdateDeviceTask(DeviceEntity deviceEntity) {
+        public UpdateDeviceTask(DeviceEntity deviceEntity, JSONObject configurationJSONObject) {
             this.deviceEntity = deviceEntity;
+            this.configurationJSONObject = configurationJSONObject;
+            this.ipAddress = deviceEntity.getIpAddress();
         }
 
         @Override
@@ -788,15 +791,35 @@ public class ConfigurationFragment extends Fragment implements Constants{
         }
 
         @Override
-        protected Void doInBackground(Runnable... runnables) {
-            runnables[0].run();
-            configurationViewModel.insertDevice(deviceEntity);
+        protected Void doInBackground(Void... voids) {
+            HttpURLConnection urlConnection;
+            URL url;
+            DataOutputStream dataOutputStream;
+            try{
+                url = new URL("http://" + ipAddress + "/mcu_config");
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setRequestProperty("Content-Length", Integer.toString(configurationJSONObject.toString().getBytes().length));
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                urlConnection.setUseCaches(false);
+                urlConnection.setDoInput(true);
+                dataOutputStream = new DataOutputStream(urlConnection.getOutputStream());
+                dataOutputStream.writeBytes(configurationJSONObject.toString());
+                dataOutputStream.flush();
+                dataOutputStream.close();
+                urlConnection.getInputStream();
+                urlConnection.disconnect();
+                Log.d("UpdateDevicePostCommand", "Success to http://" + ipAddress + "/mcu_config");
+            } catch (Exception e){
+                Log.d("UpdateDevicePostCommand", "Fail to http://" + ipAddress + "/mcu_config");
+            }
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+            configurationViewModel.updateDevice(deviceEntity);
             mProgressDialogue.dismiss();
         }
     }

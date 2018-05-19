@@ -977,6 +977,8 @@ public class DesignFragment extends Fragment{
             }
 
             TextView textView = view.findViewById(R.id.spinner_hint);
+            TextView subTextView = view.findViewById(R.id.spinner_hint_subtext);
+            subTextView.setVisibility(View.GONE);
             if(i == 0 || i == (mGroupedItemList.size() + 1)){
                 textView.setText(getString(R.string.design_mode_spinner_hint));
                 return view;
@@ -985,6 +987,8 @@ public class DesignFragment extends Fragment{
                 return view;
             } else {
                 textView.setText(mSingleItemList.get(i - (mGroupedItemList.size() + 2)).getName());
+                subTextView.setVisibility(View.VISIBLE);
+                subTextView.setText(mSingleItemList.get(i - (mGroupedItemList.size() + 2)).getIpAddress());
                 return view;
             }
         }

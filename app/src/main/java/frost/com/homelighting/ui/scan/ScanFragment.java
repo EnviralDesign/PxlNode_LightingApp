@@ -96,12 +96,7 @@ public class ScanFragment extends Fragment {
             @Override
             public void onChanged(@Nullable List<DeviceEntity> deviceEntities) {
                 mScannedDevicesList = deviceEntities;
-
-                if(mScannedDevicesList.isEmpty()) {
-                    getWifiStateAndConnect();
-                } else {
-                    mDeviceAdapter.notifyDataSetChanged();
-                }
+                mDeviceAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -169,7 +164,6 @@ public class ScanFragment extends Fragment {
         } else {
             mProgressBar.setVisibility(View.INVISIBLE);
             mScannedDevicesList.clear();
-            mDeviceAdapter.notifyDataSetChanged();
             mNoDevicesTextView.setText(getString(R.string.text_view_no_connection));
             mNoDevicesTextView.setVisibility(View.VISIBLE);
         }
@@ -414,7 +408,6 @@ public class ScanFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            mDeviceAdapter.notifyDataSetChanged();
             scanViewModel.insertAllDevices(mScannedDevicesList);
             scanViewModel.saveOnlineDevices(changeToOnlineDevices(mScannedDevicesList));
             if(mScannedDevicesList.isEmpty()){
@@ -454,7 +447,6 @@ public class ScanFragment extends Fragment {
                     @Override
                     public void run() {
                         mScannedDevicesList.add(device);
-                        mDeviceAdapter.notifyDataSetChanged();
                     }
                 });
             }
