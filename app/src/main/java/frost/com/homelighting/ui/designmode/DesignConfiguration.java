@@ -21,9 +21,10 @@ public class DesignConfiguration {
     private String effect;
     private String command;
     private boolean startCircleState;
+    private int spritesSpinnerPosition;
 
 
-    public DesignConfiguration(int startColor, int endColor, int centreCircleColor, int repetitions, int duration, String effect, String command, int spinnerPosition, ArrayList<String> selectedDevicesIP, boolean startCircleState) {
+    public DesignConfiguration(int startColor, int endColor, int centreCircleColor, int repetitions, int duration, String effect, String command, int spinnerPosition, ArrayList<String> selectedDevicesIP, boolean startCircleState, int spritesSpinnerPosition) {
         this.startColor = startColor;
         this.endColor = endColor;
         this.centreCircleColor = centreCircleColor;
@@ -34,6 +35,7 @@ public class DesignConfiguration {
         this.spinnerPosition = spinnerPosition;
         this.selectedDevicesIP = selectedDevicesIP;
         this.startCircleState = startCircleState;
+        this.spritesSpinnerPosition = spritesSpinnerPosition;
     }
 
     public int getStartColor() {
@@ -72,11 +74,11 @@ public class DesignConfiguration {
         return selectedDevicesIP;
     }
 
-    public void setSelectedDevicesIP(ArrayList<String> selectedDevicesIP) {
-        this.selectedDevicesIP = selectedDevicesIP;
-    }
-
     public boolean isStartCircleState() {
         return startCircleState;
+    }
+
+    public int getSpritesSpinnerPosition() {
+        return spritesSpinnerPosition;
     }
 }

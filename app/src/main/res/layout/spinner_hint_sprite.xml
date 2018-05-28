@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@color/colorAccent">
+
+    <TextView android:id="@+id/spinner_hint"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:textSize="16sp"
+              android:textColor="@color/colorPrimaryText"
+              android:textAlignment="textStart"
+              android:text="Default"
+              android:fontFamily="@font/montserrat_regular"/>
+    <TextView
+            android:id="@+id/spinner_hint_subtext"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="12sp"
+            android:textAlignment="textStart"
+            android:textColor="@color/colorSecondaryText"
+            android:fontFamily="@font/montserrat_light"/>
+</LinearLayout>

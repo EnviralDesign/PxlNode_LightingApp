@@ -146,6 +146,53 @@
             </LinearLayout>
         </RelativeLayout>
 
+        <android.support.v7.widget.AppCompatButton
+                android:id="@+id/sprite_button"
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:text="@string/sprite"
+                android:textColor="@color/colorPrimaryText"
+                android:textSize="10sp"
+                android:fontFamily="@font/montserrat_medium"
+                android:backgroundTint="@color/state_list_design_button"
+                style="Widget.AppCompat.Button.Colored"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_gravity="center"
+                android:visibility="gone"/>
+
+        <android.support.v7.widget.CardView
+                android:id="@+id/sprites_spinner_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/colorAccent"
+                app:cardCornerRadius="@dimen/card_view_item_radius"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:visibility="gone">
+
+            <fr.ganfra.materialspinner.MaterialSpinner
+                    android:id="@+id/sprites_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:layout_marginStart="@dimen/activity_horizontal_margin"
+                    android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                    android:background="@drawable/border_white"
+                    android:overlapAnchor="false"
+                    android:textAlignment="center"
+                    app:ms_hint="@string/design_mode_spinner_hint"
+                    app:ms_hintColor="@color/colorPrimaryText"
+                    app:ms_arrowColor="@color/colorPrimaryText"
+                    app:ms_baseColor="@android:color/transparent"
+                    app:ms_highlightColor="@android:color/transparent"
+                    app:ms_enableFloatingLabel="false"
+                    app:ms_arrowSize="16dp"/>
+        </android.support.v7.widget.CardView>
+
         <com.larswerkman.holocolorpicker.SaturationBar
                 android:id="@+id/saturationBar"
                 android:layout_width="match_parent"

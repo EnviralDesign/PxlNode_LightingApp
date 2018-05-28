@@ -21,10 +21,14 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.ColorUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -39,6 +43,7 @@ import com.larswerkman.holocolorpicker.ValueBar;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.GuardedObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -72,9 +77,11 @@ import static frost.com.homelighting.util.Constants.DESIGN_EFFECT_HUE_HSL;
 import static frost.com.homelighting.util.Constants.DESIGN_EFFECT_HUE_TWO;
 import static frost.com.homelighting.util.Constants.DESIGN_EFFECT_NONE;
 import static frost.com.homelighting.util.Constants.DESIGN_EFFECT_PULSE;
+import static frost.com.homelighting.util.Constants.DESIGN_EFFECT_SPRITE;
 import static frost.com.homelighting.util.Constants.DESIGN_REPETITION;
 import static frost.com.homelighting.util.Constants.DESIGN_SELECTED_DEVICES;
 import static frost.com.homelighting.util.Constants.DESIGN_SHARED_PREFERENCES;
+import static frost.com.homelighting.util.Constants.DESIGN_SPRITE_SELECTION;
 import static frost.com.homelighting.util.Constants.DESIGN_START_CIRCLE_STATE;
 import static frost.com.homelighting.util.Constants.DESIGN_START_COLOR;
 import static frost.com.homelighting.util.Constants.DESIGN_STOP_COLOR;
@@ -87,11 +94,13 @@ public class DesignFragment extends Fragment{
     private List<DeviceEntity> mSingleItemList;
     private List<GroupEntity> mGroupedItemList;
     private List<String> mSelectedDevices;
+    private List<String> mDeviceSprites;
 
-    private MaterialSpinner mSpinner;
+    private MaterialSpinner mDeviceSpinner, mSpritesSpinner;
+    private View mSpritesSpinnerContainer;
     private ColorPicker mColorPicker;
     private Button mBlinkButton, mHueButton, mHueTwoButton, mPulseButton,
-            mHueHsbButton, mHueHslButton, mSavePresetButton, mPreviewPresetButton;
+            mHueHsbButton, mHueHslButton, mSpriteButton, mSavePresetButton, mPreviewPresetButton;
     private NumberPickerView mDurationPicker,  mRepetitionPicker;
     private EffectsTimelineView mEffectsTimeLineView;
     private LinearLayout mEffectsControlLinearLayout;
@@ -109,6 +118,7 @@ public class DesignFragment extends Fragment{
     private int currentSpinnerPosition = 0;
     private String currentEffect = DEFAULT_EFFECT;
     private String currentCommand = DEFAULT_COMMAND;
+    private String currentSprite = null;
 
     private long lastTime = 0;
     private Boolean isPreviousEffectAvailable = false;
@@ -161,6 +171,13 @@ public class DesignFragment extends Fragment{
                 setSelectedDevices(strings);
             }
         });
+
+        designViewModel.getSprites().observe(this, new Observer<List<String>>() {
+            @Override
+            public void onChanged(@Nullable List<String> strings) {
+                setSprites(strings);
+            }
+        });
     }
 
     @Override
@@ -179,13 +196,16 @@ public class DesignFragment extends Fragment{
         mSaturationBar = mainView.findViewById(R.id.saturationBar);
         mValueBar = mainView.findViewById(R.id.valueBar);
         mColorPicker.setShowOldCenterColor(false);
-        mSpinner = mainView.findViewById(R.id.item_spinner);
+        mDeviceSpinner = mainView.findViewById(R.id.item_spinner);
+        mSpritesSpinner = mainView.findViewById(R.id.sprites_spinner);
+        mSpritesSpinnerContainer = mainView.findViewById(R.id.sprites_spinner_container);
         mBlinkButton = mainView.findViewById(R.id.blink_button);
         mHueButton = mainView.findViewById(R.id.hue_button);
         mHueTwoButton = mainView.findViewById(R.id.hue2_button);
         mPulseButton =  mainView.findViewById(R.id.pulse_button);
         mHueHsbButton = mainView.findViewById(R.id.huehsb_button);
         mHueHslButton = mainView.findViewById(R.id.huehsl_button);
+        mSpriteButton = mainView.findViewById(R.id.sprite_button);
         mDurationPicker = mainView.findViewById(R.id.duration_picker);
         mRepetitionPicker = mainView.findViewById(R.id.repetitions_picker);
         mEffectsTimeLineView = mainView.findViewById(R.id.effects_timeline);
@@ -198,6 +218,7 @@ public class DesignFragment extends Fragment{
         mSingleItemList = new ArrayList<>();
         mGroupedItemList = new ArrayList<>();
         mSelectedDevices = new ArrayList<>();
+        mDeviceSprites = new ArrayList<>();
         hoverThread = new HoverThread();
         executorService = Executors.newCachedThreadPool();
 
@@ -207,6 +228,7 @@ public class DesignFragment extends Fragment{
         mHueTwoButton.setTag(DESIGN_EFFECT_HUE_TWO);
         mHueHslButton.setTag(DESIGN_EFFECT_HUE_HSL);
         mHueHsbButton.setTag(DESIGN_EFFECT_HUE_HSB);
+        mSpriteButton.setTag(DESIGN_EFFECT_SPRITE);
 
         // Set up view's functionality & design
         mColorPicker.addValueBar(mValueBar);
@@ -230,8 +252,9 @@ public class DesignFragment extends Fragment{
             }
         });
         mEffectsTimeLineView.setTypeface(Typeface.createFromAsset(mMainActivity.getAssets(), "fonts/montserrat_light.ttf"));
-        mSpinner.setAdapter(new CustomSpinnerAdapter());
-        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mSpritesSpinner.setAdapter(new SpritesSpinnerAdapter());
+        mDeviceSpinner.setAdapter(new CustomSpinnerAdapter());
+        mDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 currentSpinnerPosition = i + 1;
@@ -244,15 +267,18 @@ public class DesignFragment extends Fragment{
                         showAllLightingViews();
                         isFirstChange = false;
                     }
+                    mSpriteButton.setVisibility(View.GONE);
                 } else if (i == (mGroupedItemList.size())){
                     hideAllLightingView();
                 } else {
-
-                    mSelectedDevices.add(mSingleItemList.get(i - (mGroupedItemList.size() + 1)).getIpAddress());
+                    String ipAddress = mSingleItemList.get(i - (mGroupedItemList.size() + 1)).getIpAddress();
+                    designViewModel.setSpritesFromDevice(ipAddress);
+                    mSelectedDevices.add(ipAddress);
                     if(!isPreviousEffectAvailable){
                         showAllLightingViews();
                         isFirstChange = false;
                     }
+                    mSpriteButton.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -262,10 +288,13 @@ public class DesignFragment extends Fragment{
             }
         });
 
-        View.OnClickListener mOnClickListener = new View.OnClickListener() {
+        View.OnClickListener mEffectButtonOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(view.isSelected()){
+                    if(view.getTag() == DESIGN_EFFECT_SPRITE){
+                        setSpriteButtonUnselected();
+                    }
                     view.setSelected(false);
                     enableEffectsControl(false);
                     mSavePresetButton.setAlpha(0.3f);
@@ -280,7 +309,12 @@ public class DesignFragment extends Fragment{
                     mPulseButton.setSelected(false);
                     mHueHsbButton.setSelected(false);
                     mHueHslButton.setSelected(false);
-                    view.setSelected(true);
+                    if(view.getTag() == DESIGN_EFFECT_SPRITE){
+                        setSpriteButtonSelected();
+                    } else {
+                        view.setSelected(true);
+                        setSpriteButtonUnselected();
+                    }
                     enableEffectsControl(true);
                     currentEffect = (String) view.getTag();
                 }
@@ -300,12 +334,14 @@ public class DesignFragment extends Fragment{
                 duration = newVal;
             }
         });
-        mBlinkButton.setOnClickListener(mOnClickListener);
-        mHueButton.setOnClickListener(mOnClickListener);
-        mHueTwoButton.setOnClickListener(mOnClickListener);
-        mPulseButton.setOnClickListener(mOnClickListener);
-        mHueHslButton.setOnClickListener(mOnClickListener);
-        mHueHsbButton.setOnClickListener(mOnClickListener);
+        mBlinkButton.setOnClickListener(mEffectButtonOnClickListener);
+        mHueButton.setOnClickListener(mEffectButtonOnClickListener);
+        mHueTwoButton.setOnClickListener(mEffectButtonOnClickListener);
+        mPulseButton.setOnClickListener(mEffectButtonOnClickListener);
+        mHueHslButton.setOnClickListener(mEffectButtonOnClickListener);
+        mHueHsbButton.setOnClickListener(mEffectButtonOnClickListener);
+        mSpriteButton.setOnClickListener(mEffectButtonOnClickListener);
+
         mSavePresetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -350,6 +386,7 @@ public class DesignFragment extends Fragment{
         outState.putString(DESIGN_CURRENT_COMMAND, currentCommand);
         outState.putInt(DESIGN_CURRENT_SPINNER_POSITION, currentSpinnerPosition);
         outState.putBoolean(DESIGN_START_CIRCLE_STATE, mEffectsTimeLineView.ismIsStartCircleInDefault());
+        outState.putInt(DESIGN_SPRITE_SELECTION, mSpritesSpinner.getSelectedItemPosition());
         super.onSaveInstanceState(outState);
     }
 
@@ -365,11 +402,15 @@ public class DesignFragment extends Fragment{
         mSelectedDevices = selectedDevices;
     }
 
+    public void setSprites(List<String> mDeviceSprites) {
+        this.mDeviceSprites = mDeviceSprites;
+    }
+
     private void setPreviousEffectVariables(Bundle bundle){
         setPickerProperties();
         if(bundle != null){
             currentSpinnerPosition = bundle.getInt(DESIGN_CURRENT_SPINNER_POSITION);
-            mSpinner.setSelection(currentSpinnerPosition);
+            mDeviceSpinner.setSelection(currentSpinnerPosition);
             mHintTextView.setVisibility(View.GONE);
             mColorPicker.setColor(bundle.getInt(DESIGN_CENTER_COLOR));
             currentCommand = bundle.getString(DESIGN_CURRENT_COMMAND);
@@ -377,12 +418,17 @@ public class DesignFragment extends Fragment{
             mHoloPickerControlsRelativeLayout.setVisibility(View.VISIBLE);
             mSaturationBar.setVisibility(View.VISIBLE);
             mValueBar.setVisibility(View.VISIBLE);
+            if(currentSpinnerPosition >= 0 && currentSpinnerPosition <= mGroupedItemList.size()){
+                mSpriteButton.setVisibility(View.GONE);
+            } else {
+                mSpriteButton.setVisibility(View.VISIBLE);
+            }
             mSavePresetButton.setAlpha(1);
-            mHoloPickerControlsRelativeLayout.setVisibility(View.VISIBLE);
-            mSaturationBar.setVisibility(View.VISIBLE);
-            mValueBar.setVisibility(View.VISIBLE);
             mSavePresetButton.setVisibility(View.VISIBLE);
 
+            if(!mDeviceSprites.isEmpty()){
+                mSpritesSpinner.setSelection(bundle.getInt(DESIGN_SPRITE_SELECTION));
+            }
             mSelectedDevices = bundle.getStringArrayList(DESIGN_SELECTED_DEVICES);
 
             if(!currentEffect.equals(DEFAULT_EFFECT)){
@@ -404,6 +450,9 @@ public class DesignFragment extends Fragment{
                         break;
                     case DESIGN_EFFECT_HUE_HSL:
                         mHueHslButton.setSelected(true);
+                        break;
+                    case DESIGN_EFFECT_SPRITE:
+                        setSpriteButtonSelected();
                         break;
                 }
 
@@ -435,6 +484,59 @@ public class DesignFragment extends Fragment{
             startColor = ContextCompat.getColor(mMainActivity.getBaseContext(), R.color.colorPrimary);
             stopColor = ContextCompat.getColor(mMainActivity.getBaseContext(), R.color.colorPrimary);
         }
+    }
+
+    //TODO: these methods
+    private void setSpriteButtonSelected(){
+        mSpriteButton.setSelected(true);
+        ResizeWidthAnimation resizeAnimation = new ResizeWidthAnimation(mSpriteButton, mHoloPickerControlsRelativeLayout.getWidth());
+        resizeAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                mSpriteButton.setVisibility(View.VISIBLE);
+                mSpritesSpinnerContainer.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mSpriteButton.setVisibility(View.GONE);
+                mSpritesSpinnerContainer.setVisibility(View.VISIBLE);
+                mSpritesSpinner.performClick();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        resizeAnimation.setDuration(400);
+        mSpriteButton.startAnimation(resizeAnimation);
+    }
+
+    private void setSpriteButtonUnselected(){
+        mSpriteButton.setSelected(false);
+        mSpritesSpinnerContainer.setVisibility(View.GONE);
+        mSpriteButton.setVisibility(View.VISIBLE);
+        ResizeWidthAnimation resizeAnimation = new ResizeWidthAnimation(mSpriteButton, dipToPixels(70));
+        resizeAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mSpritesSpinnerContainer.setVisibility(View.GONE);
+                mSpriteButton.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        resizeAnimation.setDuration(400);
+        mSpriteButton.startAnimation(resizeAnimation);
     }
 
     /**
@@ -622,6 +724,21 @@ public class DesignFragment extends Fragment{
                 mValueBar.setVisibility(View.VISIBLE);
             }
         });
+
+        int selection = mDeviceSpinner.getSelectedItemPosition();
+
+        if(selection >= 0 && selection <= mGroupedItemList.size()){
+            mSpriteButton.setVisibility(View.GONE);
+        } else {
+            mSpriteButton.setVisibility(View.VISIBLE);
+            mSpriteButton.setAlpha(0);
+            mSpriteButton.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mSpriteButton.setVisibility(View.VISIBLE);
+                }
+            });
+        }
         mSavePresetButton.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -663,6 +780,14 @@ public class DesignFragment extends Fragment{
                 mValueBar.setVisibility(View.GONE);
             }
         });
+        mSpriteButton.setVisibility(View.GONE);
+        mSpriteButton.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                mSpriteButton.setVisibility(View.GONE);
+            }
+        });
         mSavePresetButton.setVisibility(View.GONE);
         mSavePresetButton.setEnabled(false);
         mSavePresetButton.setAlpha(0.3f);
@@ -696,13 +821,13 @@ public class DesignFragment extends Fragment{
      * Saves the preset locally.
      */
     protected void savePreset(String presetName){
-        int i = mSpinner.getSelectedItemPosition();
+        int i = mDeviceSpinner.getSelectedItemPosition();
         GroupEntity groupEntity = null;
         if(i == 0){
             mMainActivity.showToast(R.string.toast_choose_group_or_device);
             return;
         } else if (i > 0 && i <= mGroupedItemList.size()){
-            groupEntity = (GroupEntity) mSpinner.getSelectedItem();
+            groupEntity = (GroupEntity) mDeviceSpinner.getSelectedItem();
             if(groupEntity == null){
                 return;
             }
@@ -744,6 +869,8 @@ public class DesignFragment extends Fragment{
         } else if (mHueHsbButton.isSelected()){
             isHSB = true;
             button = "huehsb";
+        } else if (mSpriteButton.isSelected()){
+            button = "spritehue";
         }
 
         // Get the appropriate start and stop color commands
@@ -786,7 +913,7 @@ public class DesignFragment extends Fragment{
 
         ArrayList<String> selectedDevices = new ArrayList<>(mSelectedDevices);
 
-        DesignConfiguration designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, selectedDevices, mEffectsTimeLineView.ismIsStartCircleInDefault());
+        DesignConfiguration designConfiguration = new DesignConfiguration(startColor, stopColor, mColorPicker.getColor(),repetition, duration, currentEffect, currentCommand, currentSpinnerPosition, selectedDevices, mEffectsTimeLineView.ismIsStartCircleInDefault(), mSpritesSpinner.getSelectedItemPosition());
 
         Gson gson = new Gson();
         String json = gson.toJson(designConfiguration);
@@ -875,6 +1002,11 @@ public class DesignFragment extends Fragment{
                 }
             });
         }
+    }
+
+    private int dipToPixels(float dipValue) {
+        DisplayMetrics metrics = mMainActivity.getResources().getDisplayMetrics();
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, metrics);
     }
 
     /**
@@ -1008,6 +1140,88 @@ public class DesignFragment extends Fragment{
             return mGroupedItemList.isEmpty() && mSingleItemList.isEmpty();
         }
 
+    }
+
+    private class SpritesSpinnerAdapter implements SpinnerAdapter{
+        @Override
+        public View getDropDownView(int i, View view, ViewGroup viewGroup) {
+            view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.spinner_group, viewGroup, false);
+            view.setBackgroundColor(ContextCompat.getColor(mMainActivity.getBaseContext(),R.color.colorPrimary));
+            TextView textView = view.findViewById(R.id.spinner_item_text_view);
+            textView.setText(mDeviceSprites.get(i));
+            if(i == 0){
+                textView.setTextColor(mMainActivity.getColor(R.color.colorUnusedText));
+            }
+            return view;
+        }
+
+        @Override
+        public void registerDataSetObserver(DataSetObserver dataSetObserver) {
+
+        }
+
+        @Override
+        public void unregisterDataSetObserver(DataSetObserver dataSetObserver) {
+
+        }
+
+        @Override
+        public int getCount() {
+            if(mDeviceSprites.isEmpty()){
+                return 1;
+            }
+            return mDeviceSprites.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return mDeviceSprites.get(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public boolean hasStableIds() {
+            return true;
+        }
+
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup) {
+            if (view == null){
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.spinner_hint_sprite, viewGroup, false);
+            }
+
+            TextView textView = view.findViewById(R.id.spinner_hint);
+            TextView subTextView = view.findViewById(R.id.spinner_hint_subtext);
+            subTextView.setVisibility(View.GONE);
+
+            if(i == 0){
+                textView.setText(getString(R.string.sprites));
+                textView.setTextColor(mMainActivity.getColor(R.color.colorUnusedText));
+            } else {
+                textView.setText(mDeviceSprites.get(i));
+            }
+
+            return view;
+        }
+
+        @Override
+        public int getItemViewType(int i) {
+            return 0;
+        }
+
+        @Override
+        public int getViewTypeCount() {
+            return 0;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return mDeviceSprites.isEmpty();
+        }
     }
 
     private class HoverThread extends AsyncTask<Void, Void, Void>{

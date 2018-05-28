@@ -539,41 +539,6 @@ public class ConfigurationFragment extends Fragment implements Constants{
         updateDeviceTask.execute();
     }
 
-    private static class UpdateDeviceRequest implements Runnable{
-        JSONObject json;
-        String ipAddress;
-
-        public UpdateDeviceRequest(JSONObject json, String ipAddress) {
-            this.json = json;
-            this.ipAddress = ipAddress;
-        }
-
-        @Override
-        public void run() {
-            HttpURLConnection urlConnection;
-            URL url;
-            DataOutputStream dataOutputStream;
-            try{
-                url = new URL("http://" + ipAddress + "/mcu_config");
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("POST");
-                urlConnection.setRequestProperty("Content-Length", Integer.toString(json.toString().getBytes().length));
-                urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                urlConnection.setUseCaches(false);
-                urlConnection.setDoInput(true);
-                dataOutputStream = new DataOutputStream(urlConnection.getOutputStream());
-                dataOutputStream.writeBytes(json.toString());
-                dataOutputStream.flush();
-                dataOutputStream.close();
-                urlConnection.getInputStream();
-                urlConnection.disconnect();
-                Log.d("UpdateDevicePostCommand", "Success to http://" + ipAddress + "/mcu_config");
-            } catch (Exception e){
-                Log.d("UpdateDevicePostCommand", "Fail to http://" + ipAddress + "/mcu_config");
-            }
-        }
-    }
-
 
     /**
      * Custom adapter that loads online devices only.

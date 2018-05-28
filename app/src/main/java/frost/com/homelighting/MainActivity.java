@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.internal.NavigationMenuView;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -51,6 +52,7 @@ import static frost.com.homelighting.util.Constants.DESIGN_DURATION;
 import static frost.com.homelighting.util.Constants.DESIGN_REPETITION;
 import static frost.com.homelighting.util.Constants.DESIGN_SELECTED_DEVICES;
 import static frost.com.homelighting.util.Constants.DESIGN_SHARED_PREFERENCES;
+import static frost.com.homelighting.util.Constants.DESIGN_SPRITE_SELECTION;
 import static frost.com.homelighting.util.Constants.DESIGN_START_CIRCLE_STATE;
 import static frost.com.homelighting.util.Constants.DESIGN_START_COLOR;
 import static frost.com.homelighting.util.Constants.DESIGN_STOP_COLOR;
@@ -117,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
         addFragmentToActivity(ScanFragment.newInstance());
 
         mNavigationView = findViewById(R.id.nav_view);
+        disableNavigationViewScrollbars(mNavigationView);
+
         mNavigationView.getMenu().findItem(R.id.nav_scan).setChecked(true);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -167,6 +171,15 @@ public class MainActivity extends AppCompatActivity {
         this.onBackClickListener = onBackClickListener;
     }
 
+    private void disableNavigationViewScrollbars(NavigationView navigationView) {
+        if (navigationView != null) {
+            NavigationMenuView navigationMenuView = (NavigationMenuView) navigationView.getChildAt(0);
+            if (navigationMenuView != null) {
+                navigationMenuView.setVerticalScrollBarEnabled(false);
+            }
+        }
+    }
+
     private void addFragmentToActivity (Fragment fragment) {
         mFragmentManager.beginTransaction()
                 .replace(R.id.fragment_content, fragment, TAG)
@@ -211,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
             bundle.putInt(DESIGN_CURRENT_SPINNER_POSITION, designConfiguration.getSpinnerPosition());
             bundle.putStringArrayList(DESIGN_SELECTED_DEVICES, designConfiguration.getSelectedDevicesIP());
             bundle.putBoolean(DESIGN_START_CIRCLE_STATE, designConfiguration.isStartCircleState());
-
+            bundle.putInt(DESIGN_SPRITE_SELECTION, designConfiguration.getSpritesSpinnerPosition());
             return bundle;
         }
 

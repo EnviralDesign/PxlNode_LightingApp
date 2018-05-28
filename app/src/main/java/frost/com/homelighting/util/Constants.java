@@ -36,6 +36,7 @@ public interface Constants {
     String DESIGN_EFFECT_HUE_TWO = "hue_two";
     String DESIGN_EFFECT_HUE_HSB = "hue_hsb";
     String DESIGN_EFFECT_HUE_HSL = "hue_hsl";
+    String DESIGN_EFFECT_SPRITE = "sprite";
     String DESIGN_EFFECT_NONE = "none";
     String DESIGN_START_COLOR = "start_color";
     String DESIGN_STOP_COLOR = "stop_color";
@@ -47,6 +48,7 @@ public interface Constants {
     String DESIGN_CURRENT_SPINNER_POSITION = "current_spinner_position";
     String DESIGN_SELECTED_DEVICES = "selected_devices";
     String DESIGN_START_CIRCLE_STATE = "start_circle_state";
+    String DESIGN_SPRITE_SELECTION = "sprite_selection";
 
 
     /* Configuration Constants */

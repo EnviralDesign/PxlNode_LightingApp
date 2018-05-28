@@ -6,6 +6,7 @@
     <color name="colorAccent">#67bdff</color>
     <color name="colorSecondaryDark">#0A1015</color>
     <color name="colorPrimaryText">#ffffff</color>
+    <color name="colorUnusedText">#696969</color>
     <color name="colorSecondaryText">#D47A26</color>
     <color name="colorError">#ff0033</color>
 </resources>

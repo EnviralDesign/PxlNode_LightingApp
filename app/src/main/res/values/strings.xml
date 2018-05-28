@@ -57,10 +57,12 @@
     <string name="hue">Hue</string>
     <string name="hue_two">Hue2</string>
     <string name="pulse">Pulse</string>
+    <string name="sprite">Sprite</string>
     <string name="text_view_choose_a_device_or_group">Use the dropdown menu to choose a device or group.</string>
     <string name="text_view_no_device_online">no online devices</string>
     <string name="toast_preset_saved">Preset saved</string>
     <string name="toast_choose_group_or_device">Choose a group or a device</string>
+    <string name="sprites">Sprites</string>
 
     <!-- Lighting Mode Strings-->
     <string name="lighting_mode_title">Lighting Mode</string>
