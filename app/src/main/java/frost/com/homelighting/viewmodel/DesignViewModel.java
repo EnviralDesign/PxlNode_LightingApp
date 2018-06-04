@@ -83,6 +83,17 @@ public class DesignViewModel extends ViewModel{
         new LoadDeviceSpritesTask(ipAddress).execute();
     }
 
+    public void setSpritesFromGroups(int groupID){
+        List<String> spritesExample = new ArrayList<>();
+        spritesExample.add("SPRITE"); // Used so that user has the option to remove Sprite.
+
+        for(int i = 0; i <= 10; i++){
+            spritesExample.add("Sprite " + Integer.toString(i));
+        }
+
+        sprites.setValue(spritesExample);
+    }
+
     private class loadDevicesIpAddressInGroupTask extends AsyncTask<Integer, Void, List<String>> {
 
         @Override

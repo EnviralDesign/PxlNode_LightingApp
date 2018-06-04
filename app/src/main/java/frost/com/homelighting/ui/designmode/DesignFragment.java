@@ -115,6 +115,9 @@ public class DesignFragment extends Fragment{
     private MainActivity mMainActivity;
 
     private int repetition, duration, startColor, stopColor;
+    private int spriteId = 1;// example purpose only
+    private int spriteX = 0;
+    private int spriteY = 0;
     private int currentSpinnerPosition = 0;
     private String currentEffect = DEFAULT_EFFECT;
     private String currentCommand = DEFAULT_COMMAND;
@@ -175,7 +178,11 @@ public class DesignFragment extends Fragment{
         designViewModel.getSprites().observe(this, new Observer<List<String>>() {
             @Override
             public void onChanged(@Nullable List<String> strings) {
-                setSprites(strings);
+                if(strings.isEmpty()){
+                    mSpriteButton.setVisibility(View.GONE);
+                } else {
+                    setSprites(strings);
+                }
             }
         });
     }
@@ -263,11 +270,11 @@ public class DesignFragment extends Fragment{
                     hideAllLightingView();
                 } else if (i >= 0 && i < mGroupedItemList.size()){
                     designViewModel.getDevicesIpAddressInGroup(mGroupedItemList.get(i).getId());
+                    designViewModel.setSpritesFromGroups(mGroupedItemList.get(i).getId());
                     if(!isPreviousEffectAvailable) {
                         showAllLightingViews();
                         isFirstChange = false;
                     }
-                    mSpriteButton.setVisibility(View.GONE);
                 } else if (i == (mGroupedItemList.size())){
                     hideAllLightingView();
                 } else {
@@ -278,7 +285,6 @@ public class DesignFragment extends Fragment{
                         showAllLightingViews();
                         isFirstChange = false;
                     }
-                    mSpriteButton.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -418,7 +424,7 @@ public class DesignFragment extends Fragment{
             mHoloPickerControlsRelativeLayout.setVisibility(View.VISIBLE);
             mSaturationBar.setVisibility(View.VISIBLE);
             mValueBar.setVisibility(View.VISIBLE);
-            if(currentSpinnerPosition >= 0 && currentSpinnerPosition <= mGroupedItemList.size()){
+            if(currentSpinnerPosition == 0 ){
                 mSpriteButton.setVisibility(View.GONE);
             } else {
                 mSpriteButton.setVisibility(View.VISIBLE);
@@ -486,7 +492,6 @@ public class DesignFragment extends Fragment{
         }
     }
 
-    //TODO: these methods
     private void setSpriteButtonSelected(){
         mSpriteButton.setSelected(true);
         ResizeWidthAnimation resizeAnimation = new ResizeWidthAnimation(mSpriteButton, mHoloPickerControlsRelativeLayout.getWidth());
@@ -727,7 +732,7 @@ public class DesignFragment extends Fragment{
 
         int selection = mDeviceSpinner.getSelectedItemPosition();
 
-        if(selection >= 0 && selection <= mGroupedItemList.size()){
+        if(selection == 0){
             mSpriteButton.setVisibility(View.GONE);
         } else {
             mSpriteButton.setVisibility(View.VISIBLE);
@@ -853,6 +858,7 @@ public class DesignFragment extends Fragment{
     private String getCommand(){
         Boolean isHSL = false;
         Boolean isHSB = false;
+        Boolean isSprite = false;
         String button = "";
 
         if(mHueButton.isSelected()){
@@ -870,7 +876,8 @@ public class DesignFragment extends Fragment{
             isHSB = true;
             button = "huehsb";
         } else if (mSpriteButton.isSelected()){
-            button = "spritehue";
+            isSprite = true;
+            button = "sprite";
         }
 
         // Get the appropriate start and stop color commands
@@ -899,6 +906,10 @@ public class DesignFragment extends Fragment{
             command = button + " " + startColorString + " " + stopColorString + " t" + repetition + " f" + getFrames(duration);
         } else {
             command = button + " " + stopColorString + " t" + repetition + " f" + getFrames(duration);
+        }
+
+        if(isSprite){
+            command += " s" + Integer.toString(spriteId) + " x" + spriteX + " y" + spriteY;
         }
 
         return command;
