@@ -510,8 +510,6 @@ public class ConfigurationFragment extends Fragment implements Constants{
                 + mWarmUpColorGreen
                 + " "
                 + mWarmUpColorBlue);
-
-        //TODO SAVE DEVICE
         refreshSpinnerAdapter();
     }
 

@@ -41,6 +41,7 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
+import frost.com.homelighting.BuildConfig;
 import frost.com.homelighting.HomeLightingApplication;
 import frost.com.homelighting.MainActivity;
 import frost.com.homelighting.R;
@@ -247,7 +248,7 @@ public class ScanFragment extends Fragment {
     }
 
     private DeviceEntity getDeviceConnectedToWifi(String subIP, int i){
-        int TIMEOUT_VALUE = 2500;
+        int TIMEOUT_VALUE = 5000;
 
         HttpURLConnection urlConnection;
         URL url;
@@ -279,6 +280,9 @@ public class ScanFragment extends Fragment {
         } catch (Exception e){
             Log.w("Bad Device Ip", subIP + Integer.toString(i));
         }
+//        if(BuildConfig.DEBUG){
+//            return new DeviceEntity( "Device " +  Integer.toString(i), subIP + Integer.toString(i));
+//        }
         return null;
     }
 

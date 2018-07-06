@@ -732,18 +732,21 @@ public class DesignFragment extends Fragment{
 
         int selection = mDeviceSpinner.getSelectedItemPosition();
 
-        if(selection == 0){
-            mSpriteButton.setVisibility(View.GONE);
-        } else {
-            mSpriteButton.setVisibility(View.VISIBLE);
-            mSpriteButton.setAlpha(0);
-            mSpriteButton.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mSpriteButton.setVisibility(View.VISIBLE);
-                }
-            });
+        if(mSpritesSpinnerContainer.getVisibility() != View.VISIBLE){
+            if(selection == 0){
+                mSpriteButton.setVisibility(View.GONE);
+            } else {
+                mSpriteButton.setVisibility(View.VISIBLE);
+                mSpriteButton.setAlpha(0);
+                mSpriteButton.animate().setDuration(500).alpha(1).setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        mSpriteButton.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
         }
+
         mSavePresetButton.animate().setDuration(500).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
