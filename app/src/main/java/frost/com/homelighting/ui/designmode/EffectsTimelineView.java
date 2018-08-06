@@ -204,7 +204,7 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
         else if(mStopCircleView.isSelected()){
             mStopCircleView.setCircleColor(color);
             mStopCircleView.setColorChanged(true);
-            mStartCircleView.setInFocus(true);
+//            mStartCircleView.setInFocus(true);
             mStopCircleView.invalidate();
         }
     }
@@ -240,6 +240,17 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
     public void setStartCircleToDefault(){
         mIsStartCircleInDefault = true;
         mStartCircleView.setInFocus(false);
+        mStartCircleView.setColorChanged(false);
+        unSelectView(mStartCircleView);
+        mStartCircleView.setCircleColor(getResources().getColor(R.color.colorPrimary));
+    }
+
+    /**
+     * Reset start circle color
+     */
+    public void resetStartCircleColor(){
+        mIsStartCircleInDefault = true;
+        mStartCircleView.setInFocus(true);
         mStartCircleView.setColorChanged(false);
         unSelectView(mStartCircleView);
         mStartCircleView.setCircleColor(getResources().getColor(R.color.colorPrimary));
@@ -314,6 +325,7 @@ class EffectsTimelineView extends ViewGroup implements ViewGroup.OnClickListener
         mStartCircleView.setOnLongClickListener(new OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
+//                resetStartCircleColor();
                 setStartCircleToDefault();
                 return true;
             }

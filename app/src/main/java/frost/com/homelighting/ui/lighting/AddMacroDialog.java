@@ -82,6 +82,13 @@ public class AddMacroDialog extends DialogFragment {
      * Checks if text is valid
      */
     private boolean isValidText(String text){
+        LightingFragment mFragment = ((LightingFragment) ((MainActivity)getActivity())
+                .getSupportFragmentManager()
+                .findFragmentById((R.id.fragment_content)));
+
+        if(!mFragment.checkIfMacroNameAlreadyExists(text)){
+            return false;
+        }
         text = text.trim();
         if(text == null || text.equals("")){
             return false;

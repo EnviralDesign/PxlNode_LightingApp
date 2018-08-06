@@ -7,12 +7,10 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.Formatter;
@@ -41,7 +39,6 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-import frost.com.homelighting.BuildConfig;
 import frost.com.homelighting.HomeLightingApplication;
 import frost.com.homelighting.MainActivity;
 import frost.com.homelighting.R;
@@ -66,7 +63,7 @@ public class ScanFragment extends Fragment {
     private ProgressBar mProgressBar;
     private TextView mNoDevicesTextView;
 
-    private MainActivity mainActivity;
+    private MainActivity mMainActivity;
 
     @Inject
     ViewModelProvider.Factory viewModelFactory;
@@ -83,7 +80,7 @@ public class ScanFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        mainActivity = ((MainActivity) getActivity());
+        mMainActivity = ((MainActivity) getActivity());
 
 
         ((HomeLightingApplication) getActivity().getApplication())
@@ -106,10 +103,10 @@ public class ScanFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mainActivity.invalidateOptionsMenu();
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(mainActivity);
+        mMainActivity.invalidateOptionsMenu();
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(mMainActivity);
         mDevicesRecyclerView.setLayoutManager(mLayoutManager);
-        mainActivity.setTitle(R.string.scan_mode_title);
+        mMainActivity.setTitle(R.string.scan_mode_title);
         mDevicesRecyclerView.setAdapter(mDeviceAdapter);
     }
 
@@ -159,7 +156,7 @@ public class ScanFragment extends Fragment {
      * Check wifi connection and get devices
      */
     private void getWifiStateAndConnect(){
-        WifiManager wm = (WifiManager) mainActivity.getApplicationContext().getSystemService(WIFI_SERVICE);
+        WifiManager wm = (WifiManager) mMainActivity.getApplicationContext().getSystemService(WIFI_SERVICE);
         if(wm.isWifiEnabled()){
             new ScanForDevices().execute();
         } else {
@@ -175,7 +172,21 @@ public class ScanFragment extends Fragment {
      */
     private void showSaveGroupDialog(){
         DialogFragment dialogFragment = AddGroupDialog.newInstance();
-        dialogFragment.show(mainActivity.getFragmentManager(), "AddGroupDialog");
+        dialogFragment.show(mMainActivity.getFragmentManager(), "AddGroupDialog");
+    }
+
+    /**
+     *  Check if name is already taken
+     */
+    public boolean checkIfGroupNameAlreadyExists(String presetName){
+        List<String> presetNames = scanViewModel.getGroupNames();
+        for (String presetNameTaken : presetNames) {
+            if(presetNameTaken.equals(presetName)){
+                mMainActivity.showToast(R.string.toast_duplicate_name);
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -184,7 +195,7 @@ public class ScanFragment extends Fragment {
     private void refreshDevices(){
         // Get wifi IP
         String subIP = "";
-        WifiManager wm = (WifiManager) mainActivity.getApplicationContext().getSystemService(WIFI_SERVICE);
+        WifiManager wm = (WifiManager) mMainActivity.getApplicationContext().getSystemService(WIFI_SERVICE);
 
         if(wm != null){
             String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
@@ -393,7 +404,7 @@ public class ScanFragment extends Fragment {
         }
     }
 
-    private class ScanForDevices extends AsyncTask<Void, Void, Void> {
+    public class ScanForDevices extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... voids) {
@@ -447,7 +458,7 @@ public class ScanFragment extends Fragment {
             android.os.Process.setThreadPriority(-19);
             final DeviceEntity device = getDeviceConnectedToWifi(subIp, i);
             if(device != null){
-                mainActivity.runOnUiThread(new Runnable() {
+                mMainActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         mScannedDevicesList.add(device);

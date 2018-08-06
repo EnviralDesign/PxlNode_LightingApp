@@ -26,6 +26,9 @@ public interface MacroDao {
     @Query("SELECT * FROM macro WHERE id = :id")
     LiveData<MacroEntity> loadMacro(int id);
 
+    @Query("SELECT name FROM macro")
+    List<String> loadAllMacroNames();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Long insertMacro(MacroEntity macro);
 

@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import frost.com.homelighting.MainActivity;
 import frost.com.homelighting.R;
+import frost.com.homelighting.ui.designmode.DesignFragment;
 
 public class AddGroupDialog extends DialogFragment {
 
@@ -75,8 +76,14 @@ public class AddGroupDialog extends DialogFragment {
      * Checks if text is valid
      */
     private boolean isValidText(String text){
-        text = text.trim();
+        ScanFragment mFragment = ((ScanFragment) ((MainActivity)getActivity())
+                .getSupportFragmentManager()
+                .findFragmentById((R.id.fragment_content)));
 
+        if(!mFragment.checkIfGroupNameAlreadyExists(text)){
+            return false;
+        }
+        text = text.trim();
         if(text == null || text.equals("")){
             return false;
         }

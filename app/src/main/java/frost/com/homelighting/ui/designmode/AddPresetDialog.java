@@ -81,6 +81,12 @@ public class AddPresetDialog extends DialogFragment {
      * Checks if text is valid
      */
     private boolean isValidText(String text){
+        DesignFragment mFragment = ((DesignFragment) ((MainActivity)getActivity())
+                .getSupportFragmentManager()
+                .findFragmentById((R.id.fragment_content)));
+        if(!mFragment.checkIfPresetNameAlreadyExists(text)){
+            return false;
+        }
         text = text.trim();
         if(text.equals("")){
             return false;

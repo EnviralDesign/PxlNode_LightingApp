@@ -140,6 +140,10 @@ public class Repository {
         return groupDetailsDao.loadGroupDeviceNames(groupId);
     }
 
+    public List<String> loadAllGroupsNames(){
+        return groupDao.loadAllGroupNames();
+    }
+
     /** Preset related functions **/
     public LiveData<List<PresetEntity>> loadAllPresets(){
         return presetDao.loadAllPresets();
@@ -197,6 +201,10 @@ public class Repository {
         return presetAndGroupDetailsDao.loadPresetGroupName(presetId);
     }
 
+    public List<String> loadAllPresetsNames(){
+        return presetDao.loadAllPresetsNames();
+    }
+
     /** Macro related functions **/
     public LiveData<List<MacroEntity>> loadAllMacros(){
         return macroDao.loadAllMacros();
@@ -228,6 +236,10 @@ public class Repository {
 
     public List<DeviceIPAndCommand> loadMacroDeviceIPAndCommand(int macroId){
         return macroDao.getCommandAndDevices(macroId);
+    }
+
+    public List<String> loadAllMacroNames(){
+        return macroDao.loadAllMacroNames();
     }
 
     public List<Integer> loadMacroPresetIps(int macroId){

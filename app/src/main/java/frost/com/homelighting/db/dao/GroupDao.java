@@ -7,6 +7,7 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import frost.com.homelighting.db.entity.GroupEntity;
@@ -21,6 +22,9 @@ public interface GroupDao {
 
     @Query("SELECT * FROM devices_group WHERE id = :id")
     LiveData<GroupEntity> loadGroup(int id);
+
+    @Query("SELECT name FROM devices_group")
+    List<String> loadAllGroupNames();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Long insertGroup(GroupEntity group);

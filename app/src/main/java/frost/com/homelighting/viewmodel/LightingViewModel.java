@@ -2,7 +2,9 @@ package frost.com.homelighting.viewmodel;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModel;
+import android.os.AsyncTask;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import frost.com.homelighting.Repository;
@@ -13,9 +15,13 @@ import frost.com.homelighting.ui.lighting.DeviceIPAndCommand;
 
 public class LightingViewModel extends ViewModel {
     Repository repository;
+    private List<String> macroNames;
 
     public LightingViewModel(Repository repository) {
         this.repository = repository;
+        macroNames = new ArrayList<>();
+
+        new loadMacroNames().execute();
     }
 
     public LiveData<List<PresetEntity>> getPresets(){
@@ -71,5 +77,25 @@ public class LightingViewModel extends ViewModel {
 
     public String loadPresetGroupName(int presetId){
         return repository.loadPresetGroupName(presetId);
+    }
+
+    public List<String> getMacroNames() {
+        return macroNames;
+    }
+
+    private class loadMacroNames extends AsyncTask<Void, Void, List<String>> {
+        @Override
+        protected List<String> doInBackground(Void... voids) {
+            return repository.loadAllMacroNames();
+        }
+
+        @Override
+        protected void onPostExecute(List<String> strings) {
+            super.onPostExecute(strings);
+            if(strings == null){
+                return;
+            }
+            macroNames.addAll(strings);
+        }
     }
 }

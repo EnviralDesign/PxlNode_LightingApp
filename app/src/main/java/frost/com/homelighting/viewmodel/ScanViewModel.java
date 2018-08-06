@@ -18,9 +18,13 @@ import frost.com.homelighting.model.OnlineDevices;
 public class ScanViewModel extends ViewModel{
 
     private Repository repository;
+    private List<String> groupNames;
 
     public ScanViewModel(Repository repository) {
         this.repository = repository;
+        groupNames = new ArrayList<>();
+
+        new loadGroupNames().execute();
     }
 
     public LiveData<List<DeviceEntity>> getOnlineDevices(){
@@ -49,6 +53,26 @@ public class ScanViewModel extends ViewModel{
 
     public void deleteAllOnlineDevices(){
         repository.deleteAllOnlineDevices();
+    }
+
+    public List<String> getGroupNames() {
+        return groupNames;
+    }
+
+    private class loadGroupNames extends AsyncTask<Void, Void, List<String>> {
+        @Override
+        protected List<String> doInBackground(Void... voids) {
+            return repository.loadAllGroupsNames();
+        }
+
+        @Override
+        protected void onPostExecute(List<String> strings) {
+            super.onPostExecute(strings);
+            if(strings == null){
+                return;
+            }
+            groupNames.addAll(strings);
+        }
     }
 
     private class SaveOnlineDevicesTask extends AsyncTask<List<OnlineDeviceEntity>, Void, Void>{

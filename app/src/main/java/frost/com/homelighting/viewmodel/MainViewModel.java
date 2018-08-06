@@ -2,11 +2,15 @@ package frost.com.homelighting.viewmodel;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModel;
+import android.os.AsyncTask;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import frost.com.homelighting.Repository;
 import frost.com.homelighting.db.entity.DeviceEntity;
+import frost.com.homelighting.db.entity.GroupDetailsEntity;
+import frost.com.homelighting.db.entity.GroupEntity;
 import frost.com.homelighting.db.entity.OnlineDeviceEntity;
 
 public class MainViewModel extends ViewModel{

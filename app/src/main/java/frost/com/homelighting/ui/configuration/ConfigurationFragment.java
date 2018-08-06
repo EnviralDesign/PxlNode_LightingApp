@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -47,6 +48,7 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 
 import fr.ganfra.materialspinner.MaterialSpinner;
+import frost.com.homelighting.BuildConfig;
 import frost.com.homelighting.HomeLightingApplication;
 import frost.com.homelighting.MainActivity;
 import frost.com.homelighting.R;
@@ -75,6 +77,8 @@ public class ConfigurationFragment extends Fragment implements Constants{
     private List<DeviceEntity> mOnlineDevicesList;
 
     private MainActivity mainActivity;
+
+    private int debugDeviceCounter = 0;
 
     private TextWatcher mDeviceNameWatcher = new TextWatcher() {
         Pattern pattern = Pattern.compile("[a-zA-Z0-9_\\-]*");
@@ -424,7 +428,6 @@ public class ConfigurationFragment extends Fragment implements Constants{
         }
 
         if(areInputsValid){
-            updateDeviceVariables();
             try{
                 sendUpdateDeviceCommand(createJSONMessage());
             } catch (JSONException e){
@@ -677,6 +680,22 @@ public class ConfigurationFragment extends Fragment implements Constants{
         private void loadDevicesIntoViews(JSONObject jsonObject) throws JSONException{
             clearAllTexts();
 
+//            if(BuildConfig.DEBUG){
+//                mDeviceName.setText("Device " +  debugDeviceCounter);
+//                mPixelsPerStrip.setText("24");
+//                mChunkSize.setText("30");
+//                mMAPerPixel.setText("8");
+//                mUDPPort.setText("2345");
+//                mAMPSLimit.setText("34");
+//                refreshColorPicker(123, 123, 123);
+//                mWarmUpColorRed = "123";
+//                mWarmUpColorGreen = "123";
+//                mWarmUpColorBlue = "123";
+//
+//                debugDeviceCounter += 1;
+//                return;
+//            }
+
             if (jsonObject != null){
                 mDeviceName.setText(jsonObject.getString(CONFIGURATION_DEVICE_NAME));
                 mPixelsPerStrip.setText(jsonObject.getString(CONFIGURATION_PIXELS_PER_STRIP));
@@ -755,6 +774,8 @@ public class ConfigurationFragment extends Fragment implements Constants{
 
         @Override
         protected Void doInBackground(Void... voids) {
+            int TIMEOUT_VALUE = 10000;
+
             HttpURLConnection urlConnection;
             URL url;
             DataOutputStream dataOutputStream;
@@ -764,6 +785,8 @@ public class ConfigurationFragment extends Fragment implements Constants{
                 urlConnection.setRequestMethod("POST");
                 urlConnection.setRequestProperty("Content-Length", Integer.toString(configurationJSONObject.toString().getBytes().length));
                 urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                urlConnection.setConnectTimeout(TIMEOUT_VALUE);
+                urlConnection.setReadTimeout(TIMEOUT_VALUE);
                 urlConnection.setUseCaches(false);
                 urlConnection.setDoInput(true);
                 dataOutputStream = new DataOutputStream(urlConnection.getOutputStream());
@@ -773,6 +796,7 @@ public class ConfigurationFragment extends Fragment implements Constants{
                 urlConnection.getInputStream();
                 urlConnection.disconnect();
                 Log.d("UpdateDevicePostCommand", "Success to http://" + ipAddress + "/mcu_config");
+
             } catch (Exception e){
                 Log.d("UpdateDevicePostCommand", "Fail to http://" + ipAddress + "/mcu_config");
             }
@@ -782,6 +806,8 @@ public class ConfigurationFragment extends Fragment implements Constants{
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+            // Update device in db
+            updateDeviceVariables();
             configurationViewModel.updateDevice(deviceEntity);
             mProgressDialogue.dismiss();
         }

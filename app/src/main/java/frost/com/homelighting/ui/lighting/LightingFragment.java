@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,7 +58,7 @@ public class LightingFragment extends Fragment implements Constants {
     private boolean isAddMacroAvailable;
     private SparseArray<String> mMacrosSubString, mPresetsSubString;
 
-    private MainActivity mainActivity;
+    private MainActivity mMainActivity;
     private PresetAdapter mAdapter;
 
     @Inject
@@ -76,7 +75,7 @@ public class LightingFragment extends Fragment implements Constants {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        mainActivity = (MainActivity) getActivity();
+        mMainActivity = (MainActivity) getActivity();
 
         mMacrosSubString = new SparseArray<>();
         mPresetsSubString = new SparseArray<>();
@@ -106,9 +105,9 @@ public class LightingFragment extends Fragment implements Constants {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mainActivity.invalidateOptionsMenu();
-        mainActivity.setTitle(R.string.lighting_mode_title);
-        mainActivity.setOnBackClickListener(new MainActivity.OnBackClickListener() {
+        mMainActivity.invalidateOptionsMenu();
+        mMainActivity.setTitle(R.string.lighting_mode_title);
+        mMainActivity.setOnBackClickListener(new MainActivity.OnBackClickListener() {
             @Override
             public boolean onBackClick() {
                 if(mAdapter.isSelectionMode()){
@@ -136,7 +135,7 @@ public class LightingFragment extends Fragment implements Constants {
         mSelectedMacros = new ArrayList<>();
         mAdapter = new PresetAdapter();
         isAddMacroAvailable = false;
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(mainActivity);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(mMainActivity);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setAdapter(mAdapter);
         return view;
@@ -203,7 +202,7 @@ public class LightingFragment extends Fragment implements Constants {
      * Switch off a list of online devices.
      */
     private void switchOffLights(){
-        List<DeviceEntity> onlineDevices = mainActivity.mOnlineDevices;
+        List<DeviceEntity> onlineDevices = mMainActivity.mOnlineDevices;
 
         if(onlineDevices != null){
             ExecutorService executorService = Executors.newFixedThreadPool(onlineDevices.size());
@@ -241,8 +240,8 @@ public class LightingFragment extends Fragment implements Constants {
                 urlConnection.setUseCaches(false);
                 urlConnection.setDoInput(false);
                 urlConnection.setDoInput(true);
-                urlConnection.setConnectTimeout(100);
-                urlConnection.setReadTimeout(100);
+                urlConnection.setConnectTimeout(2000);
+                urlConnection.setReadTimeout(2000);
                 os = urlConnection.getOutputStream();
                 os.write(command.getBytes("UTF-8"));
                 os.close();
@@ -306,7 +305,21 @@ public class LightingFragment extends Fragment implements Constants {
      */
     private void createNewMacro(){
         DialogFragment dialogFragment = AddMacroDialog.newInstance();
-        dialogFragment.show(mainActivity.getFragmentManager(), "AddMacroDialog");
+        dialogFragment.show(mMainActivity.getFragmentManager(), "AddMacroDialog");
+    }
+
+    /**
+     *  Check if name is already taken
+     */
+    public boolean checkIfMacroNameAlreadyExists(String macroName){
+        List<String> macroNames = lightingViewModel.getMacroNames();
+        for (String macroNameTaken : macroNames) {
+            if(macroNameTaken.equals(macroName)){
+                mMainActivity.showToast(R.string.toast_duplicate_name);
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -638,14 +651,14 @@ public class LightingFragment extends Fragment implements Constants {
             ImageView imageView = view.findViewById(R.id.preset_switch);
             switch (motionEvent.getAction()){
                 case MotionEvent.ACTION_DOWN:
-                    imageView.setImageDrawable(mainActivity.getDrawable(R.drawable.ic_play_on));
+                    imageView.setImageDrawable(mMainActivity.getDrawable(R.drawable.ic_play_on));
                     switchOnDevices((int) view.getTag(R.id.ID), (String) view.getTag(R.id.groupType));
                     return true;
                 case MotionEvent.ACTION_UP:
-                    imageView.setImageDrawable(mainActivity.getDrawable(R.drawable.ic_play_off));
+                    imageView.setImageDrawable(mMainActivity.getDrawable(R.drawable.ic_play_off));
                     return true;
                 case MotionEvent.ACTION_MOVE:
-                    imageView.setImageDrawable(mainActivity.getDrawable(R.drawable.ic_play_off));
+                    imageView.setImageDrawable(mMainActivity.getDrawable(R.drawable.ic_play_off));
                     return true;
             }
             return false;

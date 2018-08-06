@@ -7,6 +7,8 @@ import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.internal.NavigationMenuView;
@@ -20,17 +22,28 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.format.Formatter;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
 import frost.com.homelighting.db.entity.DeviceEntity;
+import frost.com.homelighting.db.entity.OnlineDeviceEntity;
 import frost.com.homelighting.ui.about.AboutFragment;
 import frost.com.homelighting.ui.designmode.ErrorFragment;
 import frost.com.homelighting.ui.macros.MacroFragment;
@@ -61,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MAIN_ACTIVITY";
 
+    private List<DeviceEntity> mScannedDevicesList;
+
     private NavigationView mNavigationView;
     protected ActionBarDrawerToggle mToggle;
     protected Toolbar mToolbar;
@@ -88,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                 .get(MainViewModel.class);
 
         mOnlineDevices = new ArrayList<>();
+        mScannedDevicesList = new ArrayList<>();
 
         mainViewModel.getOnlineDevices().observe(this, new Observer<List<DeviceEntity>>() {
             @Override
@@ -230,5 +246,4 @@ public class MainActivity extends AppCompatActivity {
 
         return null;
     }
-
 }

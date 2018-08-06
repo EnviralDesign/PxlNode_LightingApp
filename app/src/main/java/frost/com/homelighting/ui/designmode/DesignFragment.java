@@ -826,6 +826,20 @@ public class DesignFragment extends Fragment{
     }
 
     /**
+     *  Check if name is already taken
+     */
+    public boolean checkIfPresetNameAlreadyExists(String presetName){
+        List<String> presetNames = designViewModel.getPresetNames();
+        for (String presetNameTaken : presetNames) {
+            if(presetNameTaken.equals(presetName)){
+                mMainActivity.showToast(R.string.toast_duplicate_name);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Saves the preset locally.
      */
     protected void savePreset(String presetName){
@@ -1281,6 +1295,7 @@ public class DesignFragment extends Fragment{
                 presetDetailsEntities.add(new PresetDetailsEntity(presetId.intValue(), deviceIp));
             }
             designViewModel.savePresetDetails(presetDetailsEntities);
+
             return null;
         }
     }

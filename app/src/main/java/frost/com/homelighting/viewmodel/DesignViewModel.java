@@ -32,11 +32,14 @@ public class DesignViewModel extends ViewModel{
     private Repository repository;
     private MutableLiveData<List<String>> selectedDevices;
     private MutableLiveData<List<String>> sprites;
+    private List<String> presetNames;
 
     public DesignViewModel(Repository repository) {
         this.repository = repository;
         selectedDevices = new MutableLiveData<>();
         sprites = new MutableLiveData<>();
+        presetNames = new ArrayList<>();
+        new loadPresetNames().execute();
     }
 
     public LiveData<List<String>> getSelectedDevices() {
@@ -83,6 +86,10 @@ public class DesignViewModel extends ViewModel{
         new LoadDeviceSpritesTask(ipAddress).execute();
     }
 
+    public List<String> getPresetNames(){
+        return presetNames;
+    }
+
     public void setSpritesFromGroups(int groupID){
         List<String> spritesExample = new ArrayList<>();
         spritesExample.add("SPRITE"); // Used so that user has the option to remove Sprite.
@@ -92,6 +99,22 @@ public class DesignViewModel extends ViewModel{
         }
 
         sprites.setValue(spritesExample);
+    }
+
+    private class loadPresetNames extends AsyncTask<Void, Void, List<String>> {
+        @Override
+        protected List<String> doInBackground(Void... voids) {
+            return repository.loadAllPresetsNames();
+        }
+
+        @Override
+        protected void onPostExecute(List<String> strings) {
+            super.onPostExecute(strings);
+            if(strings == null){
+                return;
+            }
+            presetNames.addAll(strings);
+        }
     }
 
     private class loadDevicesIpAddressInGroupTask extends AsyncTask<Integer, Void, List<String>> {

@@ -62,6 +62,7 @@
     <string name="text_view_no_device_online">no online devices</string>
     <string name="toast_preset_saved">Preset saved</string>
     <string name="toast_choose_group_or_device">Choose a group or a device</string>
+    <string name="toast_duplicate_name">Preset name taken</string>
     <string name="sprites">Sprites</string>
 
     <!-- Lighting Mode Strings-->
