@@ -1,5 +1,16 @@
 package frost.com.homelighting;
 
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.longClick;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.contrib.DrawerMatchers.isClosed;
+import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.is;
+
 import android.support.test.espresso.PerformException;
 import android.support.test.espresso.contrib.DrawerActions;
 import android.support.test.espresso.contrib.NavigationViewActions;
@@ -15,18 +26,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.longClick;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.DrawerMatchers.isClosed;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class PresetFragmentTest {
+public class F_GroupFragmentTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class, true, true);
@@ -41,7 +44,7 @@ public class PresetFragmentTest {
 
         // Select design fragment
         onView(withId(R.id.nav_view))
-                .perform(NavigationViewActions.navigateTo(R.id.nav_group_presets));
+                .perform(NavigationViewActions.navigateTo(R.id.nav_group_node_groups));
 
         //Wait until drawer is closed
         try{
@@ -53,12 +56,12 @@ public class PresetFragmentTest {
     }
 
     @Test
-    public void deletePreset_checkListSize(){
+    public void deleteGroup_checkListSize(){
         try {
             RecyclerView.Adapter adapter = ((RecyclerView) mActivityRule.getActivity().getWindow().getDecorView().findViewById(R.id.groups_recycler_list)).getAdapter();
             int recyclerViewSize = adapter.getItemCount();
 
-            // Long click the first preset
+            // Long click the first group
             onView(withId(R.id.groups_recycler_list)).perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
 
             // Click on the delete menu button
@@ -72,14 +75,12 @@ public class PresetFragmentTest {
             } else {
 
                 // Check id error is shown
-                onView(withText(R.string.text_view_create_presets)).check(matches(isDisplayed()));
+                onView(withText(R.string.text_view_create_group)).check(matches(isDisplayed()));
 
             }
         } catch (PerformException e){
-
-            // Check error message is shown if no presets exist.
-            onView(withText(R.string.text_view_create_presets)).check(matches(isDisplayed()));
-
+            e.printStackTrace();
+            onView(withText(R.string.text_view_create_group)).check(matches(isDisplayed()));
         }
     }
 }

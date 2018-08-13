@@ -26,7 +26,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class MacroFragmentTest {
+public class E_PresetFragmentTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class, true, true);
@@ -41,7 +41,7 @@ public class MacroFragmentTest {
 
         // Select design fragment
         onView(withId(R.id.nav_view))
-                .perform(NavigationViewActions.navigateTo(R.id.nav_group_macros));
+                .perform(NavigationViewActions.navigateTo(R.id.nav_group_presets));
 
         //Wait until drawer is closed
         try{
@@ -52,14 +52,13 @@ public class MacroFragmentTest {
 
     }
 
-
     @Test
-    public void deleteMacro_checkListSize(){
+    public void deletePreset_checkListSize(){
         try {
             RecyclerView.Adapter adapter = ((RecyclerView) mActivityRule.getActivity().getWindow().getDecorView().findViewById(R.id.groups_recycler_list)).getAdapter();
             int recyclerViewSize = adapter.getItemCount();
 
-            // Long click the first group
+            // Long click the first preset
             onView(withId(R.id.groups_recycler_list)).perform(RecyclerViewActions.actionOnItemAtPosition(0, longClick()));
 
             // Click on the delete menu button
@@ -73,12 +72,14 @@ public class MacroFragmentTest {
             } else {
 
                 // Check id error is shown
-                onView(withText(R.string.text_view_create_macros)).check(matches(isDisplayed()));
+                onView(withText(R.string.text_view_create_presets)).check(matches(isDisplayed()));
 
             }
         } catch (PerformException e){
-            e.printStackTrace();
-            onView(withText(R.string.text_view_create_macros)).check(matches(isDisplayed()));
+
+            // Check error message is shown if no presets exist.
+            onView(withText(R.string.text_view_create_presets)).check(matches(isDisplayed()));
+
         }
     }
 }

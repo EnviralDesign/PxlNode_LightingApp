@@ -49,7 +49,7 @@ import frost.com.homelighting.db.entity.GroupEntity;
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class DesignFragmentTest {
+public class B_DesignFragmentTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class, true, true);
 
@@ -391,10 +391,10 @@ public class DesignFragmentTest {
         onView(withId(R.id.picker)).perform(dragColorWheelPointerFromTopToRight());
 
         // Choose the duration amount
-        onView(withId(R.id.duration_picker)).perform(dragViewFromBottomToTop());
-
-        // Choose the number of repetitions
-        onView(withId(R.id.repetitions_picker)).perform(dragViewFromTopToBottom());
+//        onView(withId(R.id.duration_picker)).perform(dragViewFromBottomToTop());
+//
+//        // Choose the number of repetitions
+//        onView(withId(R.id.repetitions_picker)).perform(dragViewFromTopToBottom());
 
         // Click on the start circle
         onView(withId(R.id.effects_timeline)).perform(clickOnStartCircle());

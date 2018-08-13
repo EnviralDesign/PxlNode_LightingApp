@@ -1,16 +1,5 @@
 package frost.com.homelighting;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.longClick;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.DrawerMatchers.isClosed;
-import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.is;
-
 import android.support.test.espresso.PerformException;
 import android.support.test.espresso.contrib.DrawerActions;
 import android.support.test.espresso.contrib.NavigationViewActions;
@@ -26,10 +15,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.longClick;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.contrib.DrawerMatchers.isClosed;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class GroupFragmentTest {
+public class D_MacroFragmentTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class, true, true);
@@ -44,7 +41,7 @@ public class GroupFragmentTest {
 
         // Select design fragment
         onView(withId(R.id.nav_view))
-                .perform(NavigationViewActions.navigateTo(R.id.nav_group_node_groups));
+                .perform(NavigationViewActions.navigateTo(R.id.nav_group_macros));
 
         //Wait until drawer is closed
         try{
@@ -55,8 +52,9 @@ public class GroupFragmentTest {
 
     }
 
+
     @Test
-    public void deleteGroup_checkListSize(){
+    public void deleteMacro_checkListSize(){
         try {
             RecyclerView.Adapter adapter = ((RecyclerView) mActivityRule.getActivity().getWindow().getDecorView().findViewById(R.id.groups_recycler_list)).getAdapter();
             int recyclerViewSize = adapter.getItemCount();
@@ -75,12 +73,12 @@ public class GroupFragmentTest {
             } else {
 
                 // Check id error is shown
-                onView(withText(R.string.text_view_create_group)).check(matches(isDisplayed()));
+                onView(withText(R.string.text_view_create_macros)).check(matches(isDisplayed()));
 
             }
         } catch (PerformException e){
             e.printStackTrace();
-            onView(withText(R.string.text_view_create_group)).check(matches(isDisplayed()));
+            onView(withText(R.string.text_view_create_macros)).check(matches(isDisplayed()));
         }
     }
 }

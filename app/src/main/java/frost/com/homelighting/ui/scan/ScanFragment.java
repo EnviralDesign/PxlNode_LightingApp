@@ -39,6 +39,7 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
+import frost.com.homelighting.BuildConfig;
 import frost.com.homelighting.HomeLightingApplication;
 import frost.com.homelighting.MainActivity;
 import frost.com.homelighting.R;
@@ -64,6 +65,8 @@ public class ScanFragment extends Fragment {
     private TextView mNoDevicesTextView;
 
     private MainActivity mMainActivity;
+
+    private int debugDeviceCounter = 0;
 
     @Inject
     ViewModelProvider.Factory viewModelFactory;
@@ -291,9 +294,12 @@ public class ScanFragment extends Fragment {
         } catch (Exception e){
             Log.w("Bad Device Ip", subIP + Integer.toString(i));
         }
-//        if(BuildConfig.DEBUG){
-//            return new DeviceEntity( "Device " +  Integer.toString(i), subIP + Integer.toString(i));
-//        }
+        if(BuildConfig.DEBUG){
+            debugDeviceCounter += 1;
+            if(debugDeviceCounter <= 2){
+                return new DeviceEntity( "Device " +  Integer.toString(i), subIP + Integer.toString(i));
+            }
+        }
         return null;
     }
 

@@ -52,7 +52,7 @@ import static org.hamcrest.Matchers.instanceOf;
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class LightingFragmentTest {
+public class C_LightingFragmentTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class, true, true);
 
