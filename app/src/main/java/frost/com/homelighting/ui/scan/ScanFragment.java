@@ -13,7 +13,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.format.Formatter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,12 +29,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -195,34 +197,61 @@ public class ScanFragment extends Fragment {
     /**
      * Refresh the list of devices
      */
+//    private void refreshDevices(){
+//        // Get wifi IP
+//        String subIP = "";
+//        WifiManager wm = (WifiManager) mMainActivity.getApplicationContext().getSystemService(WIFI_SERVICE);
+//
+//        if(wm != null){
+//            String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+//
+//            int noOfDots = 0;
+//            for(int i = 0; noOfDots < 3; i++){
+//                subIP += ip.substring(i, i + 1);
+//                if(ip.charAt(i) == '.'){
+//                    noOfDots += 1;
+//                }
+//            }
+//
+//            // Execute a queue of tasks for each possible device
+//            ExecutorService executorService = Executors.newFixedThreadPool(255);
+//            for( int i = 0; i <= 255; i++){
+//                Runnable worker = new WorkerThread(subIP, i);
+//                executorService.execute(worker);
+//            }
+//            executorService.shutdown();
+//
+//            while(!executorService.isTerminated()){
+//                // Do nothing
+//            }
+//        }
+//    }
+
     private void refreshDevices(){
-        // Get wifi IP
-        String subIP = "";
-        WifiManager wm = (WifiManager) mMainActivity.getApplicationContext().getSystemService(WIFI_SERVICE);
+        Thread thread = new Thread(new Runnable() {
+            String UDP_IP = "192.168.4.1";
+            int UDP_PORT = 2390;
+            String message = "EnviralDesignPxlNode\\xC8";
 
-        if(wm != null){
-            String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-
-            int noOfDots = 0;
-            for(int i = 0; noOfDots < 3; i++){
-                subIP += ip.substring(i, i + 1);
-                if(ip.charAt(i) == '.'){
-                    noOfDots += 1;
+            @Override
+            public void run() {
+                DatagramSocket datagramSocket = null;
+                try {
+                    datagramSocket = new DatagramSocket();
+//                    datagramSocket.setBroadcast(true);
+                    InetAddress serverAddress = InetAddress.getByName(UDP_IP);
+                    byte[] buffer = message.getBytes();
+                    DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length, serverAddress, UDP_PORT);
+                    datagramSocket.receive(datagramPacket);
+                    String stringData = new String (buffer, 0 , datagramPacket.getLength());
+                    Log.i("HERE RYAN :", stringData);
+                } catch (IOException e){
+                    e.printStackTrace();
                 }
             }
+        });
 
-            // Execute a queue of tasks for each possible device
-            ExecutorService executorService = Executors.newFixedThreadPool(255);
-            for( int i = 0; i <= 255; i++){
-                Runnable worker = new WorkerThread(subIP, i);
-                executorService.execute(worker);
-            }
-            executorService.shutdown();
-
-            while(!executorService.isTerminated()){
-                // Do nothing
-            }
-        }
+        thread.start();
     }
 
     /**
@@ -302,6 +331,7 @@ public class ScanFragment extends Fragment {
         }
         return null;
     }
+
 
     /**
      * Convert the InputStream to a String.
@@ -410,12 +440,119 @@ public class ScanFragment extends Fragment {
         }
     }
 
+//    public class ScanForDevices extends AsyncTask<Void, Void, Void> {
+//
+//        @Override
+//        protected Void doInBackground(Void... voids) {
+//            scanViewModel.deleteAllOnlineDevices();
+//            refreshDevices();
+//            return null;
+//        }
+//
+//        @Override
+//        protected void onPreExecute() {
+//            super.onPreExecute();
+//            mProgressBar.setVisibility(View.VISIBLE);
+//            mScannedDevicesList.clear();
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Void aVoid) {
+//            super.onPostExecute(aVoid);
+//            scanViewModel.insertAllDevices(mScannedDevicesList);
+//            scanViewModel.saveOnlineDevices(changeToOnlineDevices(mScannedDevicesList));
+//            if(mScannedDevicesList.isEmpty()){
+//                mNoDevicesTextView.setText(getString(R.string.text_view_no_devices_found));
+//                mNoDevicesTextView.setVisibility(View.VISIBLE);
+//            }
+//            else{
+//                mNoDevicesTextView.setVisibility(View.GONE);
+//            }
+//            mProgressBar.setVisibility(View.INVISIBLE);
+//        }
+//
+//        private List<OnlineDeviceEntity> changeToOnlineDevices(List<DeviceEntity> deviceEntities){
+//            List<OnlineDeviceEntity> onlineDevices = new ArrayList<>();
+//            for(DeviceEntity deviceEntity: deviceEntities){
+//                onlineDevices.add(new OnlineDeviceEntity(deviceEntity.getIpAddress()));
+//            }
+//            return onlineDevices;
+//        }
+//    }
+
+    public class PacketSenderAndReceiver implements Runnable {
+        String UDP_IP = "255.255.255.255";
+        int UDP_PORT = 2390;
+        Integer code = 200;
+        String message = "EnviralDesignPxlNode";
+
+        @Override
+        public void run() {
+            DatagramSocket sendSocket = null;
+            try {
+                sendSocket = new DatagramSocket(2391);
+                sendSocket.setBroadcast(true);
+                sendSocket.setSoTimeout(3000);
+                InetAddress serverAddress = InetAddress.getByName(UDP_IP);
+
+                byte[] bufferOne = message.getBytes();
+                byte[] bufferTwo = new byte[1];
+                bufferTwo[0] = code.byteValue();
+                byte[] completeBuffer = new byte[bufferOne.length + 1];
+
+                System.arraycopy(bufferOne, 0, completeBuffer, 0, bufferOne.length);
+
+                System.arraycopy(bufferTwo, 0, completeBuffer, bufferOne.length, 1);
+
+                DatagramPacket sendingPacket = new DatagramPacket(completeBuffer, completeBuffer.length, serverAddress, UDP_PORT);
+
+                byte buf[] = new byte[1024];
+
+                DatagramPacket receivingPacket = new DatagramPacket(buf, buf.length);
+
+                sendSocket.send(sendingPacket);
+                try {
+                    while(true){
+                        sendSocket.receive(receivingPacket);
+
+                        byte[] array = receivingPacket.getData();
+                        int length = 0;
+                        for(int j = 0; j <= array.length; j++){
+                            if(array[j] == 0){
+                                length = j;
+                                break;
+                            }
+                        }
+                        array = Arrays.copyOfRange(array,21, length );
+                        String deviceName = new String(array);
+                        deviceName = deviceName.replaceAll("[^a-zA-Z_-]", "");
+
+                        final DeviceEntity deviceEntity = new DeviceEntity( deviceName, receivingPacket.getAddress().toString().substring(1));
+                        mMainActivity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mScannedDevicesList.add(deviceEntity);
+                            }
+                        });
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+                Log.i("Hello World", message);
+
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+            sendSocket.close();
+        }
+    }
+
     public class ScanForDevices extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... voids) {
             scanViewModel.deleteAllOnlineDevices();
-            refreshDevices();
+            new PacketSenderAndReceiver().run();
             return null;
         }
 

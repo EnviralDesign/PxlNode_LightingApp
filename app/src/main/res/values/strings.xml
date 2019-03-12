@@ -108,7 +108,8 @@
     <string name="configuration_no_network_hint">Wifi connection unavailable</string>
 
     <!--About Mode-->
-    <string name="about_text">Bacon ipsum dolor amet shankle turkey shank meatball beef ribs. Filet mignon meatball turducken sausage, frankfurter fatback brisket landjaeger. Beef ribs t-bone beef salami pig rump jerky swine landjaeger tri-tip frankfurter. Ribeye beef kielbasa t-bone brisket. Ham shoulder swine short loin prosciutto cow hamburger porchetta ground round pork belly. Landjaeger strip steak leberkas, pig short ribs ribeye sausage kielbasa pastrami kevin frankfurter turkey t-bone chicken tenderloin. Beef ribs tenderloin leberkas ham rump andouille.</string>
+    <string name="about_title">PxlNode Light Control</string>
+    <string name="about_text">\n\n<a href="https://github.com/EnviralDesign/NodeMCU-Arduino-Pixel-Driver">https://github.com/EnviralDesign/NodeMCU-Arduino-Pixel-Driver</a>\n\n<a href="www.enviral-design.com">www.enviral-design.com</a>\n\n<a href="www.geopix.io">www.geopix.io</a></string>
 
     <!--Duration labels and values array -->
     <!--The format is [label] = [value], you can add,

@@ -10,7 +10,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_margin="32dp">
+            >
 
         <ImageView
                 android:id="@+id/logo"
@@ -21,11 +21,26 @@
                 android:layout_marginBottom="24dp"/>
 
         <TextView
+                android:id="@+id/about_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_title"
+                android:layout_below="@+id/logo"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textAlignment="center"
+                android:textSize="16sp"
+                android:textColor="@color/colorPrimaryText"
+                android:fontFamily="@font/montserrat_medium"/>
+
+        <TextView
+                android:id="@+id/about_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:autoLink="web"
                 android:textColor="@color/colorPrimaryText"
                 android:text="@string/about_text"
-                android:layout_below="@+id/logo"
+                android:layout_below="@+id/about_title"
                 android:textAlignment="center"
                 android:textSize="16sp"/>
 

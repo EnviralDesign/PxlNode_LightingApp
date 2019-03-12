@@ -3,8 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/libs/HoloColorPickerLibrary/HoloColorPickerLibrary.iml" filepath="$PROJECT_DIR$/libs/HoloColorPickerLibrary/HoloColorPickerLibrary.iml" />
-      <module fileurl="file://$PROJECT_DIR$/HomeLighting.iml" filepath="$PROJECT_DIR$/HomeLighting.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/MaterialSpinnerLibrary/MaterialSpinnerLibrary.iml" filepath="$PROJECT_DIR$/libs/MaterialSpinnerLibrary/MaterialSpinnerLibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PxlNode_LightingApp.iml" filepath="$PROJECT_DIR$/PxlNode_LightingApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/libs.iml" filepath="$PROJECT_DIR$/libs/libs.iml" />
     </modules>

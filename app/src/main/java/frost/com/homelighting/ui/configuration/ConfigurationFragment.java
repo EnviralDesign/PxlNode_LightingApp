@@ -780,7 +780,7 @@ public class ConfigurationFragment extends Fragment implements Constants{
             URL url;
             DataOutputStream dataOutputStream;
             try{
-                url = new URL("http://" + ipAddress + "/mcu_config");
+                url = new URL("http://" + ipAddress + "/mcu_json");
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("POST");
                 urlConnection.setRequestProperty("Content-Length", Integer.toString(configurationJSONObject.toString().getBytes().length));

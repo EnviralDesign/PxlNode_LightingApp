@@ -209,6 +209,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/configuration_button_update_device"
                     android:layout_margin="@dimen/activity_horizontal_margin"
+                    android:textSize="14sp"
                     android:textColor="@color/colorPrimaryText"
                     android:fontFamily="@font/montserrat_medium"
                     android:backgroundTint="@color/colorAccent"

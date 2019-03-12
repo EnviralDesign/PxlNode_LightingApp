@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -91,14 +92,7 @@ public class DesignViewModel extends ViewModel{
     }
 
     public void setSpritesFromGroups(int groupID){
-        List<String> spritesExample = new ArrayList<>();
-        spritesExample.add("SPRITE"); // Used so that user has the option to remove Sprite.
-
-        for(int i = 0; i <= 10; i++){
-            spritesExample.add("Sprite " + Integer.toString(i));
-        }
-
-        sprites.setValue(spritesExample);
+        new LoadGroupDeviceSpritesTask(groupID).execute();
     }
 
     private class loadPresetNames extends AsyncTask<Void, Void, List<String>> {
@@ -148,30 +142,86 @@ public class DesignViewModel extends ViewModel{
             HttpURLConnection urlConnection;
             URL url;
             String strLine;
+            String spriteName;
             List<String> sprites = new ArrayList<>();
             sprites.add("SPRITE"); // Used so that user has the option to remove Sprite.
             JSONArray jsonArray;
-//            try{
-//                url = new URL("http://" + ipAddress + "/getSprites");
-//                urlConnection = (HttpURLConnection) url.openConnection();
-//                urlConnection.setUseCaches(false);
-//                urlConnection.connect();
-//                InputStream inputStream = urlConnection.getInputStream();
-//                strLine = convertStreamToString(inputStream);
-//                JSONObject spritesJson = new JSONObject(strLine);
-//                jsonArray = spritesJson.getJSONArray(JSON_SPRITE_ARRAY_KEY);
-//                for(int i = 0; i <= jsonArray.length(); i++){
-//                    sprites.add(jsonArray.getString(i));
-//                }
-//                Log.w("LoadDeviceSpritesTask", "Get device sprites success for device :" + ipAddress);
-//            } catch (Exception e){
-//                Log.w("LoadDeviceSpritesTask", "Get device sprites failure for device :" + ipAddress);
-//            }
-
-
-            for(int i = 0; i <= 10; i++){
-                sprites.add("Sprite " + Integer.toString(i));
+            try{
+                url = new URL("http://" + ipAddress + "/list?dir=/");
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.connect();
+                InputStream inputStream = urlConnection.getInputStream();
+                strLine = convertStreamToString(inputStream);
+                jsonArray = new JSONArray(strLine);
+                for(int i = 0; i < jsonArray.length(); i++){
+                    JSONObject element = jsonArray.getJSONObject(i);
+                    spriteName = element.getString("name");
+                    if(spriteName.contains(".sprite")) {
+                        sprites.add(spriteName);
+                    }
+                }
+                Log.w("LoadDeviceSpritesTask", "Get device sprites success for device :" + ipAddress);
+            } catch (Exception e){
+                Log.w("LoadDeviceSpritesTask", "Get device sprites failure for device :" + ipAddress);
             }
+
+
+            return sprites;
+        }
+
+        @Override
+        protected void onPostExecute(List<String> strings) {
+            super.onPostExecute(strings);
+            sprites.setValue(strings);
+        }
+    }
+
+    /**
+     * Load sprites found in device into a mutableLiveData list.
+     */
+    private class LoadGroupDeviceSpritesTask extends AsyncTask<Void, Void, List<String>>{
+        private static final String JSON_SPRITE_ARRAY_KEY = "SPRITES";
+
+        private List<String> ipAddresses;
+        private int groupID;
+
+        public LoadGroupDeviceSpritesTask(int groupID) {
+            this.groupID = groupID;
+            this.ipAddresses = new ArrayList<>();
+        }
+
+        @Override
+        protected List<String> doInBackground(Void... voids) {
+            this.ipAddresses = repository.loadDevicesIpAddressInGroup(groupID);
+            HttpURLConnection urlConnection;
+            URL url;
+            String strLine;
+            String spriteName;
+            List<String> sprites = new ArrayList<>();
+            sprites.add("SPRITE"); // Used so that user has the option to remove Sprite.
+            JSONArray jsonArray;
+
+            for(int i = 0; i < ipAddresses.size(); i++){
+                try{
+                    url = new URL("http://" + ipAddresses.get(i) + "/list?dir=/");
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.connect();
+                    InputStream inputStream = urlConnection.getInputStream();
+                    strLine = convertStreamToString(inputStream);
+                    jsonArray = new JSONArray(strLine);
+                    for(int j = 0; j < jsonArray.length(); j++){
+                        JSONObject element = jsonArray.getJSONObject(j);
+                        spriteName = element.getString("name");
+                        if(spriteName.contains(".sprite")) {
+                            sprites.add(spriteName);
+                        }
+                    }
+                    Log.w("LoadDeviceSpritesTask", "Get device sprites success for device :" + ipAddresses.get(i));
+                } catch (Exception e){
+                    Log.w("LoadDeviceSpritesTask", "Get device sprites failure for device :" + ipAddresses.get(i));
+                }
+            }
+
             return sprites;
         }
 

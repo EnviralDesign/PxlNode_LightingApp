@@ -592,9 +592,12 @@ public class DesignFragment extends Fragment{
             mSavePresetButton.setAlpha(1);
         }
 
-        if(!mSelectedDevices.isEmpty()){
-            formulateCommand(color);
+        if(mSelectedDevices != null){
+            if(!mSelectedDevices.isEmpty()){
+                formulateCommand(color);
+            }
         }
+
         lastTime = System.currentTimeMillis();
     }
 
@@ -639,7 +642,7 @@ public class DesignFragment extends Fragment{
             String value = durationLabelsAndValue[mDurationPicker.getValue() - 1 ];
             return value.substring(value.lastIndexOf('=') + 2);
         } else {
-            return Integer.toString((duration - 4) * 60);
+            return Integer.toString((duration - durationLabelsAndValue.length) * 60);
         }
     }
 
@@ -894,7 +897,7 @@ public class DesignFragment extends Fragment{
             button = "huehsb";
         } else if (mSpriteButton.isSelected()){
             isSprite = true;
-            button = "sprite";
+            button = "SPRITE";
         }
 
         // Get the appropriate start and stop color commands
@@ -926,7 +929,7 @@ public class DesignFragment extends Fragment{
         }
 
         if(isSprite){
-            command += " s" + Integer.toString(spriteId) + " x" + spriteX + " y" + spriteY;
+            command += " s'" + (String) mSpritesSpinner.getSelectedItem() + "'";
         }
 
         return command;

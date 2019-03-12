@@ -16,7 +16,7 @@ public interface DeviceDao {
     @Query("SELECT * FROM devices")
     LiveData<List<DeviceEntity>> loadAllDevices();
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     List<Long> insertAll(List<DeviceEntity> devices);
 
     @Query("SELECT * FROM devices WHERE ip_address = :ipAddress")

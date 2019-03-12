@@ -314,7 +314,8 @@
         <android.support.v7.widget.AppCompatButton
                 android:id="@+id/preview_preset_button"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="64dp"
+                android:textSize="14sp"
                 android:text="@string/preview_preset_button"
                 android:textColor="@color/colorPrimaryText"
                 android:backgroundTint="@color/colorAccent"
@@ -328,7 +329,8 @@
         <android.support.v7.widget.AppCompatButton
                 android:id="@+id/save_preset_button"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="64dp"
+                android:textSize="14sp"
                 android:text="@string/save_preset_button"
                 android:textColor="@color/colorPrimaryText"
                 android:backgroundTint="@color/colorAccent"
